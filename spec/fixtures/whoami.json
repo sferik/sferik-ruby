@@ -1,0 +1,22 @@
+{
+  "command": "whoami",
+  "blocks": [
+    {
+      "type": "p",
+      "html": "I've spent nearly two decades writing software that runs underneath other software: HTTP clients, JSON and XML parsers, OAuth, code coverage, package registries, and command-line tools. If you've shipped a Ruby app, some of my code is probably in your <code>Gemfile.lock</code>."
+    },
+    {
+      "type": "p",
+      "html": "I'm the author of <a href=\"https://github.com/sferik/multi_json\">MultiJSON</a> and <a href=\"https://github.com/sferik/multi_xml\">MultiXML</a>, which have 1,780,743,294 combined downloads, and the top contributor to <a href=\"https://github.com/simplecov-ruby/simplecov\">SimpleCov</a>, <a href=\"https://github.com/omniauth/omniauth\">OmniAuth</a>, and <a href=\"https://rubygems.org\">RubyGems.org</a>. All of it is core infrastructure for the Ruby community. In 2014, I was given the <a href=\"https://rubyheroes.com/heroes/2014\">Ruby Hero Award</a> for my open-source contributions."
+    },
+    {
+      "type": "p",
+      "html": "If your work depends on these projects, you can <a href=\"https://github.com/sponsors/sferik\" data-open=\"sponsors sponsor\">sponsor me on GitHub</a>."
+    },
+    {
+      "type": "p",
+      "html": "Lately I've been rewriting command-line tools in Rust, patching the C internals of CRuby, and adding branch and method coverage to JRuby in Java. Before that, I co-founded Breaker (YC W17), a social podcast app that Twitter acquired to help build Spaces, and stayed on as an engineering manager. I've also been a principal software engineer at SoundCloud in Berlin and at Instacart, the CTO of 140 Proof, and one of the first <a href=\"https://codeforamerica.org/\">Code for America</a> fellows."
+    }
+  ],
+  "multiDownloads": 1780743294
+}

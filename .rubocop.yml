@@ -1,0 +1,42 @@
+plugins:
+  - rubocop-performance
+  - rubocop-rake
+  - rubocop-rspec
+  - standard-custom
+  - standard-performance
+
+inherit_gem:
+  standard: config/ruby-3.4.yml
+
+AllCops:
+  NewCops: enable
+
+# Standard leaves this off; the library freezes its string literals
+Style/FrozenStringLiteralComment:
+  Enabled: true
+
+# Standard disables the Metrics cops; enforce them at RuboCop's defaults
+Metrics/AbcSize:
+  Enabled: true
+
+# The text of a heredoc, like the usage of the sferik command, is one line of code, however long it is
+Metrics/ClassLength:
+  Enabled: true
+  CountAsOne:
+    - heredoc
+
+Metrics/CyclomaticComplexity:
+  Enabled: true
+
+Metrics/MethodLength:
+  Enabled: true
+
+Metrics/ModuleLength:
+  Enabled: true
+
+Metrics/ParameterLists:
+  Enabled: true
+  CountKeywordArgs: false
+
+Metrics/PerceivedComplexity:
+  Enabled: true

@@ -1,0 +1,14 @@
+{
+  "command": "imgcat ~/dependency.webp",
+  "figure": {
+    "type": "figure",
+    "href": "https://xkcd.com/2347/",
+    "src": "/img/dependency.webp",
+    "srcset": "/img/dependency.webp 1x, /img/dependency-2x.webp 2x",
+    "width": 385,
+    "height": 489,
+    "alt": "A tall, precarious tower of blocks labeled “all modern Ruby infrastructure,” held up near the bottom by one thin block labeled “projects @sferik has been thanklessly maintaining since 2008.”",
+    "title": "Someday ImageMagick will finally break for good and we'll have a long period of scrambling as we try to reassemble civilization from the rubble.",
+    "caption": "Adapted from <a href=\"https://xkcd.com/2347/\">xkcd 2347</a> by Randall Munroe, <a href=\"https://creativecommons.org/licenses/by-nc/2.5/\">CC BY-NC 2.5</a>."
+  }
+}

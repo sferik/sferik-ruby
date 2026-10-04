@@ -1,0 +1,217 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/faeb0ac58e4fb7a1abf3abed3ecd1a5f2e96db9f/schema.json",
+  "basics": {
+    "name": "Erik Berlin",
+    "formerName": "Erik Michaels-Ober",
+    "label": "Software Engineer",
+    "email": "sferik@gmail.com",
+    "url": "https://sferik.net",
+    "summary": "Entrepreneur, engineer, and manager, and a long-time open source maintainer. Writes and maintains infrastructure libraries with more than 5 billion combined downloads, including MultiJSON, MultiXML, SimpleCov, OmniAuth, OAuth2, Faraday, and http.rb. Recipient of the 2014 Ruby Hero Award, the highest honor in the Ruby community.\n\nLed the team at Twitter that built creator subscriptions from conception in under six months, along with the in-app purchase infrastructure behind X Premium and Quick Promote. Previously founded Breaker, a social podcast app backed by Y Combinator, Betaworks, and Greylock Partners, acquired by Twitter in 2020 to help build Spaces. Founded a first company, 140 Proof, at 24; its advertising network reached 66 million monthly users.\n\nWorks across the stack and across languages: Ruby, Rust, C, Java, and TypeScript, from interpreter internals to command-line tools to consumer apps.",
+    "location": {
+      "city": "San Francisco",
+      "region": "California",
+      "countryCode": "US"
+    },
+    "profiles": [
+      {
+        "network": "GitHub",
+        "username": "sferik",
+        "url": "https://github.com/sferik"
+      },
+      {
+        "network": "LinkedIn",
+        "username": "sferik",
+        "url": "https://www.linkedin.com/in/sferik"
+      },
+      {
+        "network": "RubyGems",
+        "username": "sferik",
+        "url": "https://rubygems.org/profiles/sferik"
+      }
+    ]
+  },
+  "work": [
+    {
+      "name": "One Thing Incorporated",
+      "position": "Founder",
+      "startDate": "2023-01"
+    },
+    {
+      "name": "Twitter",
+      "position": "Software Engineering Manager",
+      "startDate": "2021-01",
+      "endDate": "2023-01",
+      "highlights": [
+        "Led the engineering team that built Subscriptions, from conception to launch in under six months.",
+        "The team also built the client- and server-side in-app purchase infrastructure that powers X Premium (formerly Twitter Blue) and Quick Promote.",
+        "Joined through the acquisition of Breaker."
+      ]
+    },
+    {
+      "name": "Breaker",
+      "position": "CEO",
+      "startDate": "2017-01",
+      "endDate": "2020-12",
+      "highlights": [
+        "Built a social podcast app for iOS from a nights-and-weekends side project, backed by Y Combinator (Winter 2017), Betaworks, and Greylock Partners.",
+        "Launched Breaker Upstream (2018), the first marketplace for podcasters to sell premium content directly to listeners.",
+        "Acquired by Twitter in December 2020."
+      ]
+    },
+    {
+      "name": "Instacart",
+      "position": "Principal Software Engineer",
+      "startDate": "2016-01",
+      "endDate": "2016-10",
+      "highlights": [
+        "Worked on the Orders team, which handled all customer payments and purchases.",
+        "Built a system to accurately compute state and local taxes, increasing profitability and allowing expansion into new markets.",
+        "Implemented purchase pre-authorization, saving the company several million dollars in payment processing fees.",
+        "Started the internship program and hired the company's first intern."
+      ]
+    },
+    {
+      "name": "SoundCloud",
+      "position": "Principal Software Engineer",
+      "startDate": "2013-07",
+      "endDate": "2015-12",
+      "highlights": [
+        "Designed and maintained the public API and its SDKs and client libraries."
+      ]
+    },
+    {
+      "name": "General Assembly",
+      "position": "Expert in Residence",
+      "startDate": "2012-02",
+      "endDate": "2013-06"
+    },
+    {
+      "name": "Code for America",
+      "position": "Fellow",
+      "startDate": "2011-01",
+      "endDate": "2011-12",
+      "highlights": [
+        "Built Adopt-a-Hydrant for the City of Boston in one week; it became the model for Adopt-a-Siren (Honolulu) and Adopt-a-Sidewalk (Chicago)."
+      ]
+    },
+    {
+      "name": "140 Proof",
+      "position": "CTO",
+      "startDate": "2008-06",
+      "endDate": "2010-11",
+      "highlights": [
+        "Founded the company at 24 and built a social advertising network that scaled to 66 million monthly users.",
+        "Raised $5.5 million from BlueRun Ventures, Founders Fund, and SV Angel; grew to more than 50 employees, turned profitable, and was acquired by AcuityAds.",
+        "Awarded two patents for targeted digital advertising."
+      ]
+    }
+  ],
+  "volunteer": [
+    {
+      "organization": "Pacific Primary",
+      "position": "Board of Directors",
+      "url": "https://pacificprimary.org",
+      "startDate": "2023-09",
+      "endDate": "2026",
+      "summary": "President 2025–2026, Treasurer 2024–2025. As President, redesigned and rebuilt the school's website, pacificprimary.org. Created strategic plan for 2027–2031. Co-led search committee for new Director of Finance & Operations."
+    },
+    {
+      "organization": "Rails Girls Summer of Code, Ruby Summer of Code, Google Summer of Code",
+      "position": "Coach and mentor",
+      "startDate": "2013",
+      "endDate": "2013"
+    }
+  ],
+  "education": [
+    {
+      "institution": "Carnegie Mellon University",
+      "location": "Pittsburgh",
+      "startDate": "2001",
+      "endDate": "2005",
+      "courses": [],
+      "highlights": [
+        "Student Body President"
+      ]
+    }
+  ],
+  "awards": [
+    {
+      "title": "Ruby Hero Award",
+      "date": "2014-04-22",
+      "awarder": "Ruby Heroes",
+      "summary": "Presented at RailsConf, for contributions to RailsAdmin, Thor, RubyGems.org, and the twitter gem."
+    },
+    {
+      "title": "Code for America Fellow",
+      "date": "2011-01",
+      "awarder": "Code for America",
+      "summary": "Inaugural class."
+    }
+  ],
+  "patents": [
+    {
+      "title": "Method and system for creating user based summaries for content distribution",
+      "number": "US20110153423A1",
+      "date": "2011-06-23",
+      "url": "https://patents.google.com/patent/US20110153423A1"
+    },
+    {
+      "title": "Method and system for dynamic advertising based on user actions",
+      "number": "US20110153414A1",
+      "date": "2011-06-23",
+      "url": "https://patents.google.com/patent/US20110153414A1"
+    }
+  ],
+  "projects": [
+    {
+      "name": "RubyGems.org",
+      "description": "top contributor (1,900+ commits) to the Ruby package registry; also Bundler and RubyGems."
+    },
+    {
+      "name": "MultiJSON, MultiXML",
+      "description": "author; 1.8 billion downloads combined."
+    },
+    {
+      "name": "SimpleCov",
+      "description": "top contributor; added method coverage, a CLI, and per-test coverage tracking."
+    },
+    {
+      "name": "OmniAuth, OAuth2, Faraday, http.rb, Octokit, Thor, delayed_job",
+      "description": "author or core contributor; led the http.rb 6.0 release."
+    },
+    {
+      "name": "twitter gem and x-cli",
+      "description": "creator; the CLI (5,600 stars) was ported from Ruby to Rust in 2026."
+    },
+    {
+      "name": "RailsAdmin",
+      "description": "creator; admin framework for Rails (8,000 stars)."
+    },
+    {
+      "name": "CRuby (C), JRuby (Java), Crystal, mutant, Rails, Rust",
+      "description": "merged patches, including JRuby method and branch coverage and Ruby 4.0 support in mutant."
+    }
+  ],
+  "skills": [
+    {
+      "name": "Languages",
+      "keywords": [
+        "Ruby",
+        "Rust",
+        "C",
+        "Java",
+        "TypeScript and JavaScript",
+        "SQL",
+        "shell"
+      ]
+    }
+  ],
+  "speaking": {
+    "summary": "Spoke at 16 conferences in 13 countries on four continents, including RailsConf, RubyConf Australia, RubyConf India, Barcelona Ruby Conference, dotRB, and PolyConf, and gave the closing keynote at Nordic APIs Platform Summit. Talks include *Writing Fast Ruby*, which inspired the community fast-ruby benchmark suite; *Mutation Testing with Mutant*; *Towards a Higher-Level Language*; and *An Introduction to Crystal*. Full list with slides and video at sferik.net/talks."
+  },
+  "meta": {
+    "canonical": "https://sferik.net/resume",
+    "version": "v1.0.0",
+    "lastModified": "2026-10-01"
+  }
+}

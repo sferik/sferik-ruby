@@ -1,0 +1,369 @@
+{
+  "command": "finger sferik",
+  "login": "sferik",
+  "name": "Erik Berlin",
+  "directory": "/Users/sferik",
+  "shell": "/opt/homebrew/bin/fish",
+  "plan": "Ship small, sharp tools.",
+  "mail": "sferik@gmail.com",
+  "profiles": [
+    {
+      "network": "GitHub",
+      "username": "sferik",
+      "url": "https://github.com/sferik",
+      "icon": "github",
+      "aliases": [
+        "github",
+        "gh"
+      ]
+    },
+    {
+      "network": "GitLab",
+      "username": "sferik",
+      "url": "https://gitlab.com/sferik",
+      "icon": "gitlab",
+      "aliases": [
+        "gitlab"
+      ]
+    },
+    {
+      "network": "Stack Overflow",
+      "username": "sferik",
+      "url": "https://stackoverflow.com/users/209190/sferik",
+      "icon": "stackoverflow",
+      "aliases": [
+        "stackoverflow",
+        "so"
+      ]
+    },
+    {
+      "network": "RubyGems",
+      "username": "sferik",
+      "url": "https://rubygems.org/profiles/sferik",
+      "icon": "rubygems",
+      "aliases": [
+        "rubygems",
+        "gems"
+      ]
+    },
+    {
+      "network": "Speaker Deck",
+      "username": "sferik",
+      "url": "https://speakerdeck.com/sferik",
+      "icon": "speakerdeck",
+      "aliases": [
+        "speakerdeck",
+        "slides"
+      ]
+    },
+    {
+      "network": "Hacker News",
+      "username": "sferik",
+      "url": "https://news.ycombinator.com/user?id=sferik",
+      "icon": "hackernews",
+      "aliases": [
+        "hn",
+        "hackernews"
+      ]
+    },
+    {
+      "network": "Y Combinator",
+      "username": "sferik",
+      "url": "https://www.ycombinator.com/verify/qugse5lo7rvb3xe7",
+      "icon": "ycombinator",
+      "aliases": [
+        "yc",
+        "ycombinator"
+      ]
+    },
+    {
+      "network": "LinkedIn",
+      "username": "sferik",
+      "url": "https://www.linkedin.com/in/sferik",
+      "icon": "linkedin",
+      "aliases": [
+        "linkedin"
+      ]
+    },
+    {
+      "network": "X",
+      "username": "sferik",
+      "url": "https://x.com/sferik",
+      "icon": "x",
+      "aliases": [
+        "x",
+        "twitter"
+      ]
+    },
+    {
+      "network": "Bluesky",
+      "username": "sferik",
+      "url": "https://bsky.app/profile/sferik.net",
+      "icon": "bluesky",
+      "aliases": [
+        "bluesky",
+        "bsky"
+      ]
+    },
+    {
+      "network": "Mastodon",
+      "username": "sferik",
+      "url": "https://mastodon.social/@sferik",
+      "icon": "mastodon",
+      "aliases": [
+        "mastodon"
+      ]
+    },
+    {
+      "network": "Threads",
+      "username": "sferik",
+      "url": "https://www.threads.com/@sferik",
+      "icon": "threads",
+      "aliases": [
+        "threads"
+      ]
+    },
+    {
+      "network": "Facebook",
+      "username": "sferik",
+      "url": "https://www.facebook.com/sferik",
+      "icon": "facebook",
+      "aliases": [
+        "facebook",
+        "fb"
+      ]
+    },
+    {
+      "network": "Instagram",
+      "username": "sferik",
+      "url": "https://www.instagram.com/sferik/",
+      "icon": "instagram",
+      "aliases": [
+        "instagram",
+        "ig"
+      ]
+    },
+    {
+      "network": "Snapchat",
+      "username": "sferik",
+      "url": "https://www.snapchat.com/@sferik",
+      "icon": "snapchat",
+      "aliases": [
+        "snapchat",
+        "snap"
+      ]
+    },
+    {
+      "network": "TikTok",
+      "username": "sf.erik",
+      "url": "https://www.tiktok.com/@sf.erik",
+      "icon": "tiktok",
+      "aliases": [
+        "tiktok"
+      ]
+    },
+    {
+      "network": "Clubhouse",
+      "username": "sferik",
+      "url": "https://www.clubhouse.com/@sferik",
+      "icon": "clubhouse",
+      "aliases": [
+        "clubhouse"
+      ]
+    },
+    {
+      "network": "Reddit",
+      "username": "sferik",
+      "url": "https://www.reddit.com/user/sferik",
+      "icon": "reddit",
+      "aliases": [
+        "reddit"
+      ]
+    },
+    {
+      "network": "Medium",
+      "username": "sferik",
+      "url": "https://medium.com/@sferik",
+      "icon": "medium",
+      "aliases": [
+        "medium"
+      ]
+    },
+    {
+      "network": "Tumblr",
+      "username": "sferik",
+      "url": "https://www.tumblr.com/sferik",
+      "icon": "tumblr",
+      "aliases": [
+        "tumblr"
+      ]
+    },
+    {
+      "network": "Flickr",
+      "username": "sferik",
+      "url": "https://www.flickr.com/people/25243524@N02",
+      "icon": "flickr",
+      "aliases": [
+        "flickr"
+      ]
+    },
+    {
+      "network": "Pinterest",
+      "username": "sferik",
+      "url": "https://www.pinterest.com/sferik/",
+      "icon": "pinterest",
+      "aliases": [
+        "pinterest"
+      ]
+    },
+    {
+      "network": "Dribbble",
+      "username": "sferik",
+      "url": "https://dribbble.com/sferik",
+      "icon": "dribbble",
+      "aliases": [
+        "dribbble"
+      ]
+    },
+    {
+      "network": "YouTube",
+      "username": "ekmichae",
+      "url": "https://www.youtube.com/ekmichae",
+      "icon": "youtube",
+      "aliases": [
+        "youtube",
+        "yt"
+      ]
+    },
+    {
+      "network": "Vimeo",
+      "username": "sferik",
+      "url": "https://vimeo.com/sferik",
+      "icon": "vimeo",
+      "aliases": [
+        "vimeo"
+      ]
+    },
+    {
+      "network": "Twitch",
+      "username": "sferik",
+      "url": "https://www.twitch.tv/sferik",
+      "icon": "twitch",
+      "aliases": [
+        "twitch"
+      ]
+    },
+    {
+      "network": "Kick",
+      "username": "sferik",
+      "url": "https://kick.com/sferik",
+      "icon": "kick",
+      "aliases": [
+        "kick"
+      ]
+    },
+    {
+      "network": "Spotify",
+      "username": "sferik",
+      "url": "https://open.spotify.com/user/sferik",
+      "icon": "spotify",
+      "aliases": [
+        "spotify"
+      ]
+    },
+    {
+      "network": "SoundCloud",
+      "username": "erik",
+      "url": "https://soundcloud.com/erik",
+      "icon": "soundcloud",
+      "aliases": [
+        "soundcloud"
+      ]
+    },
+    {
+      "network": "Strava",
+      "username": "sferik",
+      "url": "https://www.strava.com/athletes/sferik",
+      "icon": "strava",
+      "aliases": [
+        "strava"
+      ]
+    },
+    {
+      "network": "Kickstarter",
+      "username": "sferik",
+      "url": "https://www.kickstarter.com/profile/sferik",
+      "icon": "kickstarter",
+      "aliases": [
+        "kickstarter"
+      ]
+    },
+    {
+      "network": "PayPal",
+      "username": "sferik",
+      "url": "https://www.paypal.com/paypalme/sferik",
+      "icon": "paypal",
+      "aliases": [
+        "paypal"
+      ]
+    },
+    {
+      "network": "Venmo",
+      "username": "sferik",
+      "url": "https://account.venmo.com/u/sferik",
+      "icon": "venmo",
+      "aliases": [
+        "venmo"
+      ]
+    },
+    {
+      "network": "Cash App",
+      "username": "pend",
+      "url": "https://cash.app/$pend",
+      "icon": "cashapp",
+      "aliases": [
+        "cashapp",
+        "cash"
+      ]
+    },
+    {
+      "network": "Ko-fi",
+      "username": "sferik",
+      "url": "https://ko-fi.com/sferik",
+      "icon": "kofi",
+      "aliases": [
+        "kofi",
+        "ko-fi"
+      ]
+    },
+    {
+      "network": "Buy Me a Coffee",
+      "username": "sferik",
+      "url": "https://buymeacoffee.com/sferik",
+      "icon": "buymeacoffee",
+      "aliases": [
+        "buymeacoffee",
+        "bmc",
+        "coffee"
+      ]
+    },
+    {
+      "network": "Gravatar",
+      "username": "sferik",
+      "url": "https://gravatar.com/sferik",
+      "icon": "gravatar",
+      "aliases": [
+        "gravatar"
+      ]
+    },
+    {
+      "network": "Linktree",
+      "username": "sferik",
+      "url": "https://linktr.ee/sferik",
+      "icon": "linktree",
+      "aliases": [
+        "linktree"
+      ]
+    }
+  ]
+}

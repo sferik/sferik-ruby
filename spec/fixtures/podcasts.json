@@ -1,0 +1,23 @@
+{
+  "command": "ls -lt ~/podcasts",
+  "podcasts": [
+    {
+      "title": "The Crystal Programming Language",
+      "show": "Ruby Rogues, episode 248",
+      "date": "2016-02",
+      "url": "https://topenddevs.com/podcasts/ruby-rogues/248-rr-the-crystal-programming-language-with-erik-michaels-ober"
+    },
+    {
+      "title": "Maintaining the twitter gem and RailsAdmin",
+      "show": "Ruby Rogues, episode 127",
+      "date": "2013-10",
+      "url": "https://topenddevs.com/podcasts/ruby-rogues/127-rr-erik-michaels-ober"
+    },
+    {
+      "title": "Code for America",
+      "show": "The Changelog, episode 65",
+      "date": "2011-07",
+      "url": "https://changelog.com/podcast/65"
+    }
+  ]
+}

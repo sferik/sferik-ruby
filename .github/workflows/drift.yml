@@ -1,0 +1,45 @@
+# Checks the OpenAPI description saved in spec/fixtures/ against the one the live site serves, so that a change to the
+# API is noticed when it happens rather than when someone next refreshes the fixtures. This workflow is separate from
+# the others so that it never blocks a merge or a release: don't make it a required check. A scheduled run that finds
+# a change opens an issue (or comments on the open one), on top of GitHub's usual email about a failed workflow.
+name: API drift
+on:
+  schedule:
+    - cron: "41 7 * * *" # daily, 07:41 UTC
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+    - uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
+      with:
+        ruby-version: "3.4"
+        bundler-cache: true
+    - run: bundle exec rake drift
+
+  alert:
+    needs: check
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+    - name: Open an issue, or comment on the open one
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        title="The sferik.net API has changed"
+        number=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')
+        body="The daily check of the live OpenAPI description against spec/fixtures/openapi.json found a difference: $RUN_URL. Run \`bundle exec rake fixtures\` and catch the library up."
+        if [ -n "$number" ]; then
+          gh issue comment "$number" --body "$body"
+        else
+          gh issue create --title "$title" --body "$body"
+        fi

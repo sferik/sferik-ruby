@@ -1,0 +1,16 @@
+# Weekly pull requests to keep the gems and GitHub Actions up to date. A release must be a week old before Dependabot
+# proposes it, which gives time for a broken or compromised version to be caught and pulled.
+version: 2
+updates:
+  - package-ecosystem: bundler
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7

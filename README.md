@@ -1,0 +1,339 @@
+# sferik
+
+A Ruby wrapper for the [sferik.net](https://sferik.net) API: Erik Berlin's bio, GitHub contributions, projects, talks,
+and resume.
+
+## Installation
+
+```sh
+bundle add sferik
+```
+
+Or, without Bundler:
+
+```sh
+gem install sferik
+```
+
+It needs Ruby 3.4 or later, or JRuby 10 or later, and is tested on Linux, macOS, and Windows.
+
+## Documentation
+
+[rubydoc.info/gems/sferik](https://rubydoc.info/gems/sferik/). The API itself is described by an OpenAPI 3.1 document at
+[sferik.net/openapi.json](https://sferik.net/openapi.json).
+
+## Usage
+
+```ruby
+require "sferik"
+```
+
+### The bio
+
+```ruby
+whoami = Sferik.whoami
+whoami.blocks.map(&:html)  # => ["I've spent nearly two decades writing software...", ...]
+whoami.multi_downloads     # => 1_780_609_860
+```
+
+### The comic
+
+```ruby
+figure = Sferik.dependency.figure  # xkcd 2347, adapted
+figure.src                         # => "/img/dependency.webp"
+figure.alt                         # => "A tall, precarious tower of blocks labeled “all modern Ruby infrastructure,”..."
+```
+
+### Contact details
+
+```ruby
+finger = Sferik.finger
+finger.mail                   # => "sferik@gmail.com"
+finger.profiles.map(&:url)    # => ["https://github.com/sferik", "https://gitlab.com/sferik", ...]
+```
+
+### GitHub contributions
+
+```ruby
+contributions = Sferik.contributions
+contributions.total                      # => 7747
+contributions.longest_streak             # => 32
+contributions.days.max_by(&:count).date  # => #<Date: 2026-08-28>
+contributions.last_push                  # => #<Sferik::Push repo="sferik/x-ruby" sha="d30399b..." at=2026-10-06 16:18:55 UTC>
+contributions.as_of                      # => 2026-10-08 01:15:02 UTC, when the numbers were fetched
+```
+
+### Projects
+
+```ruby
+projects = Sferik.projects  # Enumerable: most downloaded first, with related projects together
+projects.first              # => #<Sferik::Project name="multi_json" description="One interface to every Ruby JSON library." downloads=1173210700>
+projects.map(&:name)        # => ["multi_json", "multi_xml", "simplecov", ...]
+projects.size               # => 28; there's length, empty?, last, and [] too
+projects.total_downloads    # => 5_473_478_762, across every gem @sferik owns
+projects.filter_map(&:downloads).sum  # of those listed: downloads is nil for a project that isn't a gem
+projects.as_of              # => 2026-10-08 01:15:02 UTC, when the downloads were fetched
+```
+
+### Talks
+
+```ruby
+talks = Sferik.talks                # Enumerable: newest first
+talks.select(&:video).map(&:title)  # => ["The Value of Being Lazy, or How I Made OpenStruct 10X Faster", ...]
+talks.first.date                    # => #<Date: 2015-11-01>, the first day of the month it was in
+talks.last.title                    # the oldest; there's size, length, empty?, and [] too
+talks.places[talks.first.location]  # => #<Sferik::Place lat=32.09 lon=34.78 country="Israel">
+talks.speaker_deck                  # => "https://speakerdeck.com/sferik"
+Sferik.podcasts.first.show          # => "Ruby Rogues, episode 248": the podcasts alone, which the talks have too
+```
+
+### The resume
+
+```ruby
+resume = Sferik.resume              # a JSON Resume document (https://jsonresume.org)
+resume.name                         # => "Erik Berlin"
+resume.work.first.position          # => "Founder"
+resume.work.first.start_date        # => #<Date: 2023-01-01>
+resume.work.first.end_date          # => nil, since it hasn't ended
+resume.patents.map(&:number)        # => ["US20110153423A1", "US20110153414A1"]
+resume.last_modified                # => #<Date: 2026-10-01>
+
+File.binwrite("resume.pdf", Sferik.resume_pdf)
+File.write("resume.tex", Sferik.resume_latex)
+puts Sferik.text("/resume")         # as a man page
+```
+
+### Who's reading the site
+
+```ruby
+who = Sferik.who   # Enumerable: a terminal per browser tab with the site open
+who.size           # => 2
+who.map(&:page)    # => ["/", "/talks"]
+who.first.login    # => 2026-10-06 12:00:00 UTC
+```
+
+To be one of them, check in, as each browser tab does every minute: a terminal is logged in for three minutes after
+it last checked in, and keeps its name for as long as it checks in with the same token.
+
+```ruby
+require "securerandom"
+
+token = SecureRandom.uuid             # random, one per terminal
+who = Sferik.check_in(token)          # on the home page; or Sferik.check_in(token, page: "/talks")
+who.you                               # => "ttys001", your terminal
+who.size                              # => 3, with you
+```
+
+### Send me a message
+
+```ruby
+Sferik.write("Hello from Ruby. Reply to me@example.com")  # => "message sent to sferik"
+Sferik.write("Hello again", tty: who.you)                 # names your terminal in the subject line
+```
+
+The message is emailed to me, with a Reply-To if it includes an email address. It can be 5,000 bytes at most, and the
+server takes one a minute from an address and twenty a day in all: past that, it raises `Sferik::TooManyRequests`,
+with what the server says as its message, the seconds to wait as `retry_after`, and which limit it was as `error_code`
+(`"busy"` or `"full"`). It's sent as UTF-8: a String in another charset is converted, and a binary or US-ASCII one
+(what Ruby reads with no locale set) is taken for UTF-8 already.
+
+Each message goes with a random key, and the server doesn't email one twice whose key it has taken within a day. So
+if no answer comes, `write` sends the message once more, and to try again after a `Sferik::NetworkError`, give the
+key yourself:
+
+```ruby
+key = SecureRandom.uuid
+begin
+  Sferik.write("Hello from Ruby", key:)
+rescue Sferik::NetworkError
+  sleep 5
+  retry
+end
+```
+
+### Anything as terminal output
+
+Every resource also comes as text, wrapped to 80 columns, the way `curl sferik.net` shows it:
+
+```ruby
+puts Sferik.text            # the whole home page
+puts Sferik.text("/talks")
+```
+
+### Raw requests
+
+```ruby
+Sferik.client.get("/whoami", accept: "text/plain")
+Sferik.client.post("/write", "Hello", accept: "text/plain")  # the body is sent as plain text
+Sferik.client.post("/write", "Hello", idempotency_key: SecureRandom.uuid)
+```
+
+## The sferik command
+
+The gem comes with a `sferik` command, which prints what the shell on sferik.net prints, in your terminal:
+
+```sh
+gem install sferik
+sferik finger    # how to reach me
+sferik resume    # my resume, as a man page
+sferik --help    # every command and option
+```
+
+The commands that print are `finger`, `whoami`, `talks`, `podcasts`, `resume`, `contributions`, `src`, `name`, `dependency`, and
+`who`; with none, it prints the home page. With `--json`, a command prints JSON instead of text:
+
+```sh
+sferik talks --json | jq -r '.talks[].title'
+```
+
+The resume also comes as a PDF with `--pdf`, and as LaTeX with `--latex`:
+
+```sh
+sferik resume --pdf > resume.pdf
+sferik resume --latex > resume.tex
+```
+
+`sferik write` sends me a message, as `write sferik` does in the shell on the site. It reads the message from
+standard input: type it and press Ctrl-D, or pipe it in.
+
+```sh
+echo "Hello from my terminal. Reply to me@example.com" | sferik write
+```
+
+It exits 0 when it has printed what it was asked for, 1 when a request fails (the site can't be reached, or says
+no), and 2 when the command line is wrong (an unknown command or option, more than one format, a format for
+what prints no resource (`write`, `help`, or `--version`), or a host that isn't an http or https URL, from `--host`
+or `SFERIK_HOST`), so a script can tell the two apart.
+
+To ask a local copy of the site instead of sferik.net, name it with `--host` or the `SFERIK_HOST` environment
+variable (one that's set but empty counts as not set):
+
+```sh
+sferik finger --host http://localhost:3745
+SFERIK_HOST=http://localhost:3745 sferik finger
+```
+
+## Response objects
+
+Endpoints return immutable objects, nested where the response is: a resume's jobs are `Sferik::Resume::Work` objects,
+for example. Two with the same attributes are equal, and they work with pattern matching. Dates the API gives to the
+month or year, like a talk's, are the first day of that month or year. A list the response leaves out is empty, not
+nil. In a pattern and in `to_h`, a predicate goes by its name without the question mark: `live?` is `live:`. Projects,
+talks, and who's reading match array patterns too. One built by hand (`Sferik::Talk.new("title" => "...")`) keeps a
+frozen copy of what it's given, and leaves the original as it was. What it's given must be a Hash with the keys of the
+API's JSON, which are strings (`"startDate"`, not `start_date:`): anything else raises `ArgumentError`. In Rails, a
+resource inside something rendered as JSON is the JSON it came from, since it has `as_json`.
+
+Everything inside a response object is built when it is, so a response that isn't what the API documents raises
+`Sferik::InvalidResponse` from the endpoint that got it, never from a reader later on, and a reader returns the same
+frozen object each time it's called. Dates and times are frozen too: to see a time in your zone, use `getlocal`, since
+`localtime` would change it.
+
+```ruby
+case Sferik.contributions
+in {total:, longest_streak:, live:}
+  puts "#{total} contributions, longest streak #{longest_streak} days#{" (as of the last snapshot)" unless live}"
+end
+
+case Sferik.talks
+in [newest, *, oldest]
+  puts "From #{oldest.title} to #{newest.title}"
+end
+
+Sferik.talks.first.to_h       # => {title: "...", event: "...", date: #<Date: 2015-11-01>, ..., featured: true}
+Sferik.talks.first.attributes # => the raw JSON, frozen
+Sferik.talks.to_json          # => the JSON it came from
+```
+
+## Configuration
+
+```ruby
+Sferik.configure do |config|
+  config.host = "http://localhost:3745" # a local copy of the site
+  config.read_timeout = 30
+end
+
+# Or build a client of your own
+client = Sferik.new(host: "http://localhost:3745")
+client.whoami
+```
+
+| Setting         | Default                     | Description                                      |
+| --------------- | --------------------------- | ------------------------------------------------ |
+| `host`          | `"https://sferik.net"`      | The host for API requests, with scheme           |
+| `user_agent`    | `"sferik/VERSION (ruby …)"` | The `User-Agent` header                          |
+| `open_timeout`  | `5`                         | Seconds to wait for a connection to open         |
+| `read_timeout`  | `10`                        | Seconds to wait for a response (see below)       |
+| `write_timeout` | `10`                        | Seconds to wait for a request to be sent         |
+| `max_redirects` | `10`                        | Redirects to follow (never from https to http)   |
+
+The host must be an http or https URL with no credentials, query, or fragment, the user agent must be on one line, a
+timeout must be positive and finite, and `max_redirects` can't be negative (0 follows none): anything else raises
+`ArgumentError` when the client is built.
+
+A request that times out waiting for a response is sent once more, as Net::HTTP does with any GET, so a response that
+never comes takes twice `read_timeout` to raise `Sferik::NetworkError`. A POST is sent only once, and its redirects
+aren't followed, except that `write` sends its message once more if no answer comes, since its key makes that safe.
+
+## Errors
+
+Every error is a `Sferik::Error`:
+
+```
+Sferik::Error
+├── Sferik::InvalidURL         the path can't be in a URL
+├── Sferik::NetworkError       the server couldn't be reached, or its response couldn't be read
+├── Sferik::TooManyRedirects   redirected more than max_redirects times
+├── Sferik::InvalidResponse    the response wasn't what the API documents
+└── Sferik::HTTPError          any other response that isn't a success, or a redirect that isn't followed (#code, #headers, #body, #error_code, #retry_after)
+    ├── Sferik::ClientError    4xx
+    │   ├── Sferik::NotFound         404
+    │   ├── Sferik::NotAcceptable    406: no such format for that resource
+    │   └── Sferik::TooManyRequests  429: too many messages
+    └── Sferik::ServerError    5xx
+```
+
+The message of an HTTP error is always UTF-8, whatever charset the response was in. `error_code` is which error it is,
+where the API says (`"busy"`, `"too_long"`, `"bad_token"`, `"not_found"`, and so on), and `retry_after` is the seconds
+to wait before trying again, where the response has a Retry-After header: each is nil otherwise.
+
+One can be raised by hand, as a spec that stubs a request does, with nothing but its class, which gives it its code:
+
+```ruby
+allow(Sferik).to receive(:whoami).and_raise(Sferik::NotFound)  # code 404, message "404 Not Found"
+raise Sferik::ServerError, "Down for maintenance"              # code 500
+```
+
+## Development
+
+```sh
+bin/setup                 # install dependencies
+bundle exec rake          # everything below
+bundle exec rake spec     # specs, with 100% line, branch, and method coverage
+bundle exec rake lint     # RuboCop and Standard
+bundle exec rake mutant   # mutation tests: every mutant must be killed
+bundle exec rake steep    # type-check lib/ against the signatures in sig/
+bundle exec rake rbs      # validate the signatures
+bundle exec rake yardstick # 100% documentation coverage
+bin/console               # an IRB session with the library loaded
+```
+
+The specs stub requests with responses saved from the API, in `spec/fixtures/`, alongside the API's OpenAPI
+description. A contract spec checks every fixture against its schema there, and every key the library reads against
+what its schema documents. To refresh them all from the live site (or a local copy):
+
+```sh
+bundle exec rake fixtures
+HOST=http://localhost:3745 bundle exec rake fixtures
+```
+
+`bundle exec rake drift` checks the saved description against the live one, and fails if the API has changed since.
+It runs daily in `.github/workflows/drift.yml`, which opens an issue when it does.
+
+## Supported Ruby versions
+
+Ruby 3.4 and 4.0, and JRuby.
+
+## License
+
+MIT. See [LICENSE.md](LICENSE.md).

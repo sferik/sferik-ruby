@@ -1,0 +1,56 @@
+name: Push Gem
+
+# Pushing a version tag, which `rake release` does, checks the tag with CI and then pushes the gem to RubyGems.org
+# with trusted publishing
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    uses: ./.github/workflows/docs.yml
+  lint:
+    uses: ./.github/workflows/lint.yml
+  mutant:
+    uses: ./.github/workflows/mutant.yml
+  steep:
+    uses: ./.github/workflows/steep.yml
+  test:
+    uses: ./.github/workflows/test.yml
+
+  push:
+    needs: [docs, lint, mutant, steep, test]
+    if: github.repository == 'sferik/sferik-ruby'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      # Set up
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
+        with:
+          bundler-cache: true
+          ruby-version: ruby
+
+      # The release task tags the version it builds when that tag is missing, so a tag that names another version
+      # would push a gem and a tag nobody asked for
+      - name: Check that the tag names the version
+        run: ruby -r ./lib/sferik/version -e 'abort "#{ARGV[0]} is not v#{Sferik::VERSION}" unless ARGV[0] == "v#{Sferik::VERSION}"' "$GITHUB_REF_NAME"
+
+      # Release
+      - uses: rubygems/release-gem@7f9650160c1a4e7989fdc9855807bdbd421d8b6b # v1.4.1

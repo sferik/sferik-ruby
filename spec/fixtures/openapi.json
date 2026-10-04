@@ -1,0 +1,1632 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "sferik.net",
+    "version": "1.0.0",
+    "summary": "Erik Berlin's personal website, as an API",
+    "description": "Every resource is one URL, and the Accept header picks its format: application/json for data, text/plain for terminal output (also what `*/*` gets, so plain `curl` works), text/html for the page where there is one, and for the resume also application/x-latex and application/pdf. Instead of the header, add .json, .txt, .tex, or .pdf to the path. A format the resource doesn't have gets 406, and a path that isn't a resource gets 404 (components.responses.NotFound). The two POSTs answer in plain text, or in JSON for a client that prefers it, where an error has a code to tell it from the others by. Responses allow any origin, except the pages.",
+    "contact": {
+      "name": "Erik Berlin",
+      "url": "https://sferik.net",
+      "email": "sferik@gmail.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://sferik.net"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "getHome",
+        "summary": "The profile and the home page's modules",
+        "description": "What the home page builds itself from. As text/plain, the whole home page as terminal output.",
+        "responses": {
+          "200": {
+            "description": "The resource in the format the Accept header asked for",
+            "headers": {
+              "Vary": {
+                "schema": {
+                  "type": "string",
+                  "const": "Accept"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Home"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable"
+          }
+        }
+      }
+    },
+    "/whoami": {
+      "get": {
+        "operationId": "getWhoami",
+        "summary": "The bio",
+        "description": "Paragraphs of HTML and the comic.",
+        "responses": {
+          "200": {
+            "description": "The resource in the format the Accept header asked for",
+            "headers": {
+              "Vary": {
+                "schema": {
+                  "type": "string",
+                  "const": "Accept"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Whoami"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable"
+          }
+        }
+      }
+    },
+    "/dependency": {
+      "get": {
+        "operationId": "getDependency",
+        "summary": "The xkcd comic",
+        "description": "xkcd 2347, adapted. As text/plain, what it shows and where it's from.",
+        "responses": {
+          "200": {
+            "description": "The resource in the format the Accept header asked for",
+            "headers": {
+              "Vary": {
+                "schema": {
+                  "type": "string",
+                  "const": "Accept"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dependency"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable"
+          }
+        }
+      }
+    },
+    "/contributions": {
+      "get": {
+        "operationId": "getContributions",
+        "summary": "A year of GitHub contributions",
+        "description": "Live from GitHub, cached for an hour, with a snapshot to fall back on.",
+        "responses": {
+          "200": {
+            "description": "The resource in the format the Accept header asked for",
+            "headers": {
+              "Vary": {
+                "schema": {
+                  "type": "string",
+                  "const": "Accept"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Contributions"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable"
+          }
+        }
+      }
+    },
+    "/src": {
+      "get": {
+        "operationId": "getSrc",
+        "summary": "Projects, with downloads and stars",
+        "description": "Live from RubyGems and GitHub, cached, with a snapshot to fall back on.",
+        "responses": {
+          "200": {
+            "description": "The resource in the format the Accept header asked for",
+            "headers": {
+              "Vary": {
+                "schema": {
+                  "type": "string",
+                  "const": "Accept"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Src"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable"
+          }
+        }
+      }
+    },
+    "/name": {
+      "get": {
+        "operationId": "getNameChange",
+        "summary": "The name change, as a git commit",
+        "description": "Erik Michaels-Ober became Erik Berlin in 2017.",
+        "responses": {
+          "200": {
+            "description": "The resource in the format the Accept header asked for",
+            "headers": {
+              "Vary": {
+                "schema": {
+                  "type": "string",
+                  "const": "Accept"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NameChange"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable"
+          }
+        }
+      }
+    },
+    "/talks": {
+      "get": {
+        "operationId": "getTalks",
+        "summary": "Conference talks and podcasts",
+        "responses": {
+          "200": {
+            "description": "The resource in the format the Accept header asked for",
+            "headers": {
+              "Vary": {
+                "schema": {
+                  "type": "string",
+                  "const": "Accept"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Talks"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable"
+          }
+        }
+      }
+    },
+    "/podcasts": {
+      "get": {
+        "operationId": "getPodcasts",
+        "summary": "Podcast appearances",
+        "description": "The podcasts alone, which /talks has too.",
+        "responses": {
+          "200": {
+            "description": "The resource in the format the Accept header asked for",
+            "headers": {
+              "Vary": {
+                "schema": {
+                  "type": "string",
+                  "const": "Accept"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Podcasts"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable"
+          }
+        }
+      }
+    },
+    "/finger": {
+      "get": {
+        "operationId": "getFinger",
+        "summary": "Contact details and profiles",
+        "responses": {
+          "200": {
+            "description": "The resource in the format the Accept header asked for",
+            "headers": {
+              "Vary": {
+                "schema": {
+                  "type": "string",
+                  "const": "Accept"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Finger"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable"
+          }
+        }
+      }
+    },
+    "/who": {
+      "get": {
+        "operationId": "getWho",
+        "summary": "Who's logged in",
+        "description": "Everyone reading the site right now, a terminal per browser tab, as the shell's who lists them. As text/plain, who's output.",
+        "responses": {
+          "200": {
+            "description": "The resource in the format the Accept header asked for",
+            "headers": {
+              "Vary": {
+                "schema": {
+                  "type": "string",
+                  "const": "Accept"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Users"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable"
+          }
+        }
+      },
+      "post": {
+        "operationId": "checkIn",
+        "summary": "Check in a terminal",
+        "description": "What each tab sends when it opens and every minute it's in view. A terminal is logged in for three minutes after it last checked in. Answers a mistake in plain text, or in JSON for a client that prefers it. Same origin only.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "description": "Random, one per tab",
+            "schema": {
+              "type": "string",
+              "pattern": "^[\\w-]{16,64}$"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["/", "/talks", "/resume"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Your terminal, and everyone logged in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Who"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No token, or no such page",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Bad Request: token and page are required\n"
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "token and page are required",
+                  "code": "bad_token"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/write": {
+      "post": {
+        "operationId": "write",
+        "summary": "Send Erik a message",
+        "description": "The shell's write sferik. The body is the message, as plain text (5,000 bytes at most), emailed on, with a Reply-To if it includes an email address. One message a minute from an address, and twenty a day in all. Answers in plain text, or in JSON for a client that prefers it. With an Idempotency-Key, a message that may not have arrived can be sent again: the same key within a day is the same message, which is answered as sent and not emailed twice. Same origin only.",
+        "parameters": [
+          {
+            "name": "tty",
+            "in": "query",
+            "required": false,
+            "description": "The sender's terminal, for the subject line",
+            "schema": {
+              "type": "string",
+              "pattern": "^ttys\\d{3}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Random, one per message: sending it again with the same message doesn't send the message twice",
+            "schema": {
+              "type": "string",
+              "pattern": "^[\\w-]{16,64}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "maxLength": 5000
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Sent",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "write: message sent to sferik\n"
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Nothing to send (empty), or an Idempotency-Key that isn't one (bad_key)",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "write: nothing to send\n"
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "nothing to send",
+                  "code": "empty"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Longer than 5,000 bytes",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "write: that's too long for write; try mail\n"
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "that's too long for write; try mail",
+                  "code": "too_long"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many messages: from this address (busy), or in all today (full)",
+            "headers": {
+              "Retry-After": {
+                "description": "The seconds to wait before sending another",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "write: one message a minute, please\n"
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "one message a minute, please",
+                  "code": "busy"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The email didn't go through",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "write: the message didn't go through; try again later\n"
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "the message didn't go through; try again later",
+                  "code": "undelivered"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "The seconds to wait before sending it again",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "This server doesn't send email",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "write: sferik isn't taking messages here\n"
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "sferik isn't taking messages here",
+                  "code": "unavailable"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resume": {
+      "get": {
+        "operationId": "getResume",
+        "summary": "The resume",
+        "description": "JSON Resume as JSON, a man page as text, a LaTeX document, a two-page PDF, or the page.",
+        "responses": {
+          "200": {
+            "description": "The resource in the format the Accept header asked for",
+            "headers": {
+              "Vary": {
+                "schema": {
+                  "type": "string",
+                  "const": "Accept"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Resume"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/x-latex": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "contentMediaType": "application/pdf"
+                }
+              }
+            }
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SocialProfile": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string",
+            "example": "GitHub"
+          },
+          "username": {
+            "type": "string",
+            "example": "sferik"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "icon": {
+            "type": "string",
+            "description": "An icon id in /icons.svg"
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Names the shell's `open` command accepts"
+          }
+        },
+        "required": ["network", "username", "url", "icon", "aliases"],
+        "additionalProperties": false
+      },
+      "Home": {
+        "type": "object",
+        "properties": {
+          "profile": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "location": {
+                "type": "string"
+              },
+              "tagline": {
+                "type": "string"
+              },
+              "handle": {
+                "type": "string",
+                "example": "sferik"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": ["name", "location", "tagline", "handle", "url"],
+            "additionalProperties": false
+          },
+          "modules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "enum": ["whoami", "dependency", "contributions", "src", "name", "talks", "finger"]
+                },
+                "url": {
+                  "type": "string",
+                  "description": "Where to get the module, relative to the server",
+                  "example": "/whoami"
+                }
+              },
+              "required": ["id", "url"],
+              "additionalProperties": false
+            },
+            "description": "The home page's modules, in order"
+          },
+          "pages": {
+            "type": "object",
+            "properties": {
+              "talks": {
+                "type": "string",
+                "example": "/talks"
+              },
+              "resume": {
+                "type": "string",
+                "example": "/resume"
+              }
+            },
+            "required": ["talks", "resume"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["profile", "modules", "pages"],
+        "additionalProperties": false
+      },
+      "Block": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "p"
+          },
+          "html": {
+            "type": "string",
+            "description": "A paragraph of HTML"
+          }
+        },
+        "required": ["type", "html"],
+        "additionalProperties": false
+      },
+      "Figure": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "figure"
+          },
+          "href": {
+            "type": "string",
+            "format": "uri"
+          },
+          "src": {
+            "type": "string"
+          },
+          "srcset": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "alt": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string",
+            "description": "HTML"
+          }
+        },
+        "required": ["type", "href", "src", "srcset", "width", "height", "alt", "title", "caption"],
+        "additionalProperties": false,
+        "description": "An image, and what it is in words"
+      },
+      "Whoami": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The shell command this module is shown as on the home page",
+            "example": "whoami"
+          },
+          "blocks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Block"
+            }
+          },
+          "multiDownloads": {
+            "type": "integer",
+            "description": "Combined RubyGems downloads of multi_json and multi_xml"
+          }
+        },
+        "required": ["command", "blocks", "multiDownloads"],
+        "additionalProperties": false
+      },
+      "Dependency": {
+        "type": "object",
+        "description": "The xkcd comic on the home page, shown as imgcat shows an image",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The shell command this module is shown as on the home page",
+            "example": "imgcat ~/dependency.webp"
+          },
+          "figure": {
+            "$ref": "#/components/schemas/Figure"
+          }
+        },
+        "required": ["command", "figure"],
+        "additionalProperties": false
+      },
+      "Day": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "level": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4,
+            "description": "Shade in the graph: 0 for none, then 1 to 4 by quartile of the year's days with any"
+          }
+        },
+        "required": ["date", "count", "level"],
+        "additionalProperties": false
+      },
+      "Push": {
+        "type": "object",
+        "properties": {
+          "repo": {
+            "type": "string",
+            "example": "sferik/x-ruby"
+          },
+          "sha": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{7,40}$"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["repo", "sha", "at"],
+        "additionalProperties": false
+      },
+      "Contributions": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The shell command this module is shown as on the home page",
+            "example": "whoami"
+          },
+          "total": {
+            "type": "integer",
+            "description": "Contributions in the last year"
+          },
+          "longestStreak": {
+            "type": "integer",
+            "description": "Days"
+          },
+          "contributions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Day"
+            },
+            "description": "One entry per day, oldest first"
+          },
+          "since": {
+            "type": "integer",
+            "description": "The year the GitHub account was created"
+          },
+          "lastPush": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Push"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The latest public push, or null if none is recent"
+          },
+          "live": {
+            "type": "boolean",
+            "description": "false when GitHub couldn't be reached and this is the snapshot"
+          },
+          "asOf": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the graph was fetched, or the last day of the snapshot when live is false"
+          }
+        },
+        "required": ["command", "total", "longestStreak", "contributions", "since", "lastPush", "live", "asOf"],
+        "additionalProperties": false
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "description": {
+            "type": "string"
+          },
+          "downloads": {
+            "type": ["integer", "null"],
+            "description": "RubyGems downloads, or null if not a gem"
+          },
+          "stars": {
+            "type": ["integer", "null"],
+            "description": "GitHub stars, or null if not on GitHub"
+          }
+        },
+        "required": ["name", "url", "description", "downloads", "stars"],
+        "additionalProperties": false
+      },
+      "Src": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The shell command this module is shown as on the home page",
+            "example": "whoami"
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Project"
+            },
+            "description": "Most downloaded first, except that related projects are listed together"
+          },
+          "total": {
+            "type": "object",
+            "properties": {
+              "downloads": {
+                "type": "integer",
+                "description": "Across every gem @sferik owns"
+              },
+              "gems": {
+                "type": "integer"
+              },
+              "stars": {
+                "type": "integer",
+                "description": "Across the projects listed"
+              }
+            },
+            "required": ["downloads", "gems", "stars"],
+            "additionalProperties": false
+          },
+          "more": {
+            "type": "string",
+            "format": "uri"
+          },
+          "live": {
+            "type": "boolean",
+            "description": "false when RubyGems or GitHub couldn't be reached and the numbers are the snapshot"
+          },
+          "asOf": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the downloads were fetched, or the day of the snapshot when live is false"
+          }
+        },
+        "required": ["command", "projects", "total", "more", "live", "asOf"],
+        "additionalProperties": false
+      },
+      "NameChange": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The shell command this module is shown as on the home page",
+            "example": "whoami"
+          },
+          "commit": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{7,40}$"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "HTML"
+            }
+          }
+        },
+        "required": ["command", "commit", "subject", "year", "notes"],
+        "additionalProperties": false
+      },
+      "Talk": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "event": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$",
+            "description": "A year, year-month, or date (ISO 8601)"
+          },
+          "slides": {
+            "type": ["string", "null"],
+            "format": "uri"
+          },
+          "video": {
+            "type": ["string", "null"],
+            "format": "uri"
+          },
+          "featured": {
+            "type": "boolean",
+            "description": "Shown on the home page"
+          }
+        },
+        "required": ["title", "event", "location", "date", "slides", "video", "featured"],
+        "additionalProperties": false
+      },
+      "Talks": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The shell command this module is shown as on the home page",
+            "example": "whoami"
+          },
+          "speakerDeck": {
+            "type": "string",
+            "format": "uri"
+          },
+          "talks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Talk"
+            },
+            "description": "Newest first"
+          },
+          "podcasts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Podcast"
+            }
+          },
+          "places": {
+            "type": "object",
+            "description": "Where each talk's location is, and in which country",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Place"
+            }
+          }
+        },
+        "required": ["command", "speakerDeck", "talks", "places", "podcasts"],
+        "additionalProperties": false
+      },
+      "Place": {
+        "type": "object",
+        "properties": {
+          "lat": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "lon": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "country": {
+            "type": "string"
+          }
+        },
+        "required": ["lat", "lon", "country"],
+        "additionalProperties": false
+      },
+      "Finger": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The shell command this module is shown as on the home page",
+            "example": "whoami"
+          },
+          "login": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "directory": {
+            "type": "string"
+          },
+          "shell": {
+            "type": "string"
+          },
+          "plan": {
+            "type": "string"
+          },
+          "mail": {
+            "type": "string",
+            "format": "email"
+          },
+          "profiles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SocialProfile"
+            }
+          }
+        },
+        "required": ["command", "login", "name", "directory", "shell", "plan", "mail", "profiles"],
+        "additionalProperties": false
+      },
+      "Resume": {
+        "type": "object",
+        "properties": {
+          "$schema": {
+            "type": "string",
+            "format": "uri"
+          },
+          "basics": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "formerName": {
+                "type": "string",
+                "description": "An addition to JSON Resume"
+              },
+              "label": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "summary": {
+                "type": "string",
+                "description": "Paragraphs separated by blank lines; may use **bold** and *italic*"
+              },
+              "location": {
+                "type": "object",
+                "properties": {
+                  "city": {
+                    "type": "string"
+                  },
+                  "region": {
+                    "type": "string"
+                  },
+                  "countryCode": {
+                    "type": "string",
+                    "pattern": "^[A-Z]{2}$"
+                  }
+                },
+                "required": ["city", "region", "countryCode"],
+                "additionalProperties": false
+              },
+              "profiles": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "network": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  },
+                  "required": ["network", "username", "url"],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": ["name", "formerName", "label", "email", "url", "summary", "location", "profiles"],
+            "additionalProperties": false
+          },
+          "work": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "position": {
+                  "type": "string"
+                },
+                "startDate": {
+                  "type": "string",
+                  "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$",
+                  "description": "A year, year-month, or date (ISO 8601)"
+                },
+                "endDate": {
+                  "type": "string",
+                  "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$",
+                  "description": "A year, year-month, or date (ISO 8601)"
+                },
+                "highlights": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": ["name", "position", "startDate"],
+              "additionalProperties": false
+            }
+          },
+          "volunteer": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "organization": {
+                  "type": "string"
+                },
+                "position": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "startDate": {
+                  "type": "string",
+                  "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$",
+                  "description": "A year, year-month, or date (ISO 8601)"
+                },
+                "endDate": {
+                  "type": "string",
+                  "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$",
+                  "description": "A year, year-month, or date (ISO 8601)"
+                },
+                "summary": {
+                  "type": "string"
+                }
+              },
+              "required": ["organization", "position", "startDate"],
+              "additionalProperties": false
+            }
+          },
+          "education": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "institution": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "startDate": {
+                  "type": "string",
+                  "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$",
+                  "description": "A year, year-month, or date (ISO 8601)"
+                },
+                "endDate": {
+                  "type": "string",
+                  "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$",
+                  "description": "A year, year-month, or date (ISO 8601)"
+                },
+                "courses": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "highlights": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": ["institution", "location", "startDate", "highlights"],
+              "additionalProperties": false
+            }
+          },
+          "awards": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "date": {
+                  "type": "string",
+                  "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$",
+                  "description": "A year, year-month, or date (ISO 8601)"
+                },
+                "awarder": {
+                  "type": "string"
+                },
+                "summary": {
+                  "type": "string"
+                }
+              },
+              "required": ["title", "date", "awarder", "summary"],
+              "additionalProperties": false
+            }
+          },
+          "patents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "number": {
+                  "type": "string",
+                  "example": "US20110153423A1"
+                },
+                "date": {
+                  "type": "string",
+                  "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$",
+                  "description": "A year, year-month, or date (ISO 8601)"
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              },
+              "required": ["title", "number", "date", "url"],
+              "additionalProperties": false
+            },
+            "description": "An addition to JSON Resume"
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                }
+              },
+              "required": ["name", "description"],
+              "additionalProperties": false
+            }
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "keywords": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": ["name", "keywords"],
+              "additionalProperties": false
+            }
+          },
+          "speaking": {
+            "type": "object",
+            "properties": {
+              "summary": {
+                "type": "string"
+              }
+            },
+            "required": ["summary"],
+            "additionalProperties": false,
+            "description": "An addition to JSON Resume"
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "canonical": {
+                "type": "string",
+                "format": "uri"
+              },
+              "version": {
+                "type": "string"
+              },
+              "lastModified": {
+                "type": "string",
+                "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$",
+                "description": "A year, year-month, or date (ISO 8601)"
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": ["basics", "work", "volunteer", "education", "awards", "patents", "projects", "skills", "speaking"],
+        "additionalProperties": false,
+        "description": "A JSON Resume document (https://jsonresume.org/schema), plus formerName, patents, and speaking"
+      },
+      "Session": {
+        "type": "object",
+        "description": "A reader's terminal: one per browser tab",
+        "properties": {
+          "tty": {
+            "type": "string",
+            "pattern": "^ttys\\d{3}$"
+          },
+          "page": {
+            "type": "string",
+            "enum": ["/", "/talks", "/resume"]
+          },
+          "login": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "idle": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Seconds since the tab last checked in"
+          }
+        },
+        "required": ["tty", "page", "login", "idle"],
+        "additionalProperties": false
+      },
+      "Who": {
+        "type": "object",
+        "properties": {
+          "you": {
+            "type": ["string", "null"],
+            "description": "Your terminal, or null when every one is taken"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Session"
+            }
+          }
+        },
+        "required": ["you", "users"],
+        "additionalProperties": false
+      },
+      "Users": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Session"
+            }
+          }
+        },
+        "required": ["users"],
+        "additionalProperties": false
+      },
+      "Podcast": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "show": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$",
+            "description": "A year, year-month, or date (ISO 8601)"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": ["title", "show", "date", "url"],
+        "additionalProperties": false
+      },
+      "Podcasts": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The shell command this module is shown as on the home page",
+            "example": "whoami"
+          },
+          "podcasts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Podcast"
+            },
+            "description": "Newest first"
+          }
+        },
+        "required": ["command", "podcasts"],
+        "additionalProperties": false
+      },
+      "Error": {
+        "type": "object",
+        "description": "What went wrong, for a client that asked for JSON",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "What went wrong, in words",
+            "example": "one message a minute, please"
+          },
+          "code": {
+            "type": "string",
+            "enum": ["bad_token", "bad_page", "empty", "bad_key", "too_long", "busy", "full", "undelivered", "unavailable", "not_found"],
+            "description": "Which error it is, for a program to tell it from the others"
+          },
+          "path": {
+            "type": "string",
+            "description": "The path that isn't a resource, for not_found"
+          }
+        },
+        "required": ["error", "code"],
+        "additionalProperties": false
+      },
+      "Sent": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "message sent to sferik"
+          }
+        },
+        "required": ["message"],
+        "additionalProperties": false
+      }
+    },
+    "responses": {
+      "NotAcceptable": {
+        "description": "No format the Accept header allows; the body lists the formats this resource has",
+        "content": {
+          "text/plain": {
+            "schema": {
+              "type": "string"
+            },
+            "example": "Not Acceptable. Try text/html, application/json, or text/plain.\n"
+          }
+        }
+      },
+      "NotFound": {
+        "description": "No such resource: what any path that isn't one gets, in the format the Accept header asked for (the page, for text/html)",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Not Found",
+              "code": "not_found",
+              "path": "/nope"
+            }
+          },
+          "text/plain": {
+            "schema": {
+              "type": "string"
+            },
+            "example": "cd: The directory '/nope' does not exist\n"
+          }
+        }
+      }
+    }
+  }
+}

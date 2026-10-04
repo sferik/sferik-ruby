@@ -1,0 +1,43 @@
+{
+  "profile": {
+    "name": "Erik Berlin",
+    "location": "San Francisco, California",
+    "tagline": "I build libraries and tools software engineers depend on.",
+    "handle": "sferik",
+    "url": "https://sferik.net"
+  },
+  "modules": [
+    {
+      "id": "whoami",
+      "url": "/whoami"
+    },
+    {
+      "id": "dependency",
+      "url": "/dependency"
+    },
+    {
+      "id": "contributions",
+      "url": "/contributions"
+    },
+    {
+      "id": "src",
+      "url": "/src"
+    },
+    {
+      "id": "name",
+      "url": "/name"
+    },
+    {
+      "id": "talks",
+      "url": "/talks"
+    },
+    {
+      "id": "finger",
+      "url": "/finger"
+    }
+  ],
+  "pages": {
+    "talks": "/talks",
+    "resume": "/resume"
+  }
+}

@@ -1,0 +1,270 @@
+{
+  "command": "ls -lt ~/talks",
+  "speakerDeck": "https://speakerdeck.com/sferik",
+  "talks": [
+    {
+      "title": "The Value of Being Lazy, or How I Made OpenStruct 10X Faster",
+      "event": "Rails Israel",
+      "location": "Tel Aviv",
+      "date": "2015-11",
+      "slides": "https://speakerdeck.com/sferik/the-value-of-being-lazy",
+      "video": "https://www.youtube.com/watch?v=6lQeBfSVrpk",
+      "featured": true
+    },
+    {
+      "title": "An Introduction to Crystal",
+      "event": "PolyConf",
+      "location": "Poznań",
+      "date": "2015-07",
+      "slides": null,
+      "video": "https://www.youtube.com/watch?v=Ysm4IU4aWoQ",
+      "featured": true
+    },
+    {
+      "title": "The Crystal Programming Language",
+      "event": "RubyC",
+      "location": "Kyiv",
+      "date": "2015-05",
+      "slides": null,
+      "video": "https://www.youtube.com/watch?v=5-_CWyrpIBk",
+      "featured": false
+    },
+    {
+      "title": "Writing Fast Ruby",
+      "event": "RubyConf India",
+      "location": "Goa",
+      "date": "2015-04",
+      "slides": "https://speakerdeck.com/sferik/writing-fast-ruby",
+      "video": null,
+      "featured": false
+    },
+    {
+      "title": "Symbols (lightning talk)",
+      "event": "RubyConf India",
+      "location": "Goa",
+      "date": "2015-04",
+      "slides": "https://speakerdeck.com/sferik/symbols",
+      "video": null,
+      "featured": false
+    },
+    {
+      "title": "Towards a Higher-Level Language",
+      "event": "RubyConf Australia",
+      "location": "Melbourne",
+      "date": "2015-02",
+      "slides": null,
+      "video": "https://www.youtube.com/watch?v=cjPybeAeKDQ",
+      "featured": true
+    },
+    {
+      "title": "Content Negotiation for REST APIs (closing keynote)",
+      "event": "Nordic APIs Platform Summit",
+      "location": "Stockholm",
+      "date": "2014-10",
+      "slides": "https://speakerdeck.com/sferik/content-negotiation-for-rest-apis",
+      "video": "https://www.youtube.com/watch?v=xRyCykwqDEk",
+      "featured": true
+    },
+    {
+      "title": "Writing Fast Ruby",
+      "event": "RubyConf Portugal",
+      "location": "Braga",
+      "date": "2014-10",
+      "slides": "https://speakerdeck.com/sferik/writing-fast-ruby",
+      "video": null,
+      "featured": false
+    },
+    {
+      "title": "Writing Fast Ruby",
+      "event": "RailsClub",
+      "location": "Moscow",
+      "date": "2014-09",
+      "slides": "https://speakerdeck.com/sferik/writing-fast-ruby",
+      "video": "https://www.youtube.com/watch?v=IXODb6uk26o",
+      "featured": false
+    },
+    {
+      "title": "Writing Fast Ruby",
+      "event": "Barcelona Ruby Conference",
+      "location": "Barcelona",
+      "date": "2014-09",
+      "slides": "https://speakerdeck.com/sferik/writing-fast-ruby",
+      "video": "https://www.youtube.com/watch?v=fGFM_UrSp70",
+      "featured": true
+    },
+    {
+      "title": "Mutation Testing with Mutant",
+      "event": "RailsConf",
+      "location": "Chicago",
+      "date": "2014-04",
+      "slides": "https://speakerdeck.com/sferik/mutation-testing-with-mutant",
+      "video": "https://www.youtube.com/watch?v=WccaOMuf01Y",
+      "featured": true
+    },
+    {
+      "title": "Streaming Audio: Putting the Media in Hypermedia APIs (panel)",
+      "event": "API Strategy & Practice",
+      "location": "Amsterdam",
+      "date": "2014-03",
+      "slides": null,
+      "video": null,
+      "featured": false
+    },
+    {
+      "title": "A Brief History of Technology Booms",
+      "event": "dotRB",
+      "location": "Paris",
+      "date": "2013-10",
+      "slides": null,
+      "video": "https://www.youtube.com/watch?v=iXkPty3y7gA",
+      "featured": false
+    },
+    {
+      "title": "Writing a Rails Engine",
+      "event": "GoGaRuCo",
+      "location": "San Francisco",
+      "date": "2012-09",
+      "slides": null,
+      "video": "https://www.youtube.com/watch?v=Rvxcc46fox0",
+      "featured": false
+    },
+    {
+      "title": "Writing a Rails Engine",
+      "event": "eurucamp",
+      "location": "Berlin",
+      "date": "2012-08",
+      "slides": null,
+      "video": null,
+      "featured": false
+    },
+    {
+      "title": "Cultivating an Open-Source Community",
+      "event": "Red Dirt RubyConf",
+      "location": "Oklahoma City",
+      "date": "2011-04",
+      "slides": "https://www.slideshare.net/slideshow/cultivating-an-opensource-community-7708825/7708825",
+      "video": null,
+      "featured": false
+    },
+    {
+      "title": "GUI Programming with MacRuby",
+      "event": "Red Dirt RubyConf",
+      "location": "Oklahoma City",
+      "date": "2011-04",
+      "slides": "https://www.slideshare.net/slideshow/gui-programming-with-macruby-7571580/7571580",
+      "video": null,
+      "featured": false
+    },
+    {
+      "title": "GUI Programming with MacRuby",
+      "event": "Ruby on Ales",
+      "location": "Bend, Oregon",
+      "date": "2011-03",
+      "slides": "https://www.slideshare.net/slideshow/gui-programming-with-macruby-7571580/7571580",
+      "video": "https://www.youtube.com/watch?v=VSpZIkmywQM",
+      "featured": false
+    }
+  ],
+  "places": {
+    "Amsterdam": {
+      "lat": 52.37,
+      "lon": 4.9,
+      "country": "Netherlands"
+    },
+    "Barcelona": {
+      "lat": 41.39,
+      "lon": 2.17,
+      "country": "Spain"
+    },
+    "Bend, Oregon": {
+      "lat": 44.06,
+      "lon": -121.31,
+      "country": "United States"
+    },
+    "Berlin": {
+      "lat": 52.52,
+      "lon": 13.4,
+      "country": "Germany"
+    },
+    "Braga": {
+      "lat": 41.55,
+      "lon": -8.42,
+      "country": "Portugal"
+    },
+    "Chicago": {
+      "lat": 41.88,
+      "lon": -87.63,
+      "country": "United States"
+    },
+    "Goa": {
+      "lat": 15.3,
+      "lon": 74.12,
+      "country": "India"
+    },
+    "Kyiv": {
+      "lat": 50.45,
+      "lon": 30.52,
+      "country": "Ukraine"
+    },
+    "Melbourne": {
+      "lat": -37.81,
+      "lon": 144.96,
+      "country": "Australia"
+    },
+    "Moscow": {
+      "lat": 55.76,
+      "lon": 37.62,
+      "country": "Russia"
+    },
+    "Oklahoma City": {
+      "lat": 35.47,
+      "lon": -97.52,
+      "country": "United States"
+    },
+    "Paris": {
+      "lat": 48.86,
+      "lon": 2.35,
+      "country": "France"
+    },
+    "Poznań": {
+      "lat": 52.41,
+      "lon": 16.93,
+      "country": "Poland"
+    },
+    "San Francisco": {
+      "lat": 37.77,
+      "lon": -122.42,
+      "country": "United States"
+    },
+    "Stockholm": {
+      "lat": 59.33,
+      "lon": 18.07,
+      "country": "Sweden"
+    },
+    "Tel Aviv": {
+      "lat": 32.09,
+      "lon": 34.78,
+      "country": "Israel"
+    }
+  },
+  "podcasts": [
+    {
+      "title": "The Crystal Programming Language",
+      "show": "Ruby Rogues, episode 248",
+      "date": "2016-02",
+      "url": "https://topenddevs.com/podcasts/ruby-rogues/248-rr-the-crystal-programming-language-with-erik-michaels-ober"
+    },
+    {
+      "title": "Maintaining the twitter gem and RailsAdmin",
+      "show": "Ruby Rogues, episode 127",
+      "date": "2013-10",
+      "url": "https://topenddevs.com/podcasts/ruby-rogues/127-rr-erik-michaels-ober"
+    },
+    {
+      "title": "Code for America",
+      "show": "The Changelog, episode 65",
+      "date": "2011-07",
+      "url": "https://changelog.com/podcast/65"
+    }
+  ]
+}

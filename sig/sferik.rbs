@@ -1,0 +1,634 @@
+# Signatures for the sferik gem, checked against lib/ by Steep (rake steep) and validated by RBS (rake rbs)
+module Sferik
+  VERSION: String
+  CLIENT_MUTEX: Thread::Mutex
+
+  extend Configuration
+  extend SingleForwardable
+
+  self.@client: Client?
+  self.@client_options: Hash[Symbol, untyped]?
+
+  def self.new: (?host: String, ?user_agent: String, ?open_timeout: Numeric, ?read_timeout: Numeric, ?write_timeout: Numeric, ?max_redirects: Integer) -> Client
+  def self.client: () -> Client
+  def self.reset: () -> self
+
+  def self.home: () -> Home
+  def self.whoami: () -> Whoami
+  def self.dependency: () -> Dependency
+  def self.finger: () -> Finger
+  def self.name_change: () -> NameChange
+  def self.contributions: () -> Contributions
+  def self.projects: () -> Projects
+  def self.talks: () -> Talks
+  def self.podcasts: () -> Array[Podcast]
+  def self.resume: () -> Resume
+  def self.resume_latex: () -> String
+  def self.resume_pdf: () -> String
+  def self.who: () -> Who
+  def self.check_in: (String token, ?page: String) -> Who
+  def self.write: (String message, ?tty: String?, ?key: String) -> String
+  def self.text: (?String path) -> String
+  def self.openapi: () -> Hash[String, untyped]
+
+  module Configuration : Module
+    DEFAULTS: Hash[Symbol, untyped]
+
+    def self.extended: (Configuration & Module base) -> Configuration
+
+    attr_accessor host: String
+    attr_accessor user_agent: String
+    attr_accessor open_timeout: Numeric
+    attr_accessor read_timeout: Numeric
+    attr_accessor write_timeout: Numeric
+    attr_accessor max_redirects: Integer
+
+    def configure: () { (self config) -> void } -> self
+    def options: () -> Hash[Symbol, untyped]
+    def reset: () -> self
+  end
+
+  class Error < StandardError
+  end
+
+  class InvalidURL < Error
+  end
+
+  class NetworkError < Error
+  end
+
+  class TooManyRedirects < Error
+  end
+
+  module Body
+    CHARSET: Regexp
+    TEXT: Regexp
+
+    def self.of: (Net::HTTPResponse response) -> String
+    private def self.encoding_of: (Net::HTTPResponse response) -> Encoding
+  end
+
+  class InvalidResponse < Error
+  end
+
+  class HTTPError < Error
+    PLAIN_TEXT: Regexp
+    SECONDS: Regexp
+    CODE: Integer?
+    attr_reader headers: Hash[String, String]
+    attr_reader body: String
+    attr_reader code: Integer?
+
+    def initialize: (?String? message, ?code: Integer?, ?reason: String?, ?headers: Hash[String, String], ?body: String) -> void
+    def error_code: () -> String?
+    def retry_after: () -> Integer?
+
+    private
+
+    def detail: (String? reason) -> String?
+    def status_line: (String? reason) -> String?
+    def utf8: () -> String
+    def named: (String body, String key) -> String?
+    def plain: (String text) -> String?
+  end
+
+  class ClientError < HTTPError
+    CODE: Integer
+  end
+
+  class NotFound < ClientError
+    CODE: Integer
+  end
+
+  class NotAcceptable < ClientError
+    CODE: Integer
+  end
+
+  class TooManyRequests < ClientError
+    CODE: Integer
+  end
+
+  class ServerError < HTTPError
+    CODE: Integer
+  end
+
+  # What the endpoints need from the class that includes them: a way to send a request
+  interface _Requests
+    def get: (String path, ?accept: String) -> String
+    def post: (String path, ?String body, ?accept: String, ?idempotency_key: String?) -> String
+  end
+
+  module JSONParsing
+    private
+
+    def parse_json: (String body) -> Hash[String, untyped]
+  end
+
+  module API : Object, _Requests
+    include CodeEndpoints
+    include ProfileEndpoints
+    include ResumeEndpoints
+    include SiteEndpoints
+    include TalkEndpoints
+
+    module ProfileEndpoints : Object, _Requests
+      include JSONParsing
+
+      def home: () -> Home
+      def whoami: () -> Whoami
+      def dependency: () -> Dependency
+      def finger: () -> Finger
+      def name_change: () -> NameChange
+    end
+
+    module CodeEndpoints : Object, _Requests
+      include JSONParsing
+
+      def contributions: () -> Contributions
+      def projects: () -> Projects
+    end
+
+    module TalkEndpoints : Object, _Requests
+      include JSONParsing
+
+      def talks: () -> Talks
+      def podcasts: () -> Array[Podcast]
+    end
+
+    module ResumeEndpoints : Object, _Requests
+      include JSONParsing
+
+      def resume: () -> Resume
+      def resume_latex: () -> String
+      def resume_pdf: () -> String
+    end
+
+    module SiteEndpoints : Object, _Requests
+      include JSONParsing
+      include Validation
+
+      def who: () -> Who
+      def check_in: (String token, ?page: String) -> Who
+      def write: (String message, ?tty: String?, ?key: String) -> String
+      def text: (?String path) -> String
+      def openapi: () -> Hash[String, untyped]
+
+      private
+
+      def deliver: (String path, String message, String key) -> String
+    end
+  end
+
+  class CLI
+    COMMANDS: Hash[String, String]
+    USAGE: String
+
+    # What makes the client for a host: the Client class
+    interface _Clients
+      def new: (host: String) -> _Client
+    end
+
+    # What the command asks of a client
+    interface _Client
+      def get: (String path, ?accept: String) -> String
+      def write: (String message) -> String
+    end
+
+    # The environment: ENV, or a Hash
+    interface _Environment
+      def fetch: (String name, String default) -> String
+    end
+
+    PROMPT: String
+
+    @client: _Clients
+    @input: IO
+    @out: IO
+    @err: IO
+    @env: _Environment
+
+    def initialize: (?client: _Clients, ?input: IO, ?out: IO, ?err: IO, ?env: _Environment) -> void
+    def run: (Array[String] argv) -> Integer
+
+    private
+
+    def dispatch: (Array[String] argv) -> Integer
+    def parser: (Hash[Symbol, untyped] options) -> OptionParser
+    def show: (String path, Hash[Symbol, untyped] options) -> Integer
+    def unformatted: (Hash[Symbol, untyped] options) { () -> Integer } -> Integer
+    def write: (Hash[Symbol, untyped] options) -> Integer
+    def ask: (Hash[Symbol, untyped] options) { (_Client client) -> String } -> Integer
+    def print_body: (String body) -> Integer
+    def say: (String text) -> Integer
+    def misuse: (_ToS problem) -> Integer
+  end
+
+  module Validation
+    private
+
+    def check: (Symbol option, untyped value, Class type) -> untyped
+    def one_line: (Symbol option, String value) -> String
+    def seconds: (Symbol option, untyped value) -> Numeric
+    def positive: (Symbol option, Numeric value) -> Numeric
+    def http_url: (String value) -> String
+    def not_negative: (Symbol option, Integer value) -> Integer
+  end
+
+  class Client
+    include API
+    include Validation
+
+    NETWORK_ERRORS: Array[singleton(Exception)]
+    UNLABELED: Array[Encoding]
+    PLAIN_TEXT: String
+
+    attr_reader host: String
+    attr_reader user_agent: String
+    attr_reader open_timeout: Numeric
+    attr_reader read_timeout: Numeric
+    attr_reader write_timeout: Numeric
+    attr_reader max_redirects: Integer
+
+    def initialize: (?host: String, ?user_agent: String, ?open_timeout: Numeric, ?read_timeout: Numeric, ?write_timeout: Numeric, ?max_redirects: Integer) -> void
+    def get: (String path, ?accept: String) -> String
+    def post: (String path, ?String body, ?accept: String, ?idempotency_key: String?) -> String
+    def inspect: () -> String
+
+    private
+
+    def uri_for: (String path) -> URI::Generic
+    def fetch: (URI::Generic uri, String accept, Integer redirects) -> Net::HTTPResponse
+    def redirect: (Net::HTTPResponse response, URI::Generic uri) -> URI::Generic?
+    def utf8: (String body) -> String
+    def headers: (String accept) -> Hash[String, String]
+    def post_headers: (untyped accept, untyped key) -> Hash[String, String]
+    def request: (Net::HTTPRequest request) -> Net::HTTPResponse
+    def error_for: (Net::HTTPResponse response, ?String? message) -> HTTPError
+    def error_class: (Net::HTTPResponse response) -> singleton(HTTPError)
+  end
+
+  module PartialDate
+    def self.iso8601: (String value) -> Date
+  end
+
+  interface _ISO8601Parser
+    def iso8601: (String value) -> untyped
+  end
+
+  module Wrapping
+    include Validation
+
+    private
+
+    def wrap: (untyped value, singleton(Resource)? type) -> untyped
+    def wrap_list: (Symbol name, untyped list, singleton(Resource)? type) -> Array[untyped]
+    def wrap_dictionary: (Symbol name, untyped dictionary, singleton(Resource) type) -> Hash[String, Resource]
+    def wrap_timestamp: (Symbol name, untyped value, Object & _ISO8601Parser parser) -> untyped
+    def build: (singleton(Resource) type, untyped value) -> Resource
+    def deep_freeze: (untyped value) -> untyped
+  end
+
+  class Resource
+    include Wrapping
+
+    EMPTY: Array[untyped]
+    NONE: Hash[untyped, untyped]
+
+    self.@readers: Hash[Symbol, Symbol]?
+    self.@preparations: Hash[Symbol, ^() [self: Resource] -> untyped]?
+    @prepared: Hash[Symbol, untyped]
+    self.@keys: Array[String]?
+    self.@inspected: Array[Symbol]?
+
+    attr_reader attributes: Hash[String, untyped]
+
+    def self.attribute_names: () -> Array[Symbol]
+    private def self.readers: () -> Hash[Symbol, Symbol]
+    private def self.keys: () -> Array[String]
+    private def self.preparations: () -> Hash[Symbol, ^() [self: Resource] -> untyped]
+    private def self.prepare: (Symbol name) { () [self: Resource] -> untyped } -> Hash[Symbol, ^() [self: Resource] -> untyped]
+    private def self.reader: (Symbol name, String key) { () [self: Resource] -> untyped } -> Symbol
+    private def self.attribute: (Symbol name, ?String key, ?type: singleton(Resource)?) -> Symbol
+    private def self.list: (Symbol name, ?String key, ?type: singleton(Resource)?) -> Symbol
+    private def self.predicate: (Symbol name, ?String key) -> Symbol
+    private def self.dictionary: (Symbol name, ?String key, type: singleton(Resource)) -> Symbol
+    private def self.timestamp: (Symbol name, Object & _ISO8601Parser parser, ?String key) -> Symbol
+    private def self.inspect_with: (*Symbol names) -> Array[Symbol]
+    private def self.inspected: () -> Array[Symbol]
+    private def self.record: (Symbol name, ?String? key, ?reader: Symbol) -> Symbol
+    private def self.camelize: (Symbol name) -> String
+
+    def initialize: (Hash[String, untyped] attributes) -> void
+    def to_h: () -> Hash[Symbol, untyped]
+    def to_json: (*untyped args) -> String
+    def as_json: (*untyped _options) -> Hash[String, untyped]
+    def deconstruct_keys: (Array[Symbol]? keys) -> Hash[Symbol, untyped]
+    def ==: (untyped other) -> bool
+    def eql?: (untyped other) -> bool
+    def hash: () -> Integer
+    def inspect: () -> String
+
+    private
+
+    def prepared: (Symbol name) -> untyped
+    def read: (Symbol name) -> untyped
+  end
+
+  class Block < Resource
+    def type: () -> String
+    def html: () -> String
+  end
+
+  class Contributions < Resource
+    def total: () -> Integer
+    def longest_streak: () -> Integer
+    def days: () -> Array[Day]
+    def since: () -> Integer
+    def last_push: () -> Push?
+    def live?: () -> bool
+    def command: () -> String
+  end
+
+  class Day < Resource
+    def date: () -> Date
+    def count: () -> Integer
+    def level: () -> Integer
+  end
+
+  class Dependency < Resource
+    def command: () -> String
+    def figure: () -> Figure
+  end
+
+  class Figure < Resource
+    def type: () -> String
+    def href: () -> String
+    def src: () -> String
+    def srcset: () -> String
+    def width: () -> Integer
+    def height: () -> Integer
+    def alt: () -> String
+    def title: () -> String
+    def caption: () -> String
+  end
+
+  class Finger < Resource
+    def name: () -> String
+    def login: () -> String
+    def mail: () -> String
+    def directory: () -> String
+    def shell: () -> String
+    def plan: () -> String
+    def profiles: () -> Array[SocialProfile]
+    def command: () -> String
+  end
+
+  class Home < Resource
+    def profile: () -> Profile
+    def modules: () -> Array[Section]
+    def pages: () -> Pages
+
+    class Pages < Resource
+      def talks: () -> String
+      def resume: () -> String
+    end
+
+    class Profile < Resource
+      def name: () -> String
+      def location: () -> String
+      def tagline: () -> String
+      def handle: () -> String
+      def url: () -> String
+    end
+
+    class Section < Resource
+      def id: () -> String
+      def url: () -> String
+    end
+  end
+
+  class NameChange < Resource
+    def subject: () -> String
+    def year: () -> Integer
+    def commit: () -> String
+    def notes: () -> Array[String]
+    def command: () -> String
+  end
+
+  class Place < Resource
+    def lat: () -> Numeric
+    def lon: () -> Numeric
+    def country: () -> String
+  end
+
+  class Podcast < Resource
+    def title: () -> String
+    def show: () -> String
+    def date: () -> Date
+    def url: () -> String
+  end
+
+  class Project < Resource
+    def name: () -> String
+    def description: () -> String
+    def downloads: () -> Integer?
+    def stars: () -> Integer?
+    def url: () -> String
+  end
+
+  module Collection[unchecked out Elem] : _ToA[Elem]
+    def size: () -> Integer
+    alias length size
+    def empty?: () -> bool
+    def last: () -> Elem?
+            | (Integer count) -> Array[Elem]
+    def []: (Integer index) -> Elem?
+          | (Integer start, Integer length) -> Array[Elem]?
+          | (Range[Integer?] range) -> Array[Elem]?
+    def deconstruct: () -> Array[Elem]
+  end
+
+  class Projects < Resource
+    include Enumerable[Project]
+    include Collection[Project]
+
+    def projects: () -> Array[Project]
+    def total_downloads: () -> Integer?
+    def total_gems: () -> Integer?
+    def total_stars: () -> Integer?
+    def more: () -> String
+    def live?: () -> bool
+    def command: () -> String
+    def each: () { (Project project) -> void } -> self
+            | () -> Enumerator[Project, self]
+         | () -> Enumerator[Project, Array[Project]]
+    def to_h: () -> Hash[Symbol, untyped]
+    def as_json: (*untyped _options) -> Hash[String, untyped]
+
+    private
+
+    def total: () -> Hash[String, untyped]
+  end
+
+  class Push < Resource
+    def repo: () -> String
+    def sha: () -> String
+    def at: () -> Time
+  end
+
+  class Resume < Resource
+    def basics: () -> Basics
+    def work: () -> Array[Work]
+    def projects: () -> Array[Project]
+    def skills: () -> Array[Skill]
+    def awards: () -> Array[Award]
+    def patents: () -> Array[Patent]
+    def speaking: () -> Speaking
+    def education: () -> Array[Education]
+    def volunteer: () -> Array[Volunteer]
+    def meta: () -> Meta?
+    def name: () -> String?
+    def last_modified: () -> Date?
+
+    class Award < Resource
+      def title: () -> String
+      def date: () -> Date
+      def awarder: () -> String
+      def summary: () -> String
+    end
+
+    class Basics < Resource
+      def name: () -> String
+      def label: () -> String
+      def former_name: () -> String
+      def email: () -> String
+      def url: () -> String
+      def summary: () -> String
+      def location: () -> Location
+      def profiles: () -> Array[Profile]
+    end
+
+    class Education < Resource
+      def institution: () -> String
+      def location: () -> String
+      def start_date: () -> Date
+      def end_date: () -> Date?
+      def highlights: () -> Array[String]
+      def courses: () -> Array[String]
+    end
+
+    class Location < Resource
+      def city: () -> String
+      def region: () -> String
+      def country_code: () -> String
+    end
+
+    class Meta < Resource
+      def canonical: () -> String?
+      def version: () -> String?
+      def last_modified: () -> Date?
+    end
+
+    class Patent < Resource
+      def title: () -> String
+      def number: () -> String
+      def date: () -> Date
+      def url: () -> String
+    end
+
+    class Profile < Resource
+      def network: () -> String
+      def username: () -> String
+      def url: () -> String
+    end
+
+    class Project < Resource
+      def name: () -> String
+      def description: () -> String
+    end
+
+    class Skill < Resource
+      def name: () -> String
+      def keywords: () -> Array[String]
+    end
+
+    class Speaking < Resource
+      def summary: () -> String
+    end
+
+    class Volunteer < Resource
+      def position: () -> String
+      def organization: () -> String
+      def start_date: () -> Date
+      def end_date: () -> Date?
+      def summary: () -> String?
+      def url: () -> String?
+    end
+
+    class Work < Resource
+      def position: () -> String
+      def name: () -> String
+      def start_date: () -> Date
+      def end_date: () -> Date?
+      def highlights: () -> Array[String]
+    end
+  end
+
+  class Session < Resource
+    def tty: () -> String
+    def page: () -> String
+    def login: () -> Time
+    def idle: () -> Integer
+  end
+
+  class SocialProfile < Resource
+    def network: () -> String
+    def username: () -> String
+    def url: () -> String
+    def icon: () -> String
+    def aliases: () -> Array[String]
+  end
+
+  class Talk < Resource
+    def title: () -> String
+    def event: () -> String
+    def date: () -> Date
+    def location: () -> String
+    def slides: () -> String?
+    def video: () -> String?
+    def featured?: () -> bool
+  end
+
+  class Talks < Resource
+    include Enumerable[Talk]
+    include Collection[Talk]
+
+    def talks: () -> Array[Talk]
+    def places: () -> Hash[String, Place]
+    def podcasts: () -> Array[Podcast]
+    def speaker_deck: () -> String
+    def command: () -> String
+    def each: () { (Talk talk) -> void } -> self
+            | () -> Enumerator[Talk, self]
+         | () -> Enumerator[Talk, Array[Talk]]
+  end
+
+  class Who < Resource
+    include Enumerable[Session]
+    include Collection[Session]
+
+    def users: () -> Array[Session]
+    def you: () -> String?
+    def each: () { (Session session) -> void } -> self
+            | () -> Enumerator[Session, self]
+         | () -> Enumerator[Session, Array[Session]]
+    def to_h: () -> Hash[Symbol, untyped]
+    def as_json: (*untyped _options) -> Hash[String, untyped]
+  end
+
+  class Whoami < Resource
+    def command: () -> String
+    def blocks: () -> Array[Block]
+    def multi_downloads: () -> Integer
+  end
+end

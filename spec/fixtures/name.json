@@ -1,0 +1,10 @@
+{
+  "command": "git log --follow --oneline -- name",
+  "commit": "8c0d698",
+  "subject": "Rename Erik Michaels-Ober to Erik Berlin",
+  "year": 2017,
+  "notes": [
+    "When Diana and I married, we picked a new last name together. It turns out a hyphen breaks a surprising number of computer systems. <a href=\"https://dianaberlin.com/posts/becoming-berlins\">Why Berlin?</a>",
+    "Talks and commits from before 2017 are under my old name."
+  ]
+}

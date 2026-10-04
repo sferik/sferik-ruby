@@ -1,0 +1,54 @@
+# The next releases of Ruby and JRuby, built from their main branches. This workflow is separate from the others so
+# that it never blocks a merge or a release: don't make it a required check. It runs on every push, and daily so that
+# a change in Ruby itself is caught even when this repository is quiet. A failed scheduled run opens an issue (or
+# comments on the open one), on top of GitHub's usual email about a failed workflow.
+name: ruby-head
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  schedule:
+    - cron: "23 7 * * *" # daily, 07:23 UTC
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    name: ${{ matrix.os }}, Ruby ${{ matrix.ruby }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        ruby: [head, jruby-head]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+    - uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
+      with:
+        ruby-version: ${{ matrix.ruby }}
+        bundler-cache: true
+    - run: bundle exec rake spec
+
+  alert:
+    needs: build
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+    - name: Open an issue, or comment on the open one
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        title="Tests fail on an upcoming Ruby"
+        number=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')
+        body="The daily run against ruby-head and jruby-head failed: $RUN_URL"
+        if [ -n "$number" ]; then
+          gh issue comment "$number" --body "$body"
+        else
+          gh issue create --title "$title" --body "$body"
+        fi
