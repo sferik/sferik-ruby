@@ -21,6 +21,8 @@
   `max_redirects` (10), but never from https to http. A POST is sent only once, and its redirects aren't followed. Its
   body is sent as UTF-8, converted from the charset of the String it's given (a binary or US-ASCII one is taken for
   UTF-8 already), with an `Idempotency-Key` header if `idempotency_key:` gives one
+- `Sferik.client.keep_alive { |client| ... }` makes the requests in its block over one connection, where each would
+  otherwise open its own
 - Configuration, with `Sferik.configure` or the options of `Sferik.new`: `host`, `user_agent`, `open_timeout`,
   `read_timeout`, `write_timeout`, and `max_redirects`. A wrong one raises ArgumentError when the client is built
 - Errors are all `Sferik::Error`: `InvalidURL`, `NetworkError`, `TooManyRedirects`, `InvalidResponse`, and `HTTPError`

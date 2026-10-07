@@ -180,6 +180,20 @@ Sferik.client.post("/write", "Hello", accept: "text/plain")  # the body is sent 
 Sferik.client.post("/write", "Hello", idempotency_key: SecureRandom.uuid)
 ```
 
+### Several requests over one connection
+
+Each request opens a connection, and closes it. To make several over one, make them in `keep_alive`, which saves
+connecting again for each: with https, that's most of the time a request takes.
+
+```ruby
+Sferik.client.keep_alive do |client|
+  [client.whoami, client.talks, client.resume]  # one connection, closed when the block ends
+end
+```
+
+The client it yields has the options of the one it's called on, and is for one thread at a time, as a connection is.
+One that sits unused for more than two seconds is opened again, since the server may have closed it by then.
+
 ## The sferik command
 
 The gem comes with a `sferik` command, which prints what the shell on sferik.net prints, in your terminal:

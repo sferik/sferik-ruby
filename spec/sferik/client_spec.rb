@@ -547,6 +547,96 @@ RSpec.describe Sferik::Client do
     end
   end
 
+  describe "#keep_alive" do
+    # Every connection opened, and how: with a block, which closes it, or without one, which leaves it open
+    let(:opened) { [] }
+
+    before do
+      allow(Net::HTTP).to receive(:start).and_wrap_original do |start, *args, **options, &block|
+        opened << [block ? :closed : :kept, args.first, args.last, options.fetch(:use_ssl)]
+        start.call(*args, **options, &block).tap { |http| opened.last << http unless block }
+      end
+      stub_request(:get, "https://sferik.net/whoami").to_return(body: "one")
+      stub_request(:get, "https://sferik.net/talks").to_return(body: "two")
+    end
+
+    it "makes every request to a host over one connection, left open between them" do
+      stub_request(:post, "https://sferik.net/write").to_return(body: "three")
+      bodies = client.keep_alive { |kept| [kept.get("/whoami"), kept.get("/talks"), kept.post("/write", "Hello")] }
+
+      expect([bodies, opened.map { |connection| connection.first(4) }]).to eq([%w[one two three], [[:kept, "sferik.net", 443, true]]])
+    end
+
+    it "closes its connections when the block ends" do
+      started = client.keep_alive { |kept| kept.get("/whoami") && opened.last.last.started? }
+
+      expect([started, opened.last.last.started?]).to eq([true, false])
+    end
+
+    it "closes its connections when the block raises, and raises what it did" do
+      failing = -> { client.keep_alive { |kept| kept.get("/whoami") && raise("stop") } }
+
+      expect(&failing).to raise_error(RuntimeError, "stop").and(change { opened.last&.last&.started? }.from(nil).to(false))
+    end
+
+    [
+      ["port", "http://localhost:3746/whoami", [[:kept, "localhost", 3745, false], [:kept, "localhost", 3746, false]]],
+      ["host", "http://127.0.0.1:3745/whoami", [[:kept, "localhost", 3745, false], [:kept, "127.0.0.1", 3745, false]]],
+      ["scheme", "https://localhost:3745/whoami", [[:kept, "localhost", 3745, false], [:kept, "localhost", 3745, true]]]
+    ].each do |part, elsewhere, connections|
+      it "keeps a connection of its own for another #{part}, as a redirect may lead to" do
+        stub_request(:get, "http://localhost:3745/whoami").to_return(status: 302, headers: {"Location" => elsewhere})
+        stub_request(:get, elsewhere).to_return(body: "ok")
+        described_class.new(host: "http://localhost:3745").keep_alive { |kept| 2.times { kept.get("/whoami") } }
+
+        expect(opened.map { |connection| connection.first(4) }).to eq(connections)
+      end
+    end
+
+    it "yields a client with the same options, frozen" do
+      options = {host: "http://localhost:3745", user_agent: "agent", open_timeout: 1, read_timeout: 2, write_timeout: 3, max_redirects: 4}
+
+      expect(described_class.new(**options).keep_alive(&:itself)).to be_an_instance_of(described_class).and(be_frozen).and(have_attributes(**options))
+    end
+
+    it "uses the timeouts of the client it's called on" do
+      described_class.new(open_timeout: 1, read_timeout: 2, write_timeout: 3).keep_alive { |kept| kept.get("/whoami") }
+
+      expect(Net::HTTP).to have_received(:start).with("sferik.net", 443, use_ssl: true, open_timeout: 1, read_timeout: 2, write_timeout: 3)
+    end
+
+    it "leaves the client it's called on opening a connection for each request" do
+      client.keep_alive { |kept| kept.get("/whoami") }
+      client.get("/whoami")
+
+      expect(opened.map(&:first)).to eq(%i[kept closed])
+    end
+
+    it "returns what the block returns" do
+      expect(client.keep_alive { :done }).to eq(:done)
+    end
+
+    it "opens no connection until a request is made" do
+      client.keep_alive { nil }
+
+      expect(opened).to eq([])
+    end
+
+    it "raises NetworkError for a request that fails, as outside the block" do
+      stub_request(:get, "https://sferik.net/whoami").to_timeout
+
+      expect { client.keep_alive { |kept| kept.get("/whoami") } }.to raise_error(Sferik::NetworkError, /\(GET https:\/\/sferik\.net\/whoami\)\z/)
+    end
+
+    it "raises ArgumentError without a block" do
+      expect { client.keep_alive }.to raise_error(ArgumentError, "keep_alive must be given a block")
+    end
+
+    it "keeps the method that sets where connections are kept to itself" do
+      expect { client.keep({}) }.to raise_error(NoMethodError, /protected method 'keep' called/)
+    end
+  end
+
   describe "#inspect" do
     it "shows the host" do
       expect(client.inspect).to eq("#<Sferik::Client https://sferik.net>")

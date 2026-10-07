@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 
 require "net/http"
-require "openssl"
 require "uri"
-require "zlib"
 require_relative "api"
 require_relative "body"
 require_relative "configuration"
+require_relative "connections"
 require_relative "errors"
 require_relative "validation"
 
@@ -17,15 +16,12 @@ module Sferik
   # the resume, LaTeX and PDF), and {#get} asks for whatever you like. {#post} sends what the two endpoints that
   # write take: a terminal checking in, and a message.
   #
+  # Each request opens a connection and closes it. To make several over one, make them in {#keep_alive}.
+  #
   # @api public
   class Client
     include API
     include Validation
-
-    # The errors Net::HTTP raises when the server can't be reached, or its response can't be read
-    NETWORK_ERRORS = [IOError, SocketError, SystemCallError, Timeout::Error, OpenSSL::SSL::SSLError, Net::HTTPBadResponse,
-      Net::HTTPHeaderSyntaxError, Net::ProtocolError, Zlib::Error].freeze
-    private_constant :NETWORK_ERRORS
 
     # The encodings of a body that names no charset of its own, which is sent as it is: binary, and US-ASCII
     UNLABELED = [Encoding::BINARY, Encoding::US_ASCII].freeze
@@ -165,10 +161,32 @@ module Sferik
     def post(path, body = "", accept: "application/json", idempotency_key: nil)
       request = Net::HTTP::Post.new(uri_for(check(:path, path, String)), post_headers(accept, idempotency_key))
       request.body = utf8(check(:body, body, String))
-      response = request(request)
+      response = connections.request(request)
       raise error_for(response) unless response.is_a?(Net::HTTPSuccess)
 
       Body.of(response)
+    end
+
+    # Keep connections open for the requests made in a block
+    #
+    # A client opens a connection for each request, and closes it. The one this yields keeps each connection it
+    # opens, one per host, and makes its next request to that host over it, which saves connecting again: with
+    # https, most of the time a request takes. They're closed when the block ends. Net::HTTP opens one again that
+    # has sat unused for more than two seconds, which the server may have closed by then. The client yielded is for
+    # one thread at a time, as a connection is, and after the block it's a client like any other.
+    #
+    # @api public
+    # @yield [client] the requests to make
+    # @yieldparam client [Client] a client with the same options, which keeps its connections open
+    # @yieldreturn [Object] anything
+    # @return [Object] what the block returns
+    # @raise [ArgumentError] if no block is given
+    # @example Get the bio, the talks, and the resume over one connection
+    #   Sferik.client.keep_alive { |client| [client.whoami, client.talks, client.resume] }
+    def keep_alive
+      raise ArgumentError, "keep_alive must be given a block" unless block_given?
+
+      connections.keeping { |kept| yield dup.keep(kept) }
     end
 
     # A short description of the client, without the user agent
@@ -181,7 +199,27 @@ module Sferik
       "#<#{self.class} #{host}>"
     end
 
+    protected
+
+    # Make this client's requests over other connections, and freeze it again
+    #
+    # @api private
+    # @param connections [Connections] the connections
+    # @return [Client] the client itself
+    def keep(connections)
+      @connections = connections
+      freeze
+    end
+
     private
+
+    # The connections requests are made over
+    #
+    # Those {#keep_alive} gave this client, which are kept open, or else ones that open one for each request.
+    #
+    # @api private
+    # @return [Connections] the connections
+    def connections = @connections || Connections.new({open_timeout:, read_timeout:, write_timeout:})
 
     # The URL of a path on the host
     #
@@ -205,7 +243,7 @@ module Sferik
     # @return [Net::HTTPResponse] the last response
     # @raise [TooManyRedirects] if there's another redirect when none are left
     def fetch(uri, accept, redirects)
-      response = request(Net::HTTP::Get.new(uri, headers(accept)))
+      response = connections.request(Net::HTTP::Get.new(uri, headers(accept)))
       location = redirect(response, uri)
       return response unless location
       raise TooManyRedirects, "More than #{max_redirects} redirects (GET #{uri})" unless redirects.positive?
@@ -275,22 +313,6 @@ module Sferik
     def post_headers(accept, key)
       one_line(:idempotency_key, check(:idempotency_key, key, String)) unless key.nil?
       headers(one_line(:accept, check(:accept, accept, String))).merge({"Content-Type" => PLAIN_TEXT, "Idempotency-Key" => key}.compact)
-    end
-
-    # Send a request
-    #
-    # @api private
-    # @param request [Net::HTTPRequest] the request, to a URL
-    # @return [Net::HTTPResponse] the response
-    # @raise [NetworkError] if the server can't be reached, or its response can't be read
-    def request(request)
-      uri = request.uri
-      hostname = uri.hostname #: String
-      Net::HTTP.start(hostname, uri.port, use_ssl: uri.scheme.eql?("https"), open_timeout:, read_timeout:, write_timeout:) do |http|
-        http.request(request)
-      end
-    rescue *NETWORK_ERRORS => e
-      raise NetworkError, "#{e.class}: #{e} (#{request.method} #{uri})"
     end
 
     # The error for a response that isn't a success
