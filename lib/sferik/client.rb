@@ -124,7 +124,8 @@ module Sferik
     # @raise [NotAcceptable] if the resource has no representation of that type
     # @raise [NotFound] if there is no resource at that path
     # @raise [HTTPError] for any other response that isn't a success, or a redirect that isn't followed
-    # @raise [NetworkError] if the server can't be reached, or its response can't be read
+    # @raise [Unanswered] if the server was connected to, and its response didn't come, or can't be read
+    # @raise [NetworkError] if the server can't be connected to
     # @example Get the bio as terminal output
     #   Sferik.client.get("/whoami", accept: "text/plain")
     def get(path, accept: "application/json")
@@ -155,7 +156,8 @@ module Sferik
     # @raise [NotFound] if there is no resource at that path
     # @raise [TooManyRequests] if the server has taken too many requests
     # @raise [HTTPError] for any other response that isn't a success, including a redirect
-    # @raise [NetworkError] if the server can't be reached, or its response can't be read
+    # @raise [Unanswered] if the server was connected to, and its response didn't come, or can't be read
+    # @raise [NetworkError] if the server can't be connected to
     # @example Check in a terminal, and get the response as it is
     #   Sferik.client.post("/who?token=0123456789abcdef&page=/")
     def post(path, body = "", accept: "application/json", idempotency_key: nil)

@@ -57,6 +57,9 @@ module Sferik
   class InvalidURL < Error
   end
 
+  class Unanswered < NetworkError
+  end
+
   class NetworkError < Error
   end
 
@@ -178,6 +181,8 @@ module Sferik
       def text: (?String path) -> String
       def openapi: () -> Hash[String, untyped]
       def deployment: () -> Deployment
+
+      PAUSE: Integer
 
       private
 

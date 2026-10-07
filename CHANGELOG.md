@@ -15,7 +15,8 @@
 - `Sferik.check_in(token)` checks in a terminal, as each browser tab on the site does (on the home page, or on the
   one that `page:` names), and returns who's reading with the terminal's name as `you`. `Sferik.write("...")` sends
   Erik a message, as the shell's `write sferik` does. Each message goes with a random key (or the one `key:` gives),
-  which the server doesn't email twice, so `write` sends it once more if no answer comes
+  which the server doesn't email twice, so `write` sends it once more, five seconds later, if it was sent and no answer
+  came (`Unanswered`), but not if the server couldn't be connected to
 - `Sferik.contributions` and `Sferik.projects` say when their numbers are from, as `as_of`
 - `Sferik.client.get` and `Sferik.client.post` send raw requests. A GET's redirects are followed, up to
   `max_redirects` (10), but never from https to http. A POST is sent only once, and its redirects aren't followed. Its
@@ -25,7 +26,8 @@
   otherwise open its own
 - Configuration, with `Sferik.configure` or the options of `Sferik.new`: `host`, `user_agent`, `open_timeout`,
   `read_timeout`, `write_timeout`, and `max_redirects`. A wrong one raises ArgumentError when the client is built
-- Errors are all `Sferik::Error`: `InvalidURL`, `NetworkError`, `TooManyRedirects`, `InvalidResponse`, and `HTTPError`
+- Errors are all `Sferik::Error`: `InvalidURL`, `NetworkError` (and `Unanswered`, for a request that was sent and got
+  no answer), `TooManyRedirects`, `InvalidResponse`, and `HTTPError`
   (`ClientError`, `NotFound`, `NotAcceptable`, `TooManyRequests`, and `ServerError`), which has the response's `code`,
   `headers`, and `body`, what the server says went wrong as its message, which error it is as `error_code` (`"busy"` or
   `"full"` for the `TooManyRequests` that `write` raises past its rate limit), and the seconds to wait as `retry_after`,

@@ -62,6 +62,8 @@ RSpec.describe Sferik::API::SiteEndpoints do
   describe "#write" do
     let(:key) { "0f8fad5b-d9cb-469f-a165-70867728950e" }
 
+    before { allow(Kernel).to receive(:sleep) }
+
     def stub_write(url = "https://sferik.net/write", status: 202, body: %({"message":"message sent to sferik"}\n), headers: {})
       stub_request(:post, url).to_return(status:, body:, headers: {"Content-Type" => "application/json; charset=utf-8", **headers})
     end
@@ -114,6 +116,27 @@ RSpec.describe Sferik::API::SiteEndpoints do
       expect(keys).to all(match(/\A\h{8}(-\h{4}){3}-\h{12}\z/)).and(satisfy { |sent| sent.uniq.size.eql?(2) })
     end
 
+    it "waits five seconds before sending it again, to give the first time to arrive" do
+      stub_request(:post, "https://sferik.net/write").to_timeout.then.to_return(body: %({"message":"sent"}), headers: {"Content-Type" => "application/json"})
+      client.write("Hello")
+
+      expect(Kernel).to have_received(:sleep).with(5).once
+    end
+
+    it "doesn't wait when the answer comes" do
+      stub_write
+      client.write("Hello")
+
+      expect(Kernel).not_to have_received(:sleep)
+    end
+
+    it "doesn't send a message again that the server couldn't be connected to for, since none was sent" do
+      tries = 0
+      allow(Net::HTTP).to receive(:start) { (tries += 1) && raise(SocketError, "getaddrinfo: nodename nor servname provided") }
+
+      expect { client.write("Hello") }.to raise_error(an_instance_of(Sferik::NetworkError)).and(change { tries }.by(1))
+    end
+
     it "sends the message once more, with the same key, when no answer comes" do
       request = stub_request(:post, "https://sferik.net/write").with(body: "Hello", headers: {"Idempotency-Key" => key})
         .to_timeout.then.to_return(body: %({"message":"message sent to sferik"}), headers: {"Content-Type" => "application/json"})
@@ -128,10 +151,10 @@ RSpec.describe Sferik::API::SiteEndpoints do
       expect(request).to have_been_made.twice
     end
 
-    it "raises NetworkError when no answer comes twice, and doesn't send it a third time" do
+    it "raises Unanswered when no answer comes twice, and doesn't send it a third time" do
       request = stub_request(:post, "https://sferik.net/write").to_timeout
 
-      expect { client.write("Hello") }.to raise_error(Sferik::NetworkError).and(change { times_made(request) }.by(2))
+      expect { client.write("Hello") }.to raise_error(Sferik::Unanswered).and(change { times_made(request) }.by(2))
     end
 
     it "doesn't send a message again that the server turned away" do

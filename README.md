@@ -141,8 +141,11 @@ with what the server says as its message, the seconds to wait as `retry_after`, 
 (what Ruby reads with no locale set) is taken for UTF-8 already.
 
 Each message goes with a random key, and the server doesn't email one twice whose key it has taken within a day. So
-if no answer comes, `write` sends the message once more, and to try again after a `Sferik::NetworkError`, give the
-key yourself:
+if the message is sent and no answer comes (`Sferik::Unanswered`), `write` sends it once more, five seconds later. It
+doesn't if the server couldn't be connected to at all (any other `Sferik::NetworkError`), when nothing was sent and
+trying again at once wouldn't help. A message asked after while its first sending is still on its way gets a
+`Sferik::ClientError` (409), with `error_code` `"sending"` and the seconds to wait as `retry_after`. To try again
+yourself after a `Sferik::NetworkError`, give the key:
 
 ```ruby
 key = SecureRandom.uuid
@@ -321,6 +324,7 @@ Every error is a `Sferik::Error`:
 Sferik::Error
 ├── Sferik::InvalidURL         the path can't be in a URL
 ├── Sferik::NetworkError       the server couldn't be reached, or its response couldn't be read
+│   └── Sferik::Unanswered     the request was sent, or may have been, and no answer came that could be read
 ├── Sferik::TooManyRedirects   redirected more than max_redirects times
 ├── Sferik::InvalidResponse    the response wasn't what the API documents
 └── Sferik::HTTPError          any other response that isn't a success, or a redirect that isn't followed (#code, #headers, #body, #error_code, #retry_after)

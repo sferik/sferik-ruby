@@ -417,6 +417,24 @@ RSpec.describe Sferik::Client do
       expect { client.get("/x") }.to raise_error(Sferik::NetworkError, "Net::ProtocolError: unexpected response (GET https://sferik.net/x)")
     end
 
+    it "raises Unanswered, which is a NetworkError, when the request was sent and no answer came" do
+      stub_request(:get, "https://sferik.net/x").to_timeout
+
+      expect { client.get("/x") }.to raise_error(an_instance_of(Sferik::Unanswered).and(be_a(Sferik::NetworkError)))
+    end
+
+    it "raises NetworkError, and not Unanswered, when the server couldn't be connected to, so nothing was sent" do
+      allow(Net::HTTP).to receive(:start).and_raise(SocketError, "getaddrinfo: nodename nor servname provided")
+
+      expect { client.get("/x") }.to raise_error(an_instance_of(Sferik::NetworkError), "SocketError: getaddrinfo: nodename nor servname provided (GET https://sferik.net/x)")
+    end
+
+    it "raises NetworkError, and not Unanswered, when a connection to keep couldn't be opened" do
+      allow(Net::HTTP).to receive(:start).and_raise(Net::OpenTimeout, "execution expired")
+
+      expect { client.keep_alive { |kept| kept.get("/x") } }.to raise_error(an_instance_of(Sferik::NetworkError), "Net::OpenTimeout: execution expired (GET https://sferik.net/x)")
+    end
+
     it "raises NetworkError when the connection is refused" do
       stub_request(:get, "https://sferik.net/x").to_raise(Errno::ECONNREFUSED)
 

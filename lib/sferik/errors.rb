@@ -18,6 +18,12 @@ module Sferik
   # @api public
   class NetworkError < Error; end
 
+  # Raised when a request was sent, or may have been, and no answer came that could be read: the connection was
+  # open, and then it timed out, or closed, or what came back wasn't a response. Any other {NetworkError} is for a
+  # server that couldn't be connected to, so nothing was sent.
+  # @api public
+  class Unanswered < NetworkError; end
+
   # Raised when a request is redirected more than {Client#max_redirects} times
   # @api public
   class TooManyRedirects < Error; end

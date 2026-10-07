@@ -50,12 +50,17 @@ module Sferik
     # @api private
     # @param request [Net::HTTPRequest] the request, to a URL
     # @return [Net::HTTPResponse] the response
-    # @raise [NetworkError] if the server can't be reached, or its response can't be read
+    # @raise [Unanswered] if the server was connected to, and its response didn't come, or can't be read
+    # @raise [NetworkError] if the server can't be connected to
     def request(request)
       uri = request.uri
-      connection(uri) { |http| http.request(request) }
+      connected = false
+      connection(uri) do |http|
+        connected = true
+        http.request(request)
+      end
     rescue *NETWORK_ERRORS => e
-      raise NetworkError, "#{e.class}: #{e} (#{request.method} #{uri})"
+      raise (connected ? Unanswered : NetworkError), "#{e.class}: #{e} (#{request.method} #{uri})"
     end
 
     private

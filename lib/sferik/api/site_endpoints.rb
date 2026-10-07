@@ -16,6 +16,11 @@ module Sferik
       include JSONParsing
       include Validation
 
+      # The seconds to wait before sending a message again that got no answer: as long as the server says to wait
+      # before asking after one that's still being sent
+      PAUSE = 5
+      private_constant :PAUSE
+
       # Returns everyone reading the site right now
       #
       # There's a terminal per browser tab, as the shell's who lists them, and they're Enumerable: `Sferik.who.size`
@@ -55,9 +60,11 @@ module Sferik
       # The message is emailed on, with a Reply-To if it includes an email address. The server takes one message a
       # minute from an address, and twenty a day in all.
       #
-      # If no answer comes, the message is sent once more, as Net::HTTP sends a GET: it goes with a key, and the server
-      # doesn't email a message twice whose key it has taken within a day. To try again yourself after a
-      # {NetworkError}, give the same key.
+      # If it's sent and no answer comes ({Unanswered}), the message is sent once more, five seconds later: it goes
+      # with a key, and the server doesn't email a message twice whose key it has taken within a day. It isn't sent
+      # again if the server couldn't be connected to, when trying again at once wouldn't help. To try again yourself
+      # after a {NetworkError}, give the same key. The server answers a message whose first sending is still on its
+      # way with 409: {HTTPError#error_code} is "sending", and {HTTPError#retry_after} is how long to wait.
       #
       # @api public
       # @param message [String] the message, as plain text: 5,000 bytes at most, sent as UTF-8 (see {Client#post})
@@ -66,11 +73,13 @@ module Sferik
       # @return [String] what the server says: "message sent to sferik"
       # @raise [ArgumentError] if the message or the key isn't a String, the message is in a charset that doesn't convert
       #   to UTF-8, or the terminal is neither a String nor nil
-      # @raise [ClientError] if there's nothing to send or the key isn't one (400), or the message is too long (413)
+      # @raise [ClientError] if there's nothing to send or the key isn't one (400), the message is still being sent
+      #   (409), or it's too long (413)
       # @raise [TooManyRequests] if there have been too many (429): {HTTPError#retry_after} is how long to wait, and
       #   {HTTPError#error_code} is "busy" for one a minute, and "full" for twenty a day
       # @raise [ServerError] if the email didn't go through (502), or the server doesn't send email (503)
-      # @raise [NetworkError] if the server can't be reached, or its response can't be read, twice
+      # @raise [Unanswered] if no answer comes, or one that can't be read, twice
+      # @raise [NetworkError] if the server can't be connected to
       # @raise [InvalidResponse] if the response isn't what the API documents
       # @example
       #   Sferik.write("Hello from Ruby. Reply to me@example.com")
@@ -121,15 +130,20 @@ module Sferik
 
       # Send a message, and once more if no answer comes: its key makes that safe
       #
+      # The second goes after a pause, to give the first time to arrive. One the server couldn't be connected to for
+      # wasn't sent at all, and isn't sent again.
+      #
       # @api private
       # @param path [String] the path, with any query
       # @param message [String] the message
       # @param key [String] the message's idempotency key
       # @return [String] the response body
-      # @raise [NetworkError] if the server can't be reached, or its response can't be read, twice
+      # @raise [Unanswered] if no answer comes, or one that can't be read, twice
+      # @raise [NetworkError] if the server can't be connected to
       def deliver(path, message, key)
         post(path, message, idempotency_key: key)
-      rescue NetworkError
+      rescue Unanswered
+        Kernel.sleep(PAUSE)
         post(path, message, idempotency_key: key)
       end
     end
