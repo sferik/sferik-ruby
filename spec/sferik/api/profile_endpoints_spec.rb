@@ -63,8 +63,9 @@ RSpec.describe Sferik::API::ProfileEndpoints do
   describe "#finger_vcard" do
     before { stub_get("/finger", "finger.vcf", accept: "text/vcard") }
 
+    # Line by line, since a vCard's lines end with CRLF, which Ruby on Windows reads from the fixture as LF
     it "asks for a contact card" do
-      expect(client.finger_vcard).to start_with("BEGIN:VCARD\r\nVERSION:3.0\r\n").and(include("\r\nFN:Erik Berlin\r\n"))
+      expect(client.finger_vcard.lines(chomp: true)).to start_with("BEGIN:VCARD", "VERSION:3.0").and(include("FN:Erik Berlin")).and(end_with("END:VCARD"))
     end
 
     it "returns it as UTF-8, which the site says it is" do
