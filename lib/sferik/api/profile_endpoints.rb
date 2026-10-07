@@ -56,6 +56,18 @@ module Sferik
         Finger.new(parse_json(get("/finger")))
       end
 
+      # Returns contact details and profiles as a contact card (a vCard)
+      #
+      # It's what an address book imports: the name, the email address, and each profile elsewhere.
+      #
+      # @api public
+      # @return [String] the vCard
+      # @example
+      #   File.write("erik-berlin.vcf", Sferik.finger_vcard)
+      def finger_vcard
+        get("/finger", accept: "text/vcard")
+      end
+
       # Returns the name change, from Erik Michaels-Ober to Erik Berlin, as a git commit
       #
       # @api public

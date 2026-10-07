@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>https://sferik.net/talks</id>
+  <title>Talks, Erik Berlin</title>
+  <updated>2016-08-01T00:00:00Z</updated>
+  <author><name>Erik Berlin</name><uri>https://sferik.net/</uri></author>
+  <link rel="self" type="application/atom+xml" href="https://sferik.net/talks.atom"/>
+  <link rel="alternate" type="text/html" href="https://sferik.net/talks"/>
+  <entry>
+    <id>tag:sferik.net,2016-08:talks/enumerator-lazy-sf-rb</id>
+    <title>Enumerator::Lazy</title>
+    <updated>2016-08-01T00:00:00Z</updated>
+    <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/enumerator-lazy"/>
+    <summary>SF.rb, San Francisco</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2015-12:talks/ruby-trivia-3-berlin-ruby-user-group</id>
+    <title>Ruby Trivia 3</title>
+    <updated>2015-12-01T00:00:00Z</updated>
+    <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/ruby-trivia-3"/>
+    <summary>Berlin Ruby User Group, Berlin</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2015-11:talks/the-value-of-being-lazy-or-how-i-made-openstruct-10x-faster-rails-israel</id>
+    <title>The Value of Being Lazy, or How I Made OpenStruct 10X Faster</title>
+    <updated>2015-11-01T00:00:00Z</updated>
+    <link rel="alternate" type="text/html" title="Video" href="https://www.youtube.com/watch?v=6lQeBfSVrpk"/>
+    <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/the-value-of-being-lazy"/>
+    <summary>Rails Israel, Tel Aviv</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2015-11:talks/ruby-trivia-2-berlin-ruby-user-group</id>
+    <title>Ruby Trivia 2</title>
+    <updated>2015-11-01T00:00:00Z</updated>
+    <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/ruby-trivia-2"/>
+    <summary>Berlin Ruby User Group, Berlin</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2015-10:talks/ruby-trivia-berlin-ruby-user-group</id>
+    <title>Ruby Trivia</title>
+    <updated>2015-10-01T00:00:00Z</updated>
+    <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/ruby-trivia"/>
+    <summary>Berlin Ruby User Group, Berlin</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2015-07:talks/an-introduction-to-crystal-polyconf</id>
+    <title>An Introduction to Crystal</title>
+    <updated>2015-07-01T00:00:00Z</updated>
+    <link rel="alternate" type="text/html" title="Video" href="https://www.youtube.com/watch?v=Ysm4IU4aWoQ"/>
+    <summary>PolyConf, Poznań</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2015-05:talks/the-crystal-programming-language-rubyc</id>
+    <title>The Crystal Programming Language</title>
+    <updated>2015-05-01T00:00:00Z</updated>
+    <link rel="alternate" type="text/html" title="Video" href="https://www.youtube.com/watch?v=5-_CWyrpIBk"/>
+    <summary>RubyC, Kyiv</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2015-04:talks/writing-fast-ruby-rubyconf-india</id>
+    <title>Writing Fast Ruby</title>
+    <updated>2015-04-01T00:00:00Z</updated>
+    <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/writing-fast-ruby"/>
+    <summary>RubyConf India, Goa</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2015-04:talks/symbols-lightning-talk-rubyconf-india</id>
+    <title>Symbols (lightning talk)</title>
+    <updated>2015-04-01T00:00:00Z</updated>
+    <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/symbols"/>
+    <summary>RubyConf India, Goa</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2015-03:talks/secrets-to-powerful-apis-panel-sxsw</id>
+    <title>Secrets to Powerful APIs (panel)</title>
+    <updated>2015-03-01T00:00:00Z</updated>
+    <link rel="alternate" type="text/html" href="https://sferik.net/talks#y2015"/>
+    <summary>SXSW, Austin</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2015-02:talks/towards-a-higher-level-language-rubyconf-australia</id>
+    <title>Towards a Higher-Level Language</title>
+    <updated>2015-02-01T00:00:00Z</updated>
+    <link rel="alternate" type="text/html" title="Video" href="https://www.youtube.com/watch?v=cjPybeAeKDQ"/>
+    <summary>RubyConf Australia, Melbourne</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2014-10:talks/content-negotiation-for-rest-apis-closing-keynote-nordic-apis-platform-summit</id>
+    <title>Content Negotiation for REST APIs (closing keynote)</title>
+    <updated>2014-10-01T00:00:00Z</updated>
+    <link rel="alternate" type="text/html" title="Video" href="https://www.youtube.com/watch?v=xRyCykwqDEk"/>
+    <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/content-negotiation-for-rest-apis"/>
+    <summary>Nordic APIs Platform Summit, Stockholm</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2014-10:talks/writing-fast-ruby-rubyconf-portugal</id>
+    <title>Writing Fast Ruby</title>
+    <updated>2014-10-01T00:00:00Z</updated>
+    <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/writing-fast-ruby"/>
+    <summary>RubyConf Portugal, Braga</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2014-09:talks/writing-fast-ruby-railsclub</id>
+    <title>Writing Fast Ruby</title>
+    <updated>2014-09-01T00:00:00Z</updated>
+    <link rel="alternate" type="text/html" title="Video" href="https://www.youtube.com/watch?v=IXODb6uk26o"/>
+    <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/writing-fast-ruby"/>
+    <summary>RailsClub, Moscow</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2014-09:talks/writing-fast-ruby-barcelona-ruby-conference</id>
+    <title>Writing Fast Ruby</title>
+    <updated>2014-09-01T00:00:00Z</updated>
+    <link rel="alternate" type="text/html" title="Video" href="https://www.youtube.com/watch?v=fGFM_UrSp70"/>
+    <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/writing-fast-ruby"/>
+    <summary>Barcelona Ruby Conference, Barcelona</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2014-04:talks/mutation-testing-with-mutant-railsconf</id>
+    <title>Mutation Testing with Mutant</title>
+    <updated>2014-04-01T00:00:00Z</updated>
+    <link rel="alternate" type="text/html" title="Video" href="https://www.youtube.com/watch?v=WccaOMuf01Y"/>
+    <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/mutation-testing-with-mutant"/>
+    <summary>RailsConf, Chicago</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2014-03:talks/streaming-audio-putting-the-media-in-hypermedia-apis-panel-api-strategy-practice</id>
+    <title>Streaming Audio: Putting the Media in Hypermedia APIs (panel)</title>
+    <updated>2014-03-01T00:00:00Z</updated>
+    <link rel="alternate" type="text/html" href="https://sferik.net/talks#y2014"/>
+    <summary>API Strategy &amp; Practice, Amsterdam</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2013-10:talks/a-brief-history-of-technology-booms-dotrb</id>
+    <title>A Brief History of Technology Booms</title>
+    <updated>2013-10-01T00:00:00Z</updated>
+    <link rel="alternate" type="text/html" title="Video" href="https://www.youtube.com/watch?v=iXkPty3y7gA"/>
+    <summary>dotRB, Paris</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2012-09:talks/writing-a-rails-engine-gogaruco</id>
+    <title>Writing a Rails Engine</title>
+    <updated>2012-09-01T00:00:00Z</updated>
+    <link rel="alternate" type="text/html" title="Video" href="https://www.youtube.com/watch?v=Rvxcc46fox0"/>
+    <summary>GoGaRuCo, San Francisco</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2012-08:talks/writing-a-rails-engine-eurucamp</id>
+    <title>Writing a Rails Engine</title>
+    <updated>2012-08-01T00:00:00Z</updated>
+    <link rel="alternate" type="text/html" href="https://sferik.net/talks#y2012"/>
+    <summary>eurucamp, Berlin</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2011-04:talks/cultivating-an-open-source-community-red-dirt-rubyconf</id>
+    <title>Cultivating an Open-Source Community</title>
+    <updated>2011-04-01T00:00:00Z</updated>
+    <link rel="related" type="text/html" title="Slides" href="https://www.slideshare.net/slideshow/cultivating-an-opensource-community-7708825/7708825"/>
+    <summary>Red Dirt RubyConf, Oklahoma City</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2011-04:talks/gui-programming-with-macruby-red-dirt-rubyconf</id>
+    <title>GUI Programming with MacRuby</title>
+    <updated>2011-04-01T00:00:00Z</updated>
+    <link rel="related" type="text/html" title="Slides" href="https://www.slideshare.net/slideshow/gui-programming-with-macruby-7571580/7571580"/>
+    <summary>Red Dirt RubyConf, Oklahoma City</summary>
+  </entry>
+  <entry>
+    <id>tag:sferik.net,2011-03:talks/gui-programming-with-macruby-ruby-on-ales</id>
+    <title>GUI Programming with MacRuby</title>
+    <updated>2011-03-01T00:00:00Z</updated>
+    <link rel="alternate" type="text/html" title="Video" href="https://www.youtube.com/watch?v=VSpZIkmywQM"/>
+    <link rel="related" type="text/html" title="Slides" href="https://www.slideshare.net/slideshow/gui-programming-with-macruby-7571580/7571580"/>
+    <summary>Ruby on Ales, Bend, Oregon</summary>
+  </entry>
+</feed>

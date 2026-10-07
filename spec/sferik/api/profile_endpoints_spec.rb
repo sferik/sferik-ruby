@@ -60,6 +60,18 @@ RSpec.describe Sferik::API::ProfileEndpoints do
     end
   end
 
+  describe "#finger_vcard" do
+    before { stub_get("/finger", "finger.vcf", accept: "text/vcard") }
+
+    it "asks for a contact card" do
+      expect(client.finger_vcard).to start_with("BEGIN:VCARD\r\nVERSION:3.0\r\n").and(include("\r\nFN:Erik Berlin\r\n"))
+    end
+
+    it "returns it as UTF-8, which the site says it is" do
+      expect(client.finger_vcard.encoding).to eq(Encoding::UTF_8)
+    end
+  end
+
   describe "#name_change" do
     before { stub_get("/name", "name.json") }
 

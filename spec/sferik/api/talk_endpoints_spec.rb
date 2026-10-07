@@ -38,6 +38,18 @@ RSpec.describe Sferik::API::TalkEndpoints do
     end
   end
 
+  describe "#talks_feed" do
+    before { stub_get("/talks.atom", "talks.atom", accept: "application/atom+xml") }
+
+    it "asks for the Atom feed" do
+      expect(client.talks_feed).to start_with(%(<?xml version="1.0" encoding="utf-8"?>\n<feed xmlns="http://www.w3.org/2005/Atom">))
+    end
+
+    it "returns an entry for each talk" do
+      expect(client.talks_feed.scan("<entry>").size).to be > 1
+    end
+  end
+
   describe "#podcasts" do
     before { stub_get("/podcasts", "podcasts.json") }
 

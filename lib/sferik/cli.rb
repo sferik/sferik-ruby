@@ -1,14 +1,16 @@
 # frozen_string_literal: true
 
 require "optparse"
+require "securerandom"
 require_relative "../sferik"
 
 module Sferik
   # The sferik command: prints what the shell on sferik.net prints, in a real terminal
   #
   # Each command prints a resource of the site as text, the same text `curl sferik.net/finger` gets, or with --json
-  # as JSON. The resume also comes as a PDF with --pdf, and as LaTeX with --latex. The write command sends me what it
-  # reads from standard input, as the shell's write sferik does. It asks sferik.net, or a copy of the site at the URL
+  # as JSON. The resume also comes as a PDF with --pdf, and as LaTeX with --latex, and finger as a contact card with
+  # --vcard. The write command sends me what it reads from standard input, as the shell's write sferik does, and the
+  # check-in command logs in a terminal, as each browser tab on the site does, and prints its name. It asks sferik.net, or a copy of the site at the URL
   # that --host or the SFERIK_HOST environment variable names.
   #
   # @api public
@@ -17,6 +19,7 @@ module Sferik
   #   Sferik::CLI.new.run(["talks", "--json"]) # prints my talks as JSON
   #   Sferik::CLI.new.run(["resume", "--pdf"]) # prints my resume as a PDF
   #   Sferik::CLI.new.run(["write"])           # sends me a message, read from standard input
+  #   Sferik::CLI.new.run(["check-in"])        # logs in a terminal, and prints its name
   class CLI
     # The commands, and the path of the resource each one prints
     COMMANDS = {
@@ -40,6 +43,7 @@ module Sferik
         dependency     the xkcd comic, in words
         who            who's reading sferik.net
         write          send me a message, read from standard input
+        check-in       log in a terminal, as a browser tab does, and print its name
         help           print this
 
       With no command, sferik prints the home page.
@@ -48,6 +52,9 @@ module Sferik
             --json       print JSON, not text
             --pdf        print a PDF, for the resume: redirect it to a file
             --latex      print LaTeX, for the resume
+            --vcard      print a contact card, for finger
+            --tty NAME   for write: the terminal the message is from, as check-in names it
+            --token KEY  for check-in: the terminal's token, to keep its name (random, by default)
             --host URL   ask a copy of the site at URL (or set SFERIK_HOST)
         -h, --help       print this
         -v, --version    print the version
@@ -57,6 +64,19 @@ module Sferik
     # What sferik write says before it reads a message from a terminal
     PROMPT = "Type your message, then Ctrl-D to send it, or Ctrl-C to cancel. Include your email address if you'd like a reply.\n"
     private_constant :PROMPT
+
+    # The options that name a format, and the media type each asks for
+    FORMATS = {"--json" => "application/json", "--pdf" => "application/pdf", "--latex" => "application/x-latex", "--vcard" => "text/vcard"}.freeze
+
+    # The options that take a value, and what each is noted as
+    VALUES = {"--tty NAME" => :tty, "--token KEY" => :token, "--host URL" => :host}.freeze
+
+    # The options that are for one command alone, and the command each is for
+    OWNERS = {tty: "write", token: "check-in"}.freeze
+
+    # What prints no resource of the site, by the command or option that asks for it, and the method that does each
+    ACTIONS = {:usage => :usage, "help" => :usage, :version => :version, "write" => :write, "check-in" => :check_in}.freeze
+    private_constant :FORMATS, :VALUES, :OWNERS, :ACTIONS
 
     # Initialize a new CLI
     #
@@ -82,7 +102,8 @@ module Sferik
     # @api public
     # @param argv [Array<String>] the command line, without the program's name
     # @return [Integer] the exit status: 0, 1 for a request that fails, 2 for a command line that's wrong (an unknown
-    #   command or option, more than one format, or a format for what prints no resource), or 130 when interrupted
+    #   command or option, more than one format, a format for what prints no resource, or an option for another
+    #   command), or 130 when interrupted
     # @example
     #   Sferik::CLI.new.run(["talks"]) # => 0
     def run(argv)
@@ -108,29 +129,53 @@ module Sferik
       command, extra = parser(options).permute(argv) # parse would take no option after the command with POSIXLY_CORRECT set
       return misuse("unexpected argument: #{extra}") if extra
 
-      case options.fetch(:print, command)
-      when nil then show("/", options)
-      when :usage, "help" then unformatted(options) { say(USAGE) }
-      when :version then unformatted(options) { say("#{VERSION}\n") }
-      when "write" then unformatted(options) { write(options) }
-      else COMMANDS.key?(command) ? show(COMMANDS.fetch(command), options) : misuse("unknown command: #{command}")
-      end
+      option, owner = OWNERS.find { |name, its| options.key?(name) && !its.eql?(command) }
+      option ? misuse("--#{option} is for #{owner}") : perform(command, options)
     end
+
+    # Do what a command line asks for
+    #
+    # That's to print a resource, or what an option or a command that prints none names.
+    #
+    # @api private
+    # @param command [String, nil] the command, or nil for the home page
+    # @param options [Hash{Symbol => Object}] the options of the command line
+    # @return [Integer] the exit status
+    def perform(command, options)
+      action = ACTIONS[options.fetch(:print, command)]
+      return unformatted(options) { __send__(action, options) } if action
+
+      path = command ? COMMANDS[command] : "/"
+      path ? show(path, options) : misuse("unknown command: #{command}")
+    end
+
+    # Print the usage
+    #
+    # @api private
+    # @param _options [Hash{Symbol => Object}] the options of the command line, which make no difference
+    # @return [Integer] the exit status
+    def usage(_options) = say(USAGE)
+
+    # Print the version
+    #
+    # @api private
+    # @param _options [Hash{Symbol => Object}] the options of the command line, which make no difference
+    # @return [Integer] the exit status
+    def version(_options) = say("#{VERSION}\n")
 
     # What reads the options of a command line
     #
     # @api private
     # @param options [Hash{Symbol => Object}] where to note the options: the media types to :accept, which it adds each
-    #   format named to, the :host to ask, and what to :print instead of a resource (:usage or :version)
+    #   format named to, the :host to ask, what to :print instead of a resource (:usage or :version), the :tty a
+    #   message is from, and the :token to check in with
     # @return [OptionParser] the parser
     def parser(options)
       OptionParser.new do |flags|
-        flags.on("--json") { options[:accept] |= ["application/json"] }
-        flags.on("--pdf") { options[:accept] |= ["application/pdf"] }
-        flags.on("--latex") { options[:accept] |= ["application/x-latex"] }
-        flags.on("--host URL") { |url| options[:host] = url }
+        FORMATS.each { |flag, type| flags.on(flag) { options[:accept] |= [type] } }
+        VALUES.each { |flag, name| flags.on(flag) { |value| options[name] = value } }
         flags.on("-h", "--help") { options[:print] = :usage }
-        flags.on("--version") { options[:print] = :version } # and -v, which OptionParser completes to the one option it starts
+        flags.on("-v", "--version") { options[:print] = :version }
       end
     end
 
@@ -145,14 +190,14 @@ module Sferik
     # @param options [Hash{Symbol => Object}] the options of the command line
     # @return [Integer] the exit status
     def show(path, options)
-      return misuse("pick one format: --json, --pdf, or --latex") if options.fetch(:accept).size > 1
+      return misuse("pick one format: --json, --pdf, --latex, or --vcard") if options.fetch(:accept).size > 1
 
       ask(options) { |client| client.get(path, accept: [*options.fetch(:accept), "text/plain"].first) }
     end
 
     # Do what takes no format, since it prints no resource of the site
     #
-    # That's the usage, the version, and sending a message: an option that names a format for one of them is the
+    # That's the usage, the version, sending a message, and checking in: an option that names a format for one of them is the
     # command line's mistake, and nothing is done.
     #
     # @api private
@@ -161,7 +206,7 @@ module Sferik
     # @yieldreturn [Integer] the exit status
     # @return [Integer] the exit status
     def unformatted(options)
-      return misuse("--json, --pdf, and --latex are for the commands that print a resource") if options.fetch(:accept).any?
+      return misuse("--json, --pdf, --latex, and --vcard are for the commands that print a resource") if options.fetch(:accept).any?
 
       yield
     end
@@ -169,13 +214,31 @@ module Sferik
     # Send me the message that standard input has, and print what the server says
     #
     # A terminal is told how to end the message first, on standard error, so that the output is the server's alone.
+    # With --tty, the message says which terminal it's from.
     #
     # @api private
     # @param options [Hash{Symbol => Object}] the options of the command line
     # @return [Integer] the exit status
     def write(options)
       @err.print(PROMPT) if @input.tty?
-      ask(options) { |client| "#{client.write(@input.read)}\n" }
+      ask(options) { |client| "#{client.write(@input.read, tty: options[:tty])}\n" }
+    end
+
+    # Log in a terminal, as each browser tab on the site does, and print its name
+    #
+    # The name is what write's --tty takes. A terminal keeps it for as long as it checks in with the same token, at
+    # least every three minutes: without --token, each check-in is a new terminal's.
+    #
+    # @api private
+    # @param options [Hash{Symbol => Object}] the options of the command line
+    # @return [Integer] the exit status: 1 if every terminal is taken
+    def check_in(options)
+      ask(options) do |client|
+        tty = client.check_in(options.fetch(:token) { SecureRandom.uuid }).you
+        raise Error, "every terminal is taken: try again in a few minutes" unless tty
+
+        "#{tty}\n"
+      end
     end
 
     # Ask the site for something, and print its response, or what went wrong

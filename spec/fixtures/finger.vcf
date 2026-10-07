@@ -1,0 +1,51 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Berlin;Erik;;;
+FN:Erik Berlin
+EMAIL;TYPE=INTERNET:sferik@gmail.com
+TEL;TYPE=CELL:+1 415-312-2382
+URL:https://sferik.net
+NICKNAME:sferik
+BDAY:1983-11-24
+NOTE:Ship small\, sharp tools.
+X-SOCIALPROFILE;TYPE=github:https://github.com/sferik
+X-SOCIALPROFILE;TYPE=gitlab:https://gitlab.com/sferik
+X-SOCIALPROFILE;TYPE=stackoverflow:https://stackoverflow.com/users/209190/s
+ ferik
+X-SOCIALPROFILE;TYPE=rubygems:https://rubygems.org/profiles/sferik
+X-SOCIALPROFILE;TYPE=speakerdeck:https://speakerdeck.com/sferik
+X-SOCIALPROFILE;TYPE=hackernews:https://news.ycombinator.com/user?id=sferik
+X-SOCIALPROFILE;TYPE=ycombinator:https://www.ycombinator.com/verify/qugse5l
+ o7rvb3xe7
+X-SOCIALPROFILE;TYPE=linkedin:https://www.linkedin.com/in/sferik
+X-SOCIALPROFILE;TYPE=x:https://x.com/sferik
+X-SOCIALPROFILE;TYPE=bluesky:https://bsky.app/profile/sferik.net
+X-SOCIALPROFILE;TYPE=mastodon:https://mastodon.social/@sferik
+X-SOCIALPROFILE;TYPE=threads:https://www.threads.com/@sferik
+X-SOCIALPROFILE;TYPE=facebook:https://www.facebook.com/sferik
+X-SOCIALPROFILE;TYPE=instagram:https://www.instagram.com/sferik/
+X-SOCIALPROFILE;TYPE=snapchat:https://www.snapchat.com/@sferik
+X-SOCIALPROFILE;TYPE=tiktok:https://www.tiktok.com/@sf.erik
+X-SOCIALPROFILE;TYPE=clubhouse:https://www.clubhouse.com/@sferik
+X-SOCIALPROFILE;TYPE=reddit:https://www.reddit.com/user/sferik
+X-SOCIALPROFILE;TYPE=medium:https://medium.com/@sferik
+X-SOCIALPROFILE;TYPE=tumblr:https://www.tumblr.com/sferik
+X-SOCIALPROFILE;TYPE=flickr:https://www.flickr.com/people/25243524@N02
+X-SOCIALPROFILE;TYPE=pinterest:https://www.pinterest.com/sferik/
+X-SOCIALPROFILE;TYPE=dribbble:https://dribbble.com/sferik
+X-SOCIALPROFILE;TYPE=youtube:https://www.youtube.com/ekmichae
+X-SOCIALPROFILE;TYPE=vimeo:https://vimeo.com/sferik
+X-SOCIALPROFILE;TYPE=twitch:https://www.twitch.tv/sferik
+X-SOCIALPROFILE;TYPE=kick:https://kick.com/sferik
+X-SOCIALPROFILE;TYPE=spotify:https://open.spotify.com/user/sferik
+X-SOCIALPROFILE;TYPE=soundcloud:https://soundcloud.com/erik
+X-SOCIALPROFILE;TYPE=strava:https://www.strava.com/athletes/sferik
+X-SOCIALPROFILE;TYPE=kickstarter:https://www.kickstarter.com/profile/sferik
+X-SOCIALPROFILE;TYPE=paypal:https://www.paypal.com/paypalme/sferik
+X-SOCIALPROFILE;TYPE=venmo:https://account.venmo.com/u/sferik
+X-SOCIALPROFILE;TYPE=cashapp:https://cash.app/$pend
+X-SOCIALPROFILE;TYPE=kofi:https://ko-fi.com/sferik
+X-SOCIALPROFILE;TYPE=buymeacoffee:https://buymeacoffee.com/sferik
+X-SOCIALPROFILE;TYPE=gravatar:https://gravatar.com/sferik
+X-SOCIALPROFILE;TYPE=linktree:https://linktr.ee/sferik
+END:VCARD

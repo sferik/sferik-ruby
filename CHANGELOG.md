@@ -2,9 +2,10 @@
 
 ## 0.1.0 (2026-10-08)
 
-- Initial release: every endpoint of the sferik.net API (`home`, `whoami`, `dependency`, `finger`, `name_change`,
-  `contributions`, `projects`, `talks`, `podcasts`, `resume`, `resume_latex`, `resume_pdf`, `who`, `text`, `openapi`,
-  and the two that write, `check_in` and `write`), on `Sferik` itself or on a client of your own (`Sferik.new`)
+- Initial release: every endpoint of the sferik.net API (`home`, `whoami`, `dependency`, `finger`, `finger_vcard`,
+  `name_change`, `contributions`, `projects`, `talks`, `talks_feed`, `podcasts`, `resume`, `resume_latex`,
+  `resume_pdf`, `who`, `deployment`, `text`, `openapi`, and the two that write, `check_in` and `write`), on `Sferik`
+  itself or on a client of your own (`Sferik.new`)
 - Immutable response objects, typed all the way down (`Sferik::Resume::Work`, `Sferik::Home::Profile`, and so on),
   with every date a `Date` or `Time`, and with equality, pattern matching, `to_h`, `to_json`, and `as_json`. Everything
   inside one is built when it is, so a response that isn't what the API documents raises `InvalidResponse` from the
@@ -30,8 +31,9 @@
   it its code
 - A `sferik` command, which prints what the shell on sferik.net prints: `sferik finger`, `sferik resume`, and so on.
   With `--json` it prints JSON instead, `sferik resume --pdf` and `sferik resume --latex` print the resume as a PDF and
-  as LaTeX, and `--host` or the `SFERIK_HOST` environment variable names a copy of the site to ask instead of
-  sferik.net. `sferik write` sends Erik the message it reads from standard input. It exits 1 when a request fails, and 2
+  as LaTeX, `sferik finger --vcard` prints a contact card, and `--host` or the `SFERIK_HOST` environment variable names a copy of the site to ask instead of
+  sferik.net. `sferik write` sends Erik the message it reads from standard input, and
+  `sferik check-in` logs in a terminal and prints its name, which `sferik write --tty` takes. It exits 1 when a request fails, and 2
   when the command line is wrong, as one that names two formats is, or a format for what prints no resource
   (`sferik write`, `sferik help`, or `sferik --version`)
 - RBS signatures, checked by Steep

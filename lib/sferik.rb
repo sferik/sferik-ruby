@@ -64,6 +64,13 @@ module Sferik
   #   @example
   #     Sferik.finger.profiles.map(&:url)
   #   @see API::ProfileEndpoints#finger What it raises, and more about it
+  # @!method self.finger_vcard
+  #   Returns contact details and profiles as a contact card (a vCard)
+  #   @api public
+  #   @return [String] the vCard
+  #   @example
+  #     File.write("erik-berlin.vcf", Sferik.finger_vcard)
+  #   @see API::ProfileEndpoints#finger_vcard What it raises, and more about it
   # @!method self.name_change
   #   Returns the name change, from Erik Michaels-Ober to Erik Berlin, as a git commit
   #   @api public
@@ -92,6 +99,13 @@ module Sferik
   #   @example
   #     Sferik.talks.select(&:video).map(&:title)
   #   @see API::TalkEndpoints#talks What it raises, and more about it
+  # @!method self.talks_feed
+  #   Returns the talks as an Atom feed, newest first
+  #   @api public
+  #   @return [String] the feed, as XML
+  #   @example
+  #     File.write("talks.atom", Sferik.talks_feed)
+  #   @see API::TalkEndpoints#talks_feed What it raises, and more about it
   # @!method self.podcasts
   #   Returns podcast appearances
   #   @api public
@@ -161,6 +175,13 @@ module Sferik
   #   @example
   #     Sferik.openapi["paths"].keys
   #   @see API::SiteEndpoints#openapi What it raises, and more about it
+  # @!method self.deployment
+  #   Returns which commit of the site is deployed, and when it was
+  #   @api public
+  #   @return [Deployment]
+  #   @example
+  #     Sferik.deployment.commit # => "6a34226a3f351a78339b75430055a018ac30c964"
+  #   @see API::SiteEndpoints#deployment What it raises, and more about it
   def_delegators :client, *API.public_instance_methods
 
   # The methods of SingleForwardable, which the module delegates with rather than offers (one at a time: YARD can't

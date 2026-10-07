@@ -50,7 +50,12 @@ end
 FIXTURES = {
   "home.json" => "/", "whoami.json" => "/whoami", "contributions.json" => "/contributions", "src.json" => "/src",
   "name.json" => "/name", "talks.json" => "/talks", "podcasts.json" => "/podcasts", "finger.json" => "/finger", "resume.json" => "/resume",
-  "dependency.json" => "/dependency", "who.json" => "/who", "openapi.json" => "/openapi.json"
+  "dependency.json" => "/dependency", "who.json" => "/who", "openapi.json" => "/openapi.json", "version.json" => "/version"
+}.freeze
+
+# The fixtures that aren't JSON, and what each is asked for as
+OTHER_FIXTURES = {
+  "whoami.txt" => ["/whoami", "text/plain"], "finger.vcf" => ["/finger", "text/vcard"], "talks.atom" => ["/talks.atom", "application/atom+xml"]
 }.freeze
 
 desc "Save the API's responses as the specs' fixtures (HOST=http://localhost:3745 for a local copy of the site)"
@@ -60,10 +65,10 @@ task :fixtures do
 
   client = Sferik::Client.new(host: ENV.fetch("HOST", Sferik.host))
   FIXTURES.each { |file, path| File.write("spec/fixtures/#{file}", client.get(path)) }
-  File.write("spec/fixtures/whoami.txt", client.get("/whoami", accept: "text/plain"))
+  OTHER_FIXTURES.each { |file, (path, accept)| File.write("spec/fixtures/#{file}", client.get(path, accept:)) }
   # Checking in logs a terminal in to the site, for three minutes
   File.write("spec/fixtures/check_in.json", client.post("/who?#{URI.encode_www_form(token: SecureRandom.uuid, page: "/")}"))
-  puts "Saved #{FIXTURES.size + 2} fixtures from #{client.host}"
+  puts "Saved #{FIXTURES.size + OTHER_FIXTURES.size + 1} fixtures from #{client.host}"
 end
 
 # Where two JSON documents differ, as JSON pointers: an object is compared key by key, and anything else as a whole

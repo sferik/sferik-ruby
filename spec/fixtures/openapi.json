@@ -331,6 +331,12 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "text/vcard": {
+                "schema": {
+                  "type": "string",
+                  "description": "A contact card (vCard 3.0), with every profile. Also at /finger.vcf."
+                }
               }
             }
           },
@@ -429,6 +435,54 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "From another site's page",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Forbidden: that's for this site's own pages\n"
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "that's for this site's own pages",
+                  "code": "cross_origin"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many check-ins from this address",
+            "headers": {
+              "Retry-After": {
+                "description": "The seconds to wait before checking in again",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Too Many Requests: a check-in a minute is plenty\n"
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "a check-in a minute is plenty",
+                  "code": "busy"
+                }
+              }
+            }
           }
         }
       }
@@ -437,7 +491,7 @@
       "post": {
         "operationId": "write",
         "summary": "Send Erik a message",
-        "description": "The shell's write sferik. The body is the message, as plain text (5,000 bytes at most), emailed on, with a Reply-To if it includes an email address. One message a minute from an address, and twenty a day in all. Answers in plain text, or in JSON for a client that prefers it. With an Idempotency-Key, a message that may not have arrived can be sent again: the same key within a day is the same message, which is answered as sent and not emailed twice. Same origin only.",
+        "description": "The shell's write sferik. The body is the message, as plain text (5,000 bytes at most), emailed on, with a Reply-To if it includes an email address. One message a minute from an address, and twenty a day in all. Answers in plain text, or in JSON for a client that prefers it. With an Idempotency-Key, a message that may not have arrived can be sent again: the same key within a day is the same message, which is answered as sent and not emailed twice. One asked after while it's still being sent is answered 409, with the seconds to wait before asking again. Same origin only.",
         "parameters": [
           {
             "name": "tty",
@@ -504,6 +558,54 @@
                 "example": {
                   "error": "nothing to send",
                   "code": "empty"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "From another site's page",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Forbidden: that's for this site's own pages\n"
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "that's for this site's own pages",
+                  "code": "cross_origin"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The message with this Idempotency-Key is still being sent (sending)",
+            "headers": {
+              "Retry-After": {
+                "description": "The seconds to wait before asking again",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "write: that message is still being sent; ask again in a moment\n"
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "that message is still being sent; ask again in a moment",
+                  "code": "sending"
                 }
               }
             }
@@ -654,6 +756,116 @@
           },
           "406": {
             "$ref": "#/components/responses/NotAcceptable"
+          }
+        }
+      }
+    },
+    "/talks.atom": {
+      "get": {
+        "operationId": "getTalksFeed",
+        "summary": "The talks, as a feed",
+        "description": "The talks as an Atom feed, newest first. Talks are dated to the month, so each is dated its first day.",
+        "responses": {
+          "200": {
+            "description": "The feed",
+            "content": {
+              "application/atom+xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/version": {
+      "get": {
+        "operationId": "getVersion",
+        "summary": "The deployed commit",
+        "description": "Which commit of the site is deployed, and when it was. A copy of the site that wasn't deployed (one run by hand) says null for each.",
+        "responses": {
+          "200": {
+            "description": "The commit, when it was deployed, and where to read it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Version"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/.signature": {
+      "get": {
+        "operationId": "getSignature",
+        "summary": "The motto",
+        "description": "~/.signature: the motto the home page shows, as cat .signature.",
+        "responses": {
+          "200": {
+            "description": "The motto, and a newline",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/.well-known/webfinger": {
+      "get": {
+        "operationId": "getWebFinger",
+        "summary": "WebFinger",
+        "description": "WebFinger (RFC 7033) for sferik@sferik.net, and the same at sferik.com, sferik.org, and sferik.me, which points to the Mastodon account, so the domain works as a fediverse handle.",
+        "parameters": [
+          {
+            "name": "resource",
+            "in": "query",
+            "required": true,
+            "description": "The account, as an acct: URI",
+            "schema": {
+              "type": "string"
+            },
+            "example": "acct:sferik@sferik.net"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The account's JSON Resource Descriptor",
+            "content": {
+              "application/jrd+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebFinger"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No resource parameter",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Bad Request: the resource parameter is required\n"
+              }
+            }
+          },
+          "404": {
+            "description": "No such account",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "No such account: acct:someone@example.com\n"
+              }
+            }
           }
         }
       }
@@ -1571,7 +1783,20 @@
           },
           "code": {
             "type": "string",
-            "enum": ["bad_token", "bad_page", "empty", "bad_key", "too_long", "busy", "full", "undelivered", "unavailable", "not_found"],
+            "enum": [
+              "bad_token",
+              "bad_page",
+              "empty",
+              "bad_key",
+              "too_long",
+              "busy",
+              "full",
+              "sending",
+              "undelivered",
+              "unavailable",
+              "not_found",
+              "cross_origin"
+            ],
             "description": "Which error it is, for a program to tell it from the others"
           },
           "path": {
@@ -1591,6 +1816,68 @@
           }
         },
         "required": ["message"],
+        "additionalProperties": false
+      },
+      "Version": {
+        "type": "object",
+        "properties": {
+          "commit": {
+            "type": ["string", "null"],
+            "description": "The commit's SHA"
+          },
+          "deployed": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When it was deployed"
+          },
+          "url": {
+            "type": ["string", "null"],
+            "format": "uri",
+            "description": "The commit, on GitHub"
+          }
+        },
+        "required": ["commit", "deployed", "url"],
+        "additionalProperties": false
+      },
+      "WebFinger": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string",
+            "description": "The account this one points to, as an acct: URI"
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "rel": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "href": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "template": {
+                  "type": "string"
+                }
+              },
+              "required": ["rel"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["subject", "aliases", "links"],
         "additionalProperties": false
       }
     },

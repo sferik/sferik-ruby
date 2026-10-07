@@ -198,6 +198,22 @@ RSpec.describe Sferik::API::SiteEndpoints do
     end
   end
 
+  describe "#deployment" do
+    it "returns the commit that's deployed, when it was, and where to read it" do
+      stub_get("/version", "version.json")
+
+      expect(client.deployment).to be_a(Sferik::Deployment).and(have_attributes(commit: "6a34226a3f351a78339b75430055a018ac30c964",
+        deployed: Time.utc(2026, 10, 7, 18, 4, 11), url: "https://github.com/sferik/sferik-web/commit/6a34226a3f351a78339b75430055a018ac30c964"))
+    end
+
+    it "returns nil for each from a copy of the site that wasn't deployed" do
+      stub_request(:get, "https://sferik.net/version").with(headers: {"Accept" => "application/json"})
+        .to_return(body: %({"commit":null,"deployed":null,"url":null}\n))
+
+      expect(client.deployment).to have_attributes(commit: nil, deployed: nil, url: nil)
+    end
+  end
+
   describe "#openapi" do
     it "returns the API's description" do
       stub_get("/openapi.json", "openapi.json")

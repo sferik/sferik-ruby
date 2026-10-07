@@ -50,6 +50,8 @@ figure.alt                         # => "A tall, precarious tower of blocks labe
 finger = Sferik.finger
 finger.mail                   # => "sferik@gmail.com"
 finger.profiles.map(&:url)    # => ["https://github.com/sferik", "https://gitlab.com/sferik", ...]
+
+File.write("erik-berlin.vcf", Sferik.finger_vcard)  # the same, as a contact card for an address book
 ```
 
 ### GitHub contributions
@@ -85,6 +87,7 @@ talks.last.title                    # the oldest; there's size, length, empty?, 
 talks.places[talks.first.location]  # => #<Sferik::Place lat=32.09 lon=34.78 country="Israel">
 talks.speaker_deck                  # => "https://speakerdeck.com/sferik"
 Sferik.podcasts.first.show          # => "Ruby Rogues, episode 248": the podcasts alone, which the talks have too
+Sferik.talks_feed                   # the talks as an Atom feed, for a feed reader
 ```
 
 ### The resume
@@ -151,6 +154,15 @@ rescue Sferik::NetworkError
 end
 ```
 
+### Which version of the site is deployed
+
+```ruby
+deployment = Sferik.deployment
+deployment.commit    # => "6a34226a3f351a78339b75430055a018ac30c964"
+deployment.deployed  # => 2026-10-07 18:04:11 UTC
+deployment.url       # => "https://github.com/sferik/sferik-web/commit/6a34226a3f351a78339b75430055a018ac30c964"
+```
+
 ### Anything as terminal output
 
 Every resource also comes as text, wrapped to 80 columns, the way `curl sferik.net` shows it:
@@ -186,11 +198,13 @@ The commands that print are `finger`, `whoami`, `talks`, `podcasts`, `resume`, `
 sferik talks --json | jq -r '.talks[].title'
 ```
 
-The resume also comes as a PDF with `--pdf`, and as LaTeX with `--latex`:
+The resume also comes as a PDF with `--pdf`, and as LaTeX with `--latex`, and `finger` as a contact card with
+`--vcard`:
 
 ```sh
 sferik resume --pdf > resume.pdf
 sferik resume --latex > resume.tex
+sferik finger --vcard > erik-berlin.vcf
 ```
 
 `sferik write` sends me a message, as `write sferik` does in the shell on the site. It reads the message from
@@ -200,9 +214,19 @@ standard input: type it and press Ctrl-D, or pipe it in.
 echo "Hello from my terminal. Reply to me@example.com" | sferik write
 ```
 
+`sferik check-in` logs in a terminal, as each browser tab on the site does, and prints its name, which `write` takes
+as `--tty`, to say which terminal a message is from. A terminal is logged in for three minutes after it last checked
+in, and keeps its name if it checks in again with the same `--token` (16 to 64 letters, digits, hyphens, and
+underscores); without one, each check-in is a new terminal's.
+
+```sh
+tty=$(sferik check-in)                    # => ttys003, say
+echo "Hello from $tty" | sferik write --tty "$tty"
+```
+
 It exits 0 when it has printed what it was asked for, 1 when a request fails (the site can't be reached, or says
 no), and 2 when the command line is wrong (an unknown command or option, more than one format, a format for
-what prints no resource (`write`, `help`, or `--version`), or a host that isn't an http or https URL, from `--host`
+what prints no resource (`write`, `check-in`, `help`, or `--version`), `--tty` or `--token` for another command, or a host that isn't an http or https URL, from `--host`
 or `SFERIK_HOST`), so a script can tell the two apart.
 
 To ask a local copy of the site instead of sferik.net, name it with `--host` or the `SFERIK_HOST` environment

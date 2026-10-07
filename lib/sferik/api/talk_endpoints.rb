@@ -22,6 +22,16 @@ module Sferik
         Talks.new(parse_json(get("/talks")))
       end
 
+      # Returns the talks as an Atom feed, newest first
+      #
+      # @api public
+      # @return [String] the feed, as XML
+      # @example
+      #   File.write("talks.atom", Sferik.talks_feed)
+      def talks_feed
+        get("/talks.atom", accept: "application/atom+xml")
+      end
+
       # Returns podcast appearances
       #
       # They come with the talks too, as {Talks#podcasts}: this asks for them alone.

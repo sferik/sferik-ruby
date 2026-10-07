@@ -17,10 +17,12 @@ module Sferik
   def self.whoami: () -> Whoami
   def self.dependency: () -> Dependency
   def self.finger: () -> Finger
+  def self.finger_vcard: () -> String
   def self.name_change: () -> NameChange
   def self.contributions: () -> Contributions
   def self.projects: () -> Projects
   def self.talks: () -> Talks
+  def self.talks_feed: () -> String
   def self.podcasts: () -> Array[Podcast]
   def self.resume: () -> Resume
   def self.resume_latex: () -> String
@@ -30,6 +32,7 @@ module Sferik
   def self.write: (String message, ?tty: String?, ?key: String) -> String
   def self.text: (?String path) -> String
   def self.openapi: () -> Hash[String, untyped]
+  def self.deployment: () -> Deployment
 
   module Configuration : Module
     DEFAULTS: Hash[Symbol, untyped]
@@ -138,6 +141,7 @@ module Sferik
       def whoami: () -> Whoami
       def dependency: () -> Dependency
       def finger: () -> Finger
+      def finger_vcard: () -> String
       def name_change: () -> NameChange
     end
 
@@ -152,6 +156,7 @@ module Sferik
       include JSONParsing
 
       def talks: () -> Talks
+      def talks_feed: () -> String
       def podcasts: () -> Array[Podcast]
     end
 
@@ -172,6 +177,7 @@ module Sferik
       def write: (String message, ?tty: String?, ?key: String) -> String
       def text: (?String path) -> String
       def openapi: () -> Hash[String, untyped]
+      def deployment: () -> Deployment
 
       private
 
@@ -191,7 +197,8 @@ module Sferik
     # What the command asks of a client
     interface _Client
       def get: (String path, ?accept: String) -> String
-      def write: (String message) -> String
+      def write: (String message, ?tty: String?) -> String
+      def check_in: (String token) -> Who
     end
 
     # The environment: ENV, or a Hash
@@ -200,6 +207,10 @@ module Sferik
     end
 
     PROMPT: String
+    FORMATS: Hash[String, String]
+    VALUES: Hash[String, Symbol]
+    OWNERS: Hash[Symbol, String]
+    ACTIONS: Hash[Symbol | String, Symbol]
 
     @client: _Clients
     @input: IO
@@ -213,10 +224,14 @@ module Sferik
     private
 
     def dispatch: (Array[String] argv) -> Integer
+    def perform: (String? command, Hash[Symbol, untyped] options) -> Integer
+    def usage: (Hash[Symbol, untyped] _options) -> Integer
+    def version: (Hash[Symbol, untyped] _options) -> Integer
     def parser: (Hash[Symbol, untyped] options) -> OptionParser
     def show: (String path, Hash[Symbol, untyped] options) -> Integer
     def unformatted: (Hash[Symbol, untyped] options) { () -> Integer } -> Integer
     def write: (Hash[Symbol, untyped] options) -> Integer
+    def check_in: (Hash[Symbol, untyped] options) -> Integer
     def ask: (Hash[Symbol, untyped] options) { (_Client client) -> String } -> Integer
     def print_body: (String body) -> Integer
     def say: (String text) -> Integer
@@ -353,6 +368,12 @@ module Sferik
     def date: () -> Date
     def count: () -> Integer
     def level: () -> Integer
+  end
+
+  class Deployment < Resource
+    def commit: () -> String?
+    def deployed: () -> Time?
+    def url: () -> String?
   end
 
   class Dependency < Resource

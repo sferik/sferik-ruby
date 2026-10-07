@@ -2,6 +2,7 @@
 
 require "securerandom"
 require "uri"
+require_relative "../deployment"
 require_relative "../json_parsing"
 require_relative "../validation"
 require_relative "../who"
@@ -104,6 +105,16 @@ module Sferik
       #   Sferik.openapi["paths"].keys
       def openapi
         parse_json(get("/openapi.json"))
+      end
+
+      # Returns which commit of the site is deployed, and when it was
+      #
+      # @api public
+      # @return [Deployment]
+      # @example
+      #   Sferik.deployment.commit # => "6a34226a3f351a78339b75430055a018ac30c964"
+      def deployment
+        Deployment.new(parse_json(get("/version")))
       end
 
       private

@@ -11,7 +11,9 @@ RSpec.describe Sferik::CLI do
 
       def get(path, accept:) = "#{path} as #{accept}#{@from}\n"
 
-      def write(message) = "write: #{message.inspect} sent to sferik#{@from}"
+      def write(message, tty:) = "write: #{message.inspect} sent to sferik#{" by #{tty}" if tty}#{@from}"
+
+      def check_in(token) = Struct.new(:you).new("ttys#{token.size.to_s.rjust(3, "0")}#{@from}")
     end
   end
   let(:usage) { described_class.const_get(:USAGE) }
@@ -23,7 +25,8 @@ RSpec.describe Sferik::CLI do
     Class.new do
       define_method(:initialize) { |host:| }
       define_method(:get) { |*, **| raise(error, message) }
-      define_method(:write) { |*| raise(error, message) }
+      define_method(:write) { |*, **| raise(error, message) }
+      define_method(:check_in) { |*| raise(error, message) }
     end
   end
 
@@ -64,7 +67,7 @@ RSpec.describe Sferik::CLI do
   end
 
   it "lists every command in the usage" do
-    expect(usage.scan(/^  (\S+)  /).flatten).to contain_exactly(*described_class.const_get(:COMMANDS).keys, "write", "help")
+    expect(usage.scan(/^  (\S+)  /).flatten).to contain_exactly(*described_class.const_get(:COMMANDS).keys, "write", "check-in", "help")
   end
 
   %w[-v --version].each do |flag|
@@ -90,7 +93,7 @@ RSpec.describe Sferik::CLI do
   end
 
   it "lists every option in the usage" do
-    expect(usage.scan(/(?<= )--?[a-z]+/)).to eq(%w[--json --pdf --latex --host -h --help -v --version])
+    expect(usage.scan(/(?<= )--?[a-z]+/)).to eq(%w[--json --pdf --latex --vcard --tty --token --host -h --help -v --version])
   end
 
   it "prints a command as JSON with --json" do
@@ -119,10 +122,14 @@ RSpec.describe Sferik::CLI do
     expect(run_cli("resume", "--latex")).to eq([0, "/resume as application/x-latex\n", ""])
   end
 
-  [%w[--json --latex], %w[--latex --pdf], %w[--pdf --json], %w[--json --pdf --json]].each do |formats|
+  [%w[--json --latex], %w[--latex --pdf], %w[--pdf --json], %w[--json --pdf --json], %w[--vcard --json]].each do |formats|
     it "says to pick one format for #{formats.join(" ")}, then the usage, and asks for nothing" do
-      expect(run_cli("resume", *formats)).to eq([2, "", "sferik: pick one format: --json, --pdf, or --latex\n\n#{usage}"])
+      expect(run_cli("resume", *formats)).to eq([2, "", "sferik: pick one format: --json, --pdf, --latex, or --vcard\n\n#{usage}"])
     end
+  end
+
+  it "prints finger as a contact card with --vcard" do
+    expect(run_cli("finger", "--vcard")).to eq([0, "/finger as text/vcard\n", ""])
   end
 
   it "takes a format named twice" do
@@ -130,9 +137,9 @@ RSpec.describe Sferik::CLI do
   end
 
   [%w[--help], %w[-h], %w[help], %w[--version], %w[-v], %w[finger --help], %w[finger --version]].each do |argv|
-    %w[--json --pdf --latex].each do |format|
+    %w[--json --pdf --latex --vcard].each do |format|
       it "takes no #{format} for #{argv.join(" ")}, which prints no resource: it says so, then the usage" do
-        expect(run_cli(*argv, format)).to eq([2, "", "sferik: --json, --pdf, and --latex are for the commands that print a resource\n\n#{usage}"])
+        expect(run_cli(*argv, format)).to eq([2, "", "sferik: --json, --pdf, --latex, and --vcard are for the commands that print a resource\n\n#{usage}"])
       end
     end
   end
@@ -191,14 +198,80 @@ RSpec.describe Sferik::CLI do
     )
   end
 
-  %w[--json --pdf --latex].each do |format|
+  %w[--json --pdf --latex --vcard].each do |format|
     it "takes no #{format} for write: it says so, then the usage, and reads and sends nothing" do
       input = StringIO.new("Hello")
 
       expect([*run_cli("write", format, input:), input.pos]).to eq(
-        [2, "", "sferik: --json, --pdf, and --latex are for the commands that print a resource\n\n#{usage}", 0]
+        [2, "", "sferik: --json, --pdf, --latex, and --vcard are for the commands that print a resource\n\n#{usage}", 0]
       )
     end
+  end
+
+  it "write says which terminal the message is from with --tty" do
+    expect(run_cli("write", "--tty", "ttys003", input: StringIO.new("Hello"))).to eq([0, "write: \"Hello\" sent to sferik by ttys003\n", ""])
+  end
+
+  it "takes --tty before write too" do
+    expect(run_cli("--tty", "ttys003", "write", input: StringIO.new("Hello"))).to eq([0, "write: \"Hello\" sent to sferik by ttys003\n", ""])
+  end
+
+  [%w[finger], %w[check-in], []].each do |argv|
+    it "takes no --tty for #{argv.first || "the home page"}, which sends no message: it says so, then the usage, and asks for nothing" do
+      expect(run_cli(*argv, "--tty", "ttys003")).to eq([2, "", "sferik: --tty is for write\n\n#{usage}"])
+    end
+  end
+
+  it "check-in logs in a terminal with a random token, and prints the terminal's name" do
+    allow(SecureRandom).to receive(:uuid).and_return("0f8fad5b-d9cb-469f-a165-70867728950e")
+
+    expect(run_cli("check-in")).to eq([0, "ttys036\n", ""])
+  end
+
+  it "check-in logs in the terminal whose token --token gives" do
+    expect(run_cli("check-in", "--token", "0123456789abcdef")).to eq([0, "ttys016\n", ""])
+  end
+
+  it "check-in makes no random token when it's given one" do
+    allow(SecureRandom).to receive(:uuid)
+    run_cli("check-in", "--token", "0123456789abcdef")
+
+    expect(SecureRandom).not_to have_received(:uuid)
+  end
+
+  it "check-in asks the host --host names" do
+    expect(run_cli("check-in", "--token", "0123456789abcdef", "--host", "http://localhost:3745")).to eq([0, "ttys016 from http://localhost:3745\n", ""])
+  end
+
+  it "check-in says so when every terminal is taken, and fails" do
+    full = Class.new do
+      define_method(:initialize) { |host:| }
+      define_method(:check_in) { |_token| Struct.new(:you).new(nil) }
+    end
+
+    expect(run_cli("check-in", with: full)).to eq([1, "", "sferik: every terminal is taken: try again in a few minutes\n"])
+  end
+
+  it "check-in reports errors from the API, and fails" do
+    expect(run_cli("check-in", with: failing(Sferik::Error, "token and page are required"))).to eq([1, "", "sferik: token and page are required\n"])
+  end
+
+  %w[--json --pdf --latex --vcard].each do |format|
+    it "takes no #{format} for check-in: it says so, then the usage, and checks nothing in" do
+      expect(run_cli("check-in", format, with: failing(RuntimeError))).to eq(
+        [2, "", "sferik: --json, --pdf, --latex, and --vcard are for the commands that print a resource\n\n#{usage}"]
+      )
+    end
+  end
+
+  [%w[finger], %w[write], []].each do |argv|
+    it "takes no --token for #{argv.first || "the home page"}, which checks nothing in: it says so, then the usage, and asks for nothing" do
+      expect(run_cli(*argv, "--token", "0123456789abcdef", with: failing(RuntimeError))).to eq([2, "", "sferik: --token is for check-in\n\n#{usage}"])
+    end
+  end
+
+  it "says which option is another command's first, whatever else is wrong" do
+    expect(run_cli("nope", "--tty", "ttys003", "--json")).to eq([2, "", "sferik: --tty is for write\n\n#{usage}"])
   end
 
   it "write asks the host --host names" do

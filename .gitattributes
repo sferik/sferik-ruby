@@ -1,3 +1,5 @@
 # Check out text with LF line endings everywhere, so the fixtures read the same on Windows as elsewhere
 * text=auto eol=lf
 *.gem binary
+# A vCard's lines end with CRLF, which the fixture keeps
+spec/fixtures/finger.vcf -text
