@@ -2,24 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>https://sferik.net/talks</id>
   <title>Talks, Erik Berlin</title>
-  <updated>2016-08-01T00:00:00Z</updated>
+  <updated>2015-11-01T00:00:00Z</updated>
   <author><name>Erik Berlin</name><uri>https://sferik.net/</uri></author>
   <link rel="self" type="application/atom+xml" href="https://sferik.net/talks.atom"/>
   <link rel="alternate" type="text/html" href="https://sferik.net/talks"/>
-  <entry>
-    <id>tag:sferik.net,2016-08:talks/enumerator-lazy-sf-rb</id>
-    <title>Enumerator::Lazy</title>
-    <updated>2016-08-01T00:00:00Z</updated>
-    <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/enumerator-lazy"/>
-    <summary>SF.rb, San Francisco</summary>
-  </entry>
-  <entry>
-    <id>tag:sferik.net,2015-12:talks/ruby-trivia-3-berlin-ruby-user-group</id>
-    <title>Ruby Trivia 3</title>
-    <updated>2015-12-01T00:00:00Z</updated>
-    <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/ruby-trivia-3"/>
-    <summary>Berlin Ruby User Group, Berlin</summary>
-  </entry>
   <entry>
     <id>tag:sferik.net,2015-11:talks/the-value-of-being-lazy-or-how-i-made-openstruct-10x-faster-rails-israel</id>
     <title>The Value of Being Lazy, or How I Made OpenStruct 10X Faster</title>
@@ -27,20 +13,6 @@
     <link rel="alternate" type="text/html" title="Video" href="https://www.youtube.com/watch?v=6lQeBfSVrpk"/>
     <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/the-value-of-being-lazy"/>
     <summary>Rails Israel, Tel Aviv</summary>
-  </entry>
-  <entry>
-    <id>tag:sferik.net,2015-11:talks/ruby-trivia-2-berlin-ruby-user-group</id>
-    <title>Ruby Trivia 2</title>
-    <updated>2015-11-01T00:00:00Z</updated>
-    <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/ruby-trivia-2"/>
-    <summary>Berlin Ruby User Group, Berlin</summary>
-  </entry>
-  <entry>
-    <id>tag:sferik.net,2015-10:talks/ruby-trivia-berlin-ruby-user-group</id>
-    <title>Ruby Trivia</title>
-    <updated>2015-10-01T00:00:00Z</updated>
-    <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/ruby-trivia"/>
-    <summary>Berlin Ruby User Group, Berlin</summary>
   </entry>
   <entry>
     <id>tag:sferik.net,2015-07:talks/an-introduction-to-crystal-polyconf</id>
@@ -69,13 +41,6 @@
     <updated>2015-04-01T00:00:00Z</updated>
     <link rel="related" type="text/html" title="Slides" href="https://speakerdeck.com/sferik/symbols"/>
     <summary>RubyConf India, Goa</summary>
-  </entry>
-  <entry>
-    <id>tag:sferik.net,2015-03:talks/secrets-to-powerful-apis-panel-sxsw</id>
-    <title>Secrets to Powerful APIs (panel)</title>
-    <updated>2015-03-01T00:00:00Z</updated>
-    <link rel="related" type="text/html" title="Link" href="https://schedule.sxsw.com/2015/events/event_IAP35000"/>
-    <summary>SXSW, Austin</summary>
   </entry>
   <entry>
     <id>tag:sferik.net,2015-02:talks/towards-a-higher-level-language-rubyconf-australia</id>

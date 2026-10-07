@@ -5,154 +5,154 @@
       "name": "multi_json",
       "url": "https://rubygems.org/gems/multi_json",
       "description": "One interface to every Ruby JSON library.",
-      "downloads": 1173292733,
+      "downloads": 1173588881,
       "stars": 27
     },
     {
       "name": "multi_xml",
       "url": "https://rubygems.org/gems/multi_xml",
       "description": "One interface to every Ruby XML library.",
-      "downloads": 607450561,
+      "downloads": 607625567,
       "stars": 171
     },
     {
       "name": "simplecov",
       "url": "https://rubygems.org/gems/simplecov",
       "description": "Code coverage for Ruby.",
-      "downloads": 506833349,
+      "downloads": 506994725,
       "stars": 4927
     },
     {
       "name": "faraday_middleware",
       "url": "https://rubygems.org/gems/faraday_middleware",
       "description": "Middleware for the Faraday HTTP client.",
-      "downloads": 466351032,
+      "downloads": 466426191,
       "stars": 558
     },
     {
       "name": "octokit",
       "url": "https://rubygems.org/gems/octokit",
       "description": "GitHub API Ruby client.",
-      "downloads": 396818107,
+      "downloads": 396921724,
       "stars": 3951
     },
     {
       "name": "oauth2",
       "url": "https://rubygems.org/gems/oauth2",
       "description": "Ruby client for OAuth 2.0.",
-      "downloads": 279782169,
+      "downloads": 279866134,
       "stars": 2180
     },
     {
       "name": "simple_oauth",
       "url": "https://rubygems.org/gems/simple_oauth",
       "description": "Builds and verifies OAuth headers.",
-      "downloads": 42987770,
+      "downloads": 42991892,
       "stars": 77
     },
     {
       "name": "omniauth",
       "url": "https://rubygems.org/gems/omniauth",
       "description": "Multi-provider authentication for Rack.",
-      "downloads": 227016979,
+      "downloads": 227098141,
       "stars": 8101
     },
     {
       "name": "http",
       "url": "https://rubygems.org/gems/http",
       "description": "A fast, chainable HTTP client for Ruby.",
-      "downloads": 216065631,
+      "downloads": 216124025,
       "stars": 3082
     },
     {
       "name": "equalizer",
       "url": "https://rubygems.org/gems/equalizer",
       "description": "Define equality and hashing from a few keys.",
-      "downloads": 131963387,
+      "downloads": 131974579,
       "stars": 203
     },
     {
       "name": "unparser",
       "url": "https://rubygems.org/gems/unparser",
       "description": "Turns Ruby syntax trees back into source.",
-      "downloads": 103269450,
+      "downloads": 103283854,
       "stars": 329
     },
     {
       "name": "delayed_job",
       "url": "https://rubygems.org/gems/delayed_job",
       "description": "Database-backed background jobs.",
-      "downloads": 67450929,
+      "downloads": 67462850,
       "stars": 4824
     },
     {
       "name": "memoizable",
       "url": "https://rubygems.org/gems/memoizable",
       "description": "Memoize method return values.",
-      "downloads": 60305289,
+      "downloads": 60310373,
       "stars": 112
     },
     {
       "name": "gems",
       "url": "https://rubygems.org/gems/gems",
       "description": "RubyGems.org API Ruby client.",
-      "downloads": 55813753,
+      "downloads": 55823511,
       "stars": 140
     },
     {
       "name": "naught",
       "url": "https://rubygems.org/gems/naught",
       "description": "A toolkit for building null objects.",
-      "downloads": 31829885,
+      "downloads": 31834006,
       "stars": 1059
     },
     {
       "name": "twitter",
       "url": "https://rubygems.org/gems/twitter",
       "description": "Twitter API Ruby client.",
-      "downloads": 28194046,
+      "downloads": 28196794,
       "stars": 4570
     },
     {
       "name": "x",
       "url": "https://rubygems.org/gems/x",
       "description": "X API Ruby client.",
-      "downloads": 456777,
+      "downloads": 457594,
       "stars": 109
     },
     {
       "name": "x-cli",
       "url": "https://github.com/sferik/x-cli",
       "description": "Command-line power tool for X, in Rust.",
-      "downloads": 319292,
+      "downloads": 319293,
       "stars": 5587
     },
     {
       "name": "buftok",
       "url": "https://rubygems.org/gems/buftok",
       "description": "Splits a stream of bytes into tokens.",
-      "downloads": 28028689,
+      "downloads": 28031575,
       "stars": 10
     },
     {
       "name": "rails_admin",
       "url": "https://rubygems.org/gems/rails_admin",
       "description": "Admin interface for any Rails app.",
-      "downloads": 13255739,
+      "downloads": 13258148,
       "stars": 7955
     },
     {
       "name": "openai",
       "url": "https://rubygems.org/gems/openai",
       "description": "OpenAI API Ruby client.",
-      "downloads": 2342863,
+      "downloads": 2350852,
       "stars": 465
     },
     {
       "name": "mlb",
       "url": "https://rubygems.org/gems/mlb",
       "description": "MLB Stats API Ruby client.",
-      "downloads": 140232,
+      "downloads": 140284,
       "stars": 68
     },
     {
@@ -166,14 +166,14 @@
       "name": "minitest-strict",
       "url": "https://rubygems.org/gems/minitest-strict",
       "description": "Strict boolean assertions for Minitest.",
-      "downloads": 16789,
+      "downloads": 16799,
       "stars": 8
     },
     {
       "name": "minitest-memory",
       "url": "https://rubygems.org/gems/minitest-memory",
       "description": "Assert how many objects a block allocates.",
-      "downloads": 3888,
+      "downloads": 3894,
       "stars": 12
     },
     {
@@ -199,11 +199,11 @@
     }
   ],
   "total": {
-    "downloads": 5473860995,
+    "downloads": 5475222420,
     "gems": 69,
     "stars": 50972
   },
   "more": "https://github.com/sferik?tab=repositories",
   "live": true,
-  "asOf": "2026-10-07T15:30:32Z"
+  "asOf": "2026-10-07T23:30:33Z"
 }
