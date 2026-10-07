@@ -224,9 +224,10 @@ RSpec.describe Sferik::API::SiteEndpoints do
   describe "#deployment" do
     it "returns the commit that's deployed, when it was, and where to read it" do
       stub_get("/version", "version.json")
+      saved = JSON.parse(fixture("version.json")) # whichever commit was deployed when the fixtures were saved
 
-      expect(client.deployment).to be_a(Sferik::Deployment).and(have_attributes(commit: "6a34226a3f351a78339b75430055a018ac30c964",
-        deployed: Time.utc(2026, 10, 7, 18, 4, 11), url: "https://github.com/sferik/sferik-web/commit/6a34226a3f351a78339b75430055a018ac30c964"))
+      expect(client.deployment).to be_a(Sferik::Deployment).and(have_attributes(commit: saved.fetch("commit").match(/\A\h{40}\z/).to_s,
+        deployed: Time.iso8601(saved.fetch("deployed")), url: "https://github.com/sferik/sferik-web/commit/#{saved.fetch("commit")}"))
     end
 
     it "returns nil for each from a copy of the site that wasn't deployed" do
