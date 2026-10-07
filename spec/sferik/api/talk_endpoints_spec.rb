@@ -19,6 +19,15 @@ RSpec.describe Sferik::API::TalkEndpoints do
         date: Date.new(2015, 4, 1), slides: String)
     end
 
+    it "returns a talk's page on the event's site, for one that has one" do
+      expect(client.talks.find { |t| t.event.eql?("SXSW") }).to have_attributes(title: "Secrets to Powerful APIs (panel)", slides: nil, video: nil,
+        link: "https://schedule.sxsw.com/2015/events/event_IAP35000")
+    end
+
+    it "returns no page for a talk that has none" do
+      expect(client.talks.first).to have_attributes(title: "Enumerator::Lazy", link: nil)
+    end
+
     it "returns where each talk's location is" do
       talks = client.talks
 

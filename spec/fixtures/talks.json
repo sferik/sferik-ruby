@@ -3,13 +3,54 @@
   "speakerDeck": "https://speakerdeck.com/sferik",
   "talks": [
     {
+      "title": "Enumerator::Lazy",
+      "event": "SF.rb",
+      "location": "San Francisco",
+      "date": "2016-08",
+      "slides": "https://speakerdeck.com/sferik/enumerator-lazy",
+      "video": null,
+      "link": null,
+      "featured": false
+    },
+    {
+      "title": "Ruby Trivia 3",
+      "event": "Berlin Ruby User Group",
+      "location": "Berlin",
+      "date": "2015-12",
+      "slides": "https://speakerdeck.com/sferik/ruby-trivia-3",
+      "video": null,
+      "link": null,
+      "featured": false
+    },
+    {
       "title": "The Value of Being Lazy, or How I Made OpenStruct 10X Faster",
       "event": "Rails Israel",
       "location": "Tel Aviv",
       "date": "2015-11",
       "slides": "https://speakerdeck.com/sferik/the-value-of-being-lazy",
       "video": "https://www.youtube.com/watch?v=6lQeBfSVrpk",
+      "link": null,
       "featured": true
+    },
+    {
+      "title": "Ruby Trivia 2",
+      "event": "Berlin Ruby User Group",
+      "location": "Berlin",
+      "date": "2015-11",
+      "slides": "https://speakerdeck.com/sferik/ruby-trivia-2",
+      "video": null,
+      "link": null,
+      "featured": false
+    },
+    {
+      "title": "Ruby Trivia",
+      "event": "Berlin Ruby User Group",
+      "location": "Berlin",
+      "date": "2015-10",
+      "slides": "https://speakerdeck.com/sferik/ruby-trivia",
+      "video": null,
+      "link": null,
+      "featured": false
     },
     {
       "title": "An Introduction to Crystal",
@@ -18,6 +59,7 @@
       "date": "2015-07",
       "slides": null,
       "video": "https://www.youtube.com/watch?v=Ysm4IU4aWoQ",
+      "link": null,
       "featured": true
     },
     {
@@ -27,6 +69,7 @@
       "date": "2015-05",
       "slides": null,
       "video": "https://www.youtube.com/watch?v=5-_CWyrpIBk",
+      "link": null,
       "featured": false
     },
     {
@@ -36,6 +79,7 @@
       "date": "2015-04",
       "slides": "https://speakerdeck.com/sferik/writing-fast-ruby",
       "video": null,
+      "link": null,
       "featured": false
     },
     {
@@ -45,6 +89,17 @@
       "date": "2015-04",
       "slides": "https://speakerdeck.com/sferik/symbols",
       "video": null,
+      "link": null,
+      "featured": false
+    },
+    {
+      "title": "Secrets to Powerful APIs (panel)",
+      "event": "SXSW",
+      "location": "Austin",
+      "date": "2015-03",
+      "slides": null,
+      "video": null,
+      "link": "https://schedule.sxsw.com/2015/events/event_IAP35000",
       "featured": false
     },
     {
@@ -54,6 +109,7 @@
       "date": "2015-02",
       "slides": null,
       "video": "https://www.youtube.com/watch?v=cjPybeAeKDQ",
+      "link": null,
       "featured": true
     },
     {
@@ -63,6 +119,7 @@
       "date": "2014-10",
       "slides": "https://speakerdeck.com/sferik/content-negotiation-for-rest-apis",
       "video": "https://www.youtube.com/watch?v=xRyCykwqDEk",
+      "link": null,
       "featured": true
     },
     {
@@ -72,6 +129,7 @@
       "date": "2014-10",
       "slides": "https://speakerdeck.com/sferik/writing-fast-ruby",
       "video": null,
+      "link": null,
       "featured": false
     },
     {
@@ -81,6 +139,7 @@
       "date": "2014-09",
       "slides": "https://speakerdeck.com/sferik/writing-fast-ruby",
       "video": "https://www.youtube.com/watch?v=IXODb6uk26o",
+      "link": null,
       "featured": false
     },
     {
@@ -90,6 +149,7 @@
       "date": "2014-09",
       "slides": "https://speakerdeck.com/sferik/writing-fast-ruby",
       "video": "https://www.youtube.com/watch?v=fGFM_UrSp70",
+      "link": null,
       "featured": true
     },
     {
@@ -99,6 +159,7 @@
       "date": "2014-04",
       "slides": "https://speakerdeck.com/sferik/mutation-testing-with-mutant",
       "video": "https://www.youtube.com/watch?v=WccaOMuf01Y",
+      "link": null,
       "featured": true
     },
     {
@@ -108,6 +169,7 @@
       "date": "2014-03",
       "slides": null,
       "video": null,
+      "link": null,
       "featured": false
     },
     {
@@ -117,6 +179,7 @@
       "date": "2013-10",
       "slides": null,
       "video": "https://www.youtube.com/watch?v=iXkPty3y7gA",
+      "link": null,
       "featured": false
     },
     {
@@ -126,6 +189,7 @@
       "date": "2012-09",
       "slides": null,
       "video": "https://www.youtube.com/watch?v=Rvxcc46fox0",
+      "link": null,
       "featured": false
     },
     {
@@ -135,6 +199,7 @@
       "date": "2012-08",
       "slides": null,
       "video": null,
+      "link": null,
       "featured": false
     },
     {
@@ -144,6 +209,7 @@
       "date": "2011-04",
       "slides": "https://www.slideshare.net/slideshow/cultivating-an-opensource-community-7708825/7708825",
       "video": null,
+      "link": null,
       "featured": false
     },
     {
@@ -153,6 +219,7 @@
       "date": "2011-04",
       "slides": "https://www.slideshare.net/slideshow/gui-programming-with-macruby-7571580/7571580",
       "video": null,
+      "link": null,
       "featured": false
     },
     {
@@ -162,6 +229,7 @@
       "date": "2011-03",
       "slides": "https://www.slideshare.net/slideshow/gui-programming-with-macruby-7571580/7571580",
       "video": "https://www.youtube.com/watch?v=VSpZIkmywQM",
+      "link": null,
       "featured": false
     }
   ],
@@ -170,6 +238,11 @@
       "lat": 52.37,
       "lon": 4.9,
       "country": "Netherlands"
+    },
+    "Austin": {
+      "lat": 30.27,
+      "lon": -97.74,
+      "country": "United States"
     },
     "Barcelona": {
       "lat": 41.39,

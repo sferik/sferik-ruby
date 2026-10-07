@@ -1278,12 +1278,17 @@
             "type": ["string", "null"],
             "format": "uri"
           },
+          "link": {
+            "type": ["string", "null"],
+            "format": "uri",
+            "description": "The talk's page on the event's site"
+          },
           "featured": {
             "type": "boolean",
             "description": "Shown on the home page"
           }
         },
-        "required": ["title", "event", "location", "date", "slides", "video", "featured"],
+        "required": ["title", "event", "location", "date", "slides", "video", "link", "featured"],
         "additionalProperties": false
       },
       "Talks": {

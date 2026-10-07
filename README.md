@@ -82,9 +82,10 @@ projects.as_of              # => 2026-10-08 01:15:02 UTC, when the downloads wer
 ```ruby
 talks = Sferik.talks                # Enumerable: newest first
 talks.select(&:video).map(&:title)  # => ["The Value of Being Lazy, or How I Made OpenStruct 10X Faster", ...]
-talks.first.date                    # => #<Date: 2015-11-01>, the first day of the month it was in
+talks.first.date                    # => #<Date: 2016-08-01>, the first day of the month it was in
 talks.last.title                    # the oldest; there's size, length, empty?, and [] too
-talks.places[talks.first.location]  # => #<Sferik::Place lat=32.09 lon=34.78 country="Israel">
+talks.places[talks.first.location]  # => #<Sferik::Place lat=37.77 lon=-122.42 country="United States">
+talks.filter_map(&:link)            # => ["https://schedule.sxsw.com/2015/events/event_IAP35000"]: a talk's page on the event's site
 talks.speaker_deck                  # => "https://speakerdeck.com/sferik"
 Sferik.podcasts.first.show          # => "Ruby Rogues, episode 248": the podcasts alone, which the talks have too
 Sferik.talks_feed                   # the talks as an Atom feed, for a feed reader

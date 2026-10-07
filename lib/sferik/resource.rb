@@ -73,7 +73,7 @@ module Sferik
       # @api public
       # @return [Array<Symbol>] the names, frozen
       # @example
-      #   Sferik::Talk.attribute_names # => [:title, :event, :date, :location, :slides, :video, :featured]
+      #   Sferik::Talk.attribute_names # => [:title, :event, :date, :location, :slides, :video, :link, :featured]
       def attribute_names
         readers.keys.freeze
       end

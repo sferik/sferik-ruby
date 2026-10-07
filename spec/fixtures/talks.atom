@@ -74,7 +74,7 @@
     <id>tag:sferik.net,2015-03:talks/secrets-to-powerful-apis-panel-sxsw</id>
     <title>Secrets to Powerful APIs (panel)</title>
     <updated>2015-03-01T00:00:00Z</updated>
-    <link rel="alternate" type="text/html" href="https://sferik.net/talks#y2015"/>
+    <link rel="related" type="text/html" title="Link" href="https://schedule.sxsw.com/2015/events/event_IAP35000"/>
     <summary>SXSW, Austin</summary>
   </entry>
   <entry>

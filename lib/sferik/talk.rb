@@ -54,6 +54,14 @@ module Sferik
     #     talk.video # => "https://www.youtube.com/watch?v=fGFM_UrSp70"
     attribute :video
 
+    # @!method link
+    #   The talk's page on the event's site, if it has one
+    #   @api public
+    #   @return [String, nil] the talk's page on the event's site, if it has one
+    #   @example
+    #     talk.link # => "https://schedule.sxsw.com/2015/events/event_IAP35000"
+    attribute :link
+
     # @!method featured?
     #   Whether the home page shows it
     #   @api public
