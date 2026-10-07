@@ -655,6 +655,59 @@ RSpec.describe Sferik::Client do
     end
   end
 
+  describe "#cached" do
+    let(:options) { {host: "http://localhost:3745", user_agent: "agent", open_timeout: 1, read_timeout: 2, write_timeout: 3, max_redirects: 4} }
+
+    before { stub_request(:get, "https://sferik.net/whoami").to_return(body: "ok", headers: {"ETag" => '"v1"', "Cache-Control" => "public, max-age=60"}) }
+
+    it "returns a client with the same options, frozen" do
+      expect(described_class.new(**options).cached).to be_an_instance_of(described_class).and(be_frozen).and(have_attributes(**options))
+    end
+
+    it "returns a client that asks once for what it gets twice while it's good" do
+      cached = client.cached
+      bodies = Array.new(2) { cached.get("/whoami") }
+
+      expect([bodies, WebMock::RequestRegistry.instance.times_executed(a_request(:get, "https://sferik.net/whoami"))]).to eq([%w[ok ok], 1])
+    end
+
+    it "leaves the client it's called on asking each time" do
+      client.cached.get("/whoami")
+      2.times { client.get("/whoami") }
+
+      expect(a_request(:get, "https://sferik.net/whoami")).to have_been_made.times(3)
+    end
+
+    it "returns a client with a cache of its own each time" do
+      2.times { client.cached.get("/whoami") }
+
+      expect(a_request(:get, "https://sferik.net/whoami")).to have_been_made.twice
+    end
+
+    it "returns a client that uses the timeouts of the one it's called on" do
+      allow(Net::HTTP).to receive(:start).and_call_original
+      described_class.new(open_timeout: 1, read_timeout: 2, write_timeout: 3).cached.get("/whoami")
+
+      expect(Net::HTTP).to have_received(:start).with("sferik.net", 443, use_ssl: true, open_timeout: 1, read_timeout: 2, write_timeout: 3)
+    end
+
+    it "returns a client that keeps what it gets in keep_alive too, over one connection" do
+      allow(Net::HTTP).to receive(:start).and_call_original
+      cached = client.cached
+      cached.keep_alive { |kept| 2.times { kept.get("/whoami") } }
+
+      expect([cached.get("/whoami"), WebMock::RequestRegistry.instance.times_executed(a_request(:get, "https://sferik.net/whoami"))]).to eq(["ok", 1])
+    end
+
+    it "can be asked of a client in keep_alive, which then keeps what it gets over the connection kept open" do
+      allow(Net::HTTP).to receive(:start).and_call_original
+      stub_request(:get, "https://sferik.net/talks").to_return(body: "talks")
+      client.keep_alive { |kept| kept.cached.then { |cached| [cached.get("/whoami"), cached.get("/talks")] } }
+
+      expect(Net::HTTP).to have_received(:start).once
+    end
+  end
+
   describe "#inspect" do
     it "shows the host" do
       expect(client.inspect).to eq("#<Sferik::Client https://sferik.net>")

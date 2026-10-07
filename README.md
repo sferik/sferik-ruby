@@ -197,6 +197,21 @@ end
 The client it yields has the options of the one it's called on, and is for one thread at a time, as a connection is.
 One that sits unused for more than two seconds is opened again, since the server may have closed it by then.
 
+### Asking only for what has changed
+
+Each GET asks the server. A client from `cached` keeps the responses instead: one says how long it's good for (a
+minute, for most of the API, and five seconds for who's reading), and for that long the client answers with it,
+without a request. After that it asks with the response's ETag, and the server sends the body only if it has changed.
+
+```ruby
+client = Sferik.client.cached
+client.talks  # asks the server
+client.talks  # doesn't, for a minute; after that, asks whether the talks have changed
+```
+
+What it keeps is in memory, by URL and format, for as long as the client is, so keep the client: each call of
+`cached` starts with nothing kept. It's safe to share between threads, and works in `keep_alive` too.
+
 ## The sferik command
 
 The gem comes with a `sferik` command, which prints what the shell on sferik.net prints, in your terminal:

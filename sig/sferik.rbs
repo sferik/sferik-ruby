@@ -272,15 +272,16 @@ module Sferik
     def get: (String path, ?accept: String) -> String
     def post: (String path, ?String body, ?accept: String, ?idempotency_key: String?) -> String
     def keep_alive: [T] () { (Client client) -> T } -> T
+    def cached: () -> Client
     def inspect: () -> String
 
-    @connections: Connections?
+    @connections: _Connections?
 
-    def keep: (Connections connections) -> Client
+    def keep: (_Connections connections) -> Client
 
     private
 
-    def connections: () -> Connections
+    def connections: () -> _Connections
     def uri_for: (String path) -> URI::Generic
     def fetch: (URI::Generic uri, String accept, Integer redirects) -> Net::HTTPResponse
     def redirect: (Net::HTTPResponse response, URI::Generic uri) -> URI::Generic?
@@ -289,6 +290,44 @@ module Sferik
     def post_headers: (untyped accept, untyped key) -> Hash[String, String]
     def error_for: (Net::HTTPResponse response, ?String? message) -> HTTPError
     def error_class: (Net::HTTPResponse response) -> singleton(HTTPError)
+  end
+
+  # What a client makes its requests over: connections, or a cache over them
+  interface _Connections
+    def request: (Net::HTTPRequest request) -> Net::HTTPResponse
+    def keeping: [T] () { (_Connections connections) -> T } -> T
+  end
+
+  class Cache
+    class Entry < Data
+      attr_reader response: Net::HTTPResponse
+      attr_reader etag: String?
+      attr_reader expires: Numeric
+
+      def self.new: (Net::HTTPResponse response, String? etag, Numeric expires) -> Entry
+    end
+
+    type key = [URI::Generic, String]
+
+    CLOCK: ^() -> Float
+    MAX_AGE: Regexp
+    NO_CACHE: Regexp
+    NO_STORE: Regexp
+
+    @connections: _Connections
+    @clock: ^() -> Numeric
+    @entries: Hash[key, Entry]
+    @lock: Mutex
+
+    def initialize: (_Connections connections, ?^() -> Numeric clock, ?Hash[key, Entry] entries, ?Mutex lock) -> void
+    def keeping: [T] () { (_Connections connections) -> T } -> T
+    def request: (Net::HTTPRequest request) -> Net::HTTPResponse
+
+    private
+
+    def renew: (key key, Entry? entry, Net::HTTPRequest request) -> Net::HTTPResponse
+    def keep: (key key, Net::HTTPResponse response, Net::HTTPResponse latest) -> void
+    def fresh_for: (String control) -> Integer
   end
 
   class Connections

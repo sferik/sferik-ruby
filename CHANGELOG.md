@@ -24,6 +24,8 @@
   UTF-8 already), with an `Idempotency-Key` header if `idempotency_key:` gives one
 - `Sferik.client.keep_alive { |client| ... }` makes the requests in its block over one connection, where each would
   otherwise open its own
+- `Sferik.client.cached` is a client that keeps the responses to its GETs for as long as each says it's good for, and
+  after that asks with the response's ETag, so the server sends the body only if it has changed
 - Configuration, with `Sferik.configure` or the options of `Sferik.new`: `host`, `user_agent`, `open_timeout`,
   `read_timeout`, `write_timeout`, and `max_redirects`. A wrong one raises ArgumentError when the client is built
 - Errors are all `Sferik::Error`: `InvalidURL`, `NetworkError` (and `Unanswered`, for a request that was sent and got

@@ -4,6 +4,7 @@ require "net/http"
 require "uri"
 require_relative "api"
 require_relative "body"
+require_relative "cache"
 require_relative "configuration"
 require_relative "connections"
 require_relative "errors"
@@ -16,7 +17,8 @@ module Sferik
   # the resume, LaTeX and PDF), and {#get} asks for whatever you like. {#post} sends what the two endpoints that
   # write take: a terminal checking in, and a message.
   #
-  # Each request opens a connection and closes it. To make several over one, make them in {#keep_alive}.
+  # Each request opens a connection and closes it. To make several over one, make them in {#keep_alive}. And each
+  # GET asks the server: {#cached} is a client that keeps the responses, and asks again only for what may have changed.
   #
   # @api public
   class Client
@@ -191,6 +193,21 @@ module Sferik
       connections.keeping { |kept| yield dup.keep(kept) }
     end
 
+    # A client that keeps the responses to its GET requests
+    #
+    # It asks again only for what may have changed. A response says how long it's good for (most of the API's, a
+    # minute), and for that long the client answers with it, without a request. After that it asks with the
+    # response's ETag, and the server sends the body only if it has changed. What's kept is by URL and media type,
+    # in memory, for as long as the client is, and is safe to share between threads: keep the client, since each
+    # call of this starts with nothing kept.
+    #
+    # @api public
+    # @return [Client] a client with the same options, and a cache of its own
+    # @example Ask who's reading the site every second, which asks the server every five
+    #   client = Sferik.client.cached
+    #   loop { puts client.who.size; sleep 1 }
+    def cached = dup.keep(Cache.new(connections))
+
     # A short description of the client, without the user agent
     #
     # @api public
@@ -206,7 +223,7 @@ module Sferik
     # Make this client's requests over other connections, and freeze it again
     #
     # @api private
-    # @param connections [Connections] the connections
+    # @param connections [Connections, Cache] the connections, or a cache over them
     # @return [Client] the client itself
     def keep(connections)
       @connections = connections
