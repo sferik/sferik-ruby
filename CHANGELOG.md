@@ -16,7 +16,8 @@
   one that `page:` names), and returns who's reading with the terminal's name as `you`. `Sferik.write("...")` sends
   Erik a message, as the shell's `write sferik` does. Each message goes with a random key (or the one `key:` gives),
   which the server doesn't email twice, so `write` sends it once more, five seconds later, if it was sent and no answer
-  came (`Unanswered`), but not if the server couldn't be connected to
+  came (`Unanswered`), but not if the server couldn't be connected to. And if the server says the message is still
+  being sent (a 409), `write` asks after it once more, as much later as the server says to
 - `Sferik.contributions` and `Sferik.projects` say when their numbers are from, as `as_of`
 - `Sferik.client.get` and `Sferik.client.post` send raw requests. A GET's redirects are followed, up to
   `max_redirects` (10), but never from https to http. A POST is sent only once, and its redirects aren't followed. Its
@@ -25,7 +26,9 @@
 - `Sferik.client.keep_alive { |client| ... }` makes the requests in its block over one connection, where each would
   otherwise open its own
 - `Sferik.client.cached` is a client that keeps the responses to its GETs for as long as each says it's good for, and
-  after that asks with the response's ETag, so the server sends the body only if it has changed
+  after that asks with the response's ETag, so the server sends the body only if it has changed. A response that has
+  been kept on its way already (`Age`) is good for that much less. With `cached(stale_if_error: true)`, the client
+  answers with what it kept, however old, when the server can't be reached
 - Configuration, with `Sferik.configure` or the options of `Sferik.new`: `host`, `user_agent`, `open_timeout`,
   `read_timeout`, `write_timeout`, and `max_redirects`. A wrong one raises ArgumentError when the client is built
 - Errors are all `Sferik::Error`: `InvalidURL`, `NetworkError` (and `Unanswered`, for a request that was sent and got
@@ -38,8 +41,9 @@
 - A `sferik` command, which prints what the shell on sferik.net prints: `sferik finger`, `sferik resume`, and so on.
   With `--json` it prints JSON instead, `sferik resume --pdf` and `sferik resume --latex` print the resume as a PDF and
   as LaTeX, `sferik finger --vcard` prints a contact card, and `--host` or the `SFERIK_HOST` environment variable names a copy of the site to ask instead of
-  sferik.net. `sferik write` sends Erik the message it reads from standard input, and
+  sferik.net. `sferik feed`, `sferik deployment`, and `sferik openapi` print the talks as an Atom feed, the deployed
+  commit, and the API's description. `sferik write` sends Erik the message it reads from standard input, and
   `sferik check-in` logs in a terminal and prints its name, which `sferik write --tty` takes. It exits 1 when a request fails, and 2
   when the command line is wrong, as one that names two formats is, or a format for what prints no resource
-  (`sferik write`, `sferik help`, or `sferik --version`)
+  (`sferik write`, `sferik help`, or `sferik --version`) or one that comes in one format alone (`sferik feed`)
 - RBS signatures, checked by Steep

@@ -42,6 +42,9 @@ module Sferik
         name           my name change, as a git commit
         dependency     the xkcd comic, in words
         who            who's reading sferik.net
+        feed           my talks, as an Atom feed
+        deployment     which commit of the site is deployed, and when, as JSON
+        openapi        the description of the site's API, as JSON
         write          send me a message, read from standard input
         check-in       log in a terminal, as a browser tab does, and print its name
         help           print this
@@ -74,8 +77,10 @@ module Sferik
     # The options that are for one command alone, and the command each is for
     OWNERS = {tty: "write", token: "check-in"}.freeze
 
-    # What prints no resource of the site, by the command or option that asks for it, and the method that does each
-    ACTIONS = {:usage => :usage, "help" => :usage, :version => :version, "write" => :write, "check-in" => :check_in}.freeze
+    # What prints no resource of the site, by the command or option that asks for it, and the method that does each.
+    # Or what there is of the site in one format alone, which is printed as that: the method, then the path and the format
+    ACTIONS = {:usage => [:usage], "help" => [:usage], :version => [:version], "write" => [:write], "check-in" => [:check_in],
+               "feed" => [:only, "/talks.atom", "application/atom+xml"], "deployment" => [:only, "/version", "application/json"], "openapi" => [:only, "/openapi.json", "application/json"]}.freeze
     private_constant :FORMATS, :VALUES, :OWNERS, :ACTIONS
 
     # Initialize a new CLI
@@ -143,7 +148,7 @@ module Sferik
     # @return [Integer] the exit status
     def perform(command, options)
       action = ACTIONS[options.fetch(:print, command)]
-      return unformatted(options) { __send__(action, options) } if action
+      return unformatted(options) { __send__(*action, options) } if action
 
       path = command ? COMMANDS[command] : "/"
       path ? show(path, options) : misuse("unknown command: #{command}")
@@ -240,6 +245,17 @@ module Sferik
         "#{tty}\n"
       end
     end
+
+    # Print what there is of the site in one format alone
+    #
+    # That's the feed of talks, the deployed version, and the API's description.
+    #
+    # @api private
+    # @param path [String] the path
+    # @param accept [String] the media type it comes as
+    # @param options [Hash{Symbol => Object}] the options of the command line
+    # @return [Integer] the exit status
+    def only(path, accept, options) = ask(options) { |client| client.get(path, accept:) }
 
     # Ask the site for something, and print its response, or what went wrong
     #

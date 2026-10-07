@@ -144,8 +144,10 @@ with what the server says as its message, the seconds to wait as `retry_after`, 
 Each message goes with a random key, and the server doesn't email one twice whose key it has taken within a day. So
 if the message is sent and no answer comes (`Sferik::Unanswered`), `write` sends it once more, five seconds later. It
 doesn't if the server couldn't be connected to at all (any other `Sferik::NetworkError`), when nothing was sent and
-trying again at once wouldn't help. A message asked after while its first sending is still on its way gets a
-`Sferik::ClientError` (409), with `error_code` `"sending"` and the seconds to wait as `retry_after`. To try again
+trying again at once wouldn't help. A message asked after while its first sending is still on its way gets a 409
+from the server, which says how long to wait: `write` waits that long and asks once more, by when the server usually
+knows the message was sent. If it's still on its way then, `write` raises the `Sferik::ClientError` (409), with
+`error_code` `"sending"` and the seconds to wait as `retry_after`. To try again
 yourself after a `Sferik::NetworkError`, give the key:
 
 ```ruby
@@ -213,6 +215,19 @@ client.talks  # doesn't, for a minute; after that, asks whether the talks have c
 What it keeps is in memory, by URL and format, for as long as the client is, so keep the client: each call of
 `cached` starts with nothing kept. It's safe to share between threads, and works in `keep_alive` too.
 
+A response that Cloudflare's cache answered with has been kept there for a while already, which it says (`Age`), and
+is good for that much less here: one that's good for a minute, and has been kept for 55 seconds, is asked for again in
+five.
+
+When the server can't be reached to say whether a response that's no longer good has changed, the request raises
+`NetworkError`, as any other would. A script that would rather go on with what it last knew can ask for that:
+
+```ruby
+client = Sferik.client.cached(stale_if_error: true)
+client.talks  # asks the server
+client.talks  # a minute later, with the network down: the talks it kept
+```
+
 ## The sferik command
 
 The gem comes with a `sferik` command, which prints what the shell on sferik.net prints, in your terminal:
@@ -229,6 +244,14 @@ The commands that print are `finger`, `whoami`, `talks`, `podcasts`, `resume`, `
 
 ```sh
 sferik talks --json | jq -r '.talks[].title'
+```
+
+Three more print what comes in one format alone, and take no format: `feed` (my talks, as an Atom feed),
+`deployment` (which commit of the site is deployed, and when, as JSON), and `openapi` (the description of the API,
+as JSON):
+
+```sh
+sferik deployment | jq -r .commit
 ```
 
 The resume also comes as a PDF with `--pdf`, and as LaTeX with `--latex`, and `finger` as a contact card with
@@ -259,7 +282,7 @@ echo "Hello from $tty" | sferik write --tty "$tty"
 
 It exits 0 when it has printed what it was asked for, 1 when a request fails (the site can't be reached, or says
 no), and 2 when the command line is wrong (an unknown command or option, more than one format, a format for
-what prints no resource (`write`, `check-in`, `help`, or `--version`), `--tty` or `--token` for another command, or a host that isn't an http or https URL, from `--host`
+what prints no resource, or one that comes in one format alone (`write`, `check-in`, `help`, `--version`, `feed`, `deployment`, or `openapi`), `--tty` or `--token` for another command, or a host that isn't an http or https URL, from `--host`
 or `SFERIK_HOST`), so a script can tell the two apart.
 
 To ask a local copy of the site instead of sferik.net, name it with `--host` or the `SFERIK_HOST` environment

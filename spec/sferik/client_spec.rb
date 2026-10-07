@@ -699,6 +699,35 @@ RSpec.describe Sferik::Client do
       expect([cached.get("/whoami"), WebMock::RequestRegistry.instance.times_executed(a_request(:get, "https://sferik.net/whoami"))]).to eq(["ok", 1])
     end
 
+    it "returns a client that raises when the server can't be reached, though it kept a response that's no longer good" do
+      stub_request(:get, "https://sferik.net/who").to_return(body: "ok", headers: {"Cache-Control" => "no-cache"}).then.to_timeout
+      cached = client.cached
+      cached.get("/who")
+
+      expect { cached.get("/who") }.to raise_error(Sferik::Unanswered)
+    end
+
+    it "returns a client that answers with what it kept then, with stale_if_error" do
+      stub_request(:get, "https://sferik.net/who").to_return(body: "ok", headers: {"Cache-Control" => "no-cache"}).then.to_timeout
+      cached = client.cached(stale_if_error: true)
+
+      expect(Array.new(2) { cached.get("/who") }).to eq(%w[ok ok])
+    end
+
+    it "returns a client that raises then with stale_if_error: false" do
+      stub_request(:get, "https://sferik.net/who").to_return(body: "ok", headers: {"Cache-Control" => "no-cache"}).then.to_timeout
+      cached = client.cached(stale_if_error: false)
+      cached.get("/who")
+
+      expect { cached.get("/who") }.to raise_error(Sferik::Unanswered)
+    end
+
+    [nil, 1, "true"].each do |value|
+      it "raises ArgumentError for a stale_if_error of #{value.inspect}" do
+        expect { client.cached(stale_if_error: value) }.to raise_error(ArgumentError, "stale_if_error must be true or false, not #{value.inspect}")
+      end
+    end
+
     it "can be asked of a client in keep_alive, which then keeps what it gets over the connection kept open" do
       allow(Net::HTTP).to receive(:start).and_call_original
       stub_request(:get, "https://sferik.net/talks").to_return(body: "talks")

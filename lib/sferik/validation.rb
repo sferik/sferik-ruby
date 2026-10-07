@@ -47,6 +47,19 @@ module Sferik
       raise ArgumentError, "host must be an http or https URL, not #{value.inspect}"
     end
 
+    # Check that an option is true or false
+    #
+    # @api private
+    # @param option [Symbol] the option's name
+    # @param value [Object] its value
+    # @return [Boolean] the value
+    # @raise [ArgumentError] if the value is neither true nor false
+    def boolean(option, value)
+      return value if [true, false].include?(value)
+
+      raise ArgumentError, "#{option} must be true or false, not #{value.inspect}"
+    end
+
     # Check that the value of a header is on one line
     #
     # Net::HTTP fails in the middle of a request with one that has a carriage return or a line feed.

@@ -64,7 +64,9 @@ module Sferik
       # with a key, and the server doesn't email a message twice whose key it has taken within a day. It isn't sent
       # again if the server couldn't be connected to, when trying again at once wouldn't help. To try again yourself
       # after a {NetworkError}, give the same key. The server answers a message whose first sending is still on its
-      # way with 409: {HTTPError#error_code} is "sending", and {HTTPError#retry_after} is how long to wait.
+      # way with 409, and says how long to wait ({HTTPError#retry_after}): the message is asked after once more, that
+      # much later, by when the server usually knows that it was sent. If it's still on its way then, the 409 is
+      # raised, and {HTTPError#error_code} is "sending".
       #
       # @api public
       # @param message [String] the message, as plain text: 5,000 bytes at most, sent as UTF-8 (see {Client#post})
@@ -74,7 +76,7 @@ module Sferik
       # @raise [ArgumentError] if the message or the key isn't a String, the message is in a charset that doesn't convert
       #   to UTF-8, or the terminal is neither a String nor nil
       # @raise [ClientError] if there's nothing to send or the key isn't one (400), the message is still being sent
-      #   (409), or it's too long (413)
+      #   when it's asked after a second time (409), or it's too long (413)
       # @raise [TooManyRequests] if there have been too many (429): {HTTPError#retry_after} is how long to wait, and
       #   {HTTPError#error_code} is "busy" for one a minute, and "full" for twenty a day
       # @raise [ServerError] if the email didn't go through (502), or the server doesn't send email (503)
@@ -141,9 +143,30 @@ module Sferik
       # @raise [Unanswered] if no answer comes, or one that can't be read, twice
       # @raise [NetworkError] if the server can't be connected to
       def deliver(path, message, key)
-        post(path, message, idempotency_key: key)
+        settle(path, message, key)
       rescue Unanswered
         Kernel.sleep(PAUSE)
+        settle(path, message, key)
+      end
+
+      # Send a message, and ask after it once more if it's still being sent
+      #
+      # Still being sent is what the server says of a key it has taken, whose email hasn't gone yet: the message sent
+      # again while its first sending is on its way. The server says how long to wait, too, and after that the same
+      # key is answered with what became of the message.
+      #
+      # @api private
+      # @param path [String] the path, with any query
+      # @param message [String] the message
+      # @param key [String] the message's idempotency key
+      # @return [String] the response body
+      # @raise [ClientError] if the message is still being sent the second time, or was turned away for anything else
+      def settle(path, message, key)
+        post(path, message, idempotency_key: key)
+      rescue ClientError => e
+        raise unless e.error_code.eql?("sending")
+
+        Kernel.sleep(e.retry_after || PAUSE)
         post(path, message, idempotency_key: key)
       end
     end

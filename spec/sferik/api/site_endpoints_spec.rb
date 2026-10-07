@@ -157,6 +157,68 @@ RSpec.describe Sferik::API::SiteEndpoints do
       expect { client.write("Hello") }.to raise_error(Sferik::Unanswered).and(change { times_made(request) }.by(2))
     end
 
+    # Stub the server to say a message is still being sent, and then whatever comes next
+    def stub_sending(headers: {"Retry-After" => "7"})
+      stub_write(status: 409, body: %({"error":"that message is still being sent; ask again in a moment","code":"sending"}), headers:)
+    end
+
+    it "asks after a message once more that the server says is still being sent, with the same key" do
+      request = stub_sending.with(body: "Hello", headers: {"Idempotency-Key" => key}).then
+        .to_return(status: 202, body: %({"message":"message sent to sferik"}), headers: {"Content-Type" => "application/json"})
+
+      expect([client.write("Hello", key:), times_made(request)]).to eq(["message sent to sferik", 2])
+    end
+
+    it "waits as long as the server says before asking after a message that's still being sent" do
+      stub_sending.then.to_return(status: 202, body: %({"message":"sent"}), headers: {"Content-Type" => "application/json"})
+      client.write("Hello")
+
+      expect(Kernel).to have_received(:sleep).with(7).once
+    end
+
+    it "waits five seconds when the server doesn't say how long" do
+      stub_sending(headers: {}).then.to_return(status: 202, body: %({"message":"sent"}), headers: {"Content-Type" => "application/json"})
+      client.write("Hello")
+
+      expect(Kernel).to have_received(:sleep).with(5).once
+    end
+
+    it "asks after a message at its terminal's URL too" do
+      request = stub_request(:post, "https://sferik.net/write?tty=ttys001")
+        .to_return(status: 409, body: %({"code":"sending"}), headers: {"Content-Type" => "application/json"}).then
+        .to_return(status: 202, body: %({"message":"sent"}), headers: {"Content-Type" => "application/json"})
+      client.write("Hello", tty: "ttys001")
+
+      expect(request).to have_been_made.twice
+    end
+
+    it "raises the 409 for a message that's still being sent when it's asked after, and doesn't ask a third time" do
+      request = stub_sending
+
+      expect { client.write("Hello") }.to raise_error(an_instance_of(Sferik::ClientError).and(having_attributes(code: 409, error_code: "sending")))
+        .and(change { times_made(request) }.by(2))
+    end
+
+    it "asks after a message that got no answer, and then is still being sent" do
+      request = stub_request(:post, "https://sferik.net/write").to_timeout.then
+        .to_return(status: 409, body: %({"code":"sending"}), headers: {"Content-Type" => "application/json", "Retry-After" => "7"}).then
+        .to_return(status: 202, body: %({"message":"sent"}), headers: {"Content-Type" => "application/json"})
+
+      expect([client.write("Hello"), times_made(request)]).to eq(["sent", 3])
+    end
+
+    it "sends a message again that got no answer when it was asked after" do
+      request = stub_sending.then.to_timeout.then.to_return(status: 202, body: %({"message":"sent"}), headers: {"Content-Type" => "application/json"})
+
+      expect([client.write("Hello"), times_made(request)]).to eq(["sent", 3])
+    end
+
+    it "doesn't send a message again that the server turned away for anything else, like a 409 of another kind" do
+      request = stub_write(status: 409, body: %({"error":"no","code":"conflict"}), headers: {"Retry-After" => "7"})
+
+      expect { client.write("Hello") }.to raise_error(Sferik::ClientError).and(change { times_made(request) }.by(1))
+    end
+
     it "doesn't send a message again that the server turned away" do
       request = stub_write(status: 503, body: %({"error":"sferik isn't taking messages here","code":"unavailable"}))
 

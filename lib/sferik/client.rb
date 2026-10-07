@@ -201,12 +201,24 @@ module Sferik
     # in memory, for as long as the client is, and is safe to share between threads: keep the client, since each
     # call of this starts with nothing kept.
     #
+    # A response that Cloudflare's cache answered with has been kept there for a while already, which it says (Age),
+    # and is good for that much less here.
+    #
+    # When the server can't be reached, or doesn't answer, to say whether a response that's no longer good has
+    # changed, the request fails with a {NetworkError}, as any other would. With stale_if_error, the client answers
+    # with the response it kept instead, however old: for a script that would rather go on with what it last knew.
+    #
     # @api public
+    # @param stale_if_error [Boolean] whether to answer with a response that's no longer good when the server can't
+    #   be reached, or doesn't answer
     # @return [Client] a client with the same options, and a cache of its own
+    # @raise [ArgumentError] if stale_if_error is neither true nor false
     # @example Ask who's reading the site every second, which asks the server every five
     #   client = Sferik.client.cached
     #   loop { puts client.who.size; sleep 1 }
-    def cached = dup.keep(Cache.new(connections))
+    # @example Go on with the last answer when the network is down
+    #   client = Sferik.client.cached(stale_if_error: true)
+    def cached(stale_if_error: false) = dup.keep(Cache.new(connections, stale: boolean(:stale_if_error, stale_if_error)))
 
     # A short description of the client, without the user agent
     #

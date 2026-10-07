@@ -90,6 +90,38 @@ RSpec.describe "Sferik::Cache" do
       expect(request).to have_been_made.times(3)
     end
 
+    it "keeps a response for as long as it's good for, less how long it says it has been kept already" do
+      request = stub_request(:get, url).to_return(body: "one", headers: {"Cache-Control" => "public, max-age=60", "Age" => "55"})
+      get(url)
+      [4.9, 0.1].each { |seconds| wait(seconds) && get(url) }
+
+      expect(request).to have_been_made.twice
+    end
+
+    it "takes the whole seconds of how long a response says it has been kept" do
+      request = stub_request(:get, url).to_return(body: "one", headers: {"Cache-Control" => "public, max-age=60", "Age" => "58.9"})
+      get(url)
+      [1.9, 0.1].each { |seconds| wait(seconds) && get(url) }
+
+      expect(request).to have_been_made.twice
+    end
+
+    it "asks again for a response that says it has been kept for as long as it's good for, or longer" do
+      request = stub_request(:get, url).to_return(body: "one", headers: {"Cache-Control" => "public, max-age=60", "Age" => "75"})
+      2.times { get(url) }
+
+      expect(request).to have_been_made.twice
+    end
+
+    it "keeps a response that hasn't changed for as long as the server then says, less how long that answer has been kept" do
+      request = stub_fresh.then.to_return(status: 304, headers: {"Cache-Control" => "public, max-age=30", "Age" => "25"})
+      get(url)
+      wait(60)
+      [0, 4.9, 0.1].each { |seconds| wait(seconds) && get(url) }
+
+      expect(request).to have_been_made.times(3)
+    end
+
     it "answers with a response that has changed, and keeps that one" do
       request = stub_fresh.then.to_return(body: "two", headers: {"ETag" => '"v2"', "Cache-Control" => "public, max-age=60"})
       get(url)
@@ -309,9 +341,84 @@ RSpec.describe "Sferik::Cache" do
 
       expect { get(url) }.to raise_error(Sferik::Unanswered)
     end
+
+    it "raises what the connections do though it kept a response, which is no longer good" do
+      stub_fresh.then.to_timeout
+      get(url)
+      wait(60)
+
+      expect { get(url) }.to raise_error(Sferik::Unanswered)
+    end
+  end
+
+  context "when it's to answer with what's no longer good, if the server can't be reached" do
+    let(:cache) { Sferik.const_get(:Cache).new(connections, -> { now.first }, entries, lock, stale: true) }
+
+    it "answers with the response it kept, however old, when no answer comes" do
+      stub_fresh.then.to_timeout
+      first = get(url)
+      wait(86_400)
+
+      expect(get(url)).to be(first)
+    end
+
+    it "answers with the response it kept when the server can't be connected to" do
+      stub_fresh
+      first = get(url)
+      wait(60)
+      allow(Net::HTTP).to receive(:start).and_raise(SocketError, "getaddrinfo: nodename nor servname provided")
+
+      expect(get(url)).to be(first)
+    end
+
+    it "asks again the next time, and keeps what the server says then" do
+      request = stub_fresh.then.to_timeout.then.to_return(body: "two", headers: {"Cache-Control" => "public, max-age=60"})
+      get(url)
+      wait(60)
+
+      expect([get(url).body, get(url).body, get(url).body, made(request)]).to eq(["one", "two", "two", 3])
+    end
+
+    it "raises when it kept nothing to answer with" do
+      stub_request(:get, url).to_timeout
+
+      expect { get(url) }.to raise_error(Sferik::Unanswered)
+    end
+
+    it "raises anything else that goes wrong, though it kept a response" do
+      stub_fresh.then.to_raise(ArgumentError.new("not the network"))
+      get(url)
+      wait(60)
+
+      expect { get(url) }.to raise_error(ArgumentError, "not the network")
+    end
+
+    it "answers with what the server says, when it says a response isn't there any more" do
+      stub_fresh.then.to_return(status: 404)
+      get(url)
+      wait(60)
+
+      expect(get(url).code).to eq("404")
+    end
+
+    it "yields a cache from keeping that answers with what's no longer good too" do
+      stub_fresh.then.to_timeout
+      first = get(url)
+      wait(60)
+
+      expect(cache.keeping { |kept| get(url, through: kept) }).to be(first)
+    end
   end
 
   describe "#keeping" do
+    it "yields a cache that doesn't answer with what's no longer good either, when the server can't be reached" do
+      stub_fresh.then.to_timeout
+      get(url)
+      wait(60)
+
+      expect { cache.keeping { |kept| get(url, through: kept) } }.to raise_error(Sferik::Unanswered)
+    end
+
     it "yields a cache that answers with what this one kept" do
       request = stub_fresh
       get(url)
