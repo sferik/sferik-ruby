@@ -683,10 +683,52 @@ RSpec.describe Sferik::Resource do
       expect(Ractor.shareable?(talk)).to be(true)
     end
 
-    it "can share what an endpoint returns" do
-      stub_get("/talks", "talks.json")
+    # Each endpoint that returns a response object, and the path and the fixture it's answered with
+    {
+      home: ["/", "home.json"], whoami: ["/whoami", "whoami.json"], dependency: ["/dependency", "dependency.json"], finger: ["/finger", "finger.json"],
+      name_change: ["/name", "name.json"], contributions: ["/contributions", "contributions.json"], projects: ["/src", "src.json"],
+      talks: ["/talks", "talks.json"], podcasts: ["/podcasts", "podcasts.json"], resume: ["/resume", "resume.json"], who: ["/who", "who.json"],
+      deployment: ["/version", "version.json"], openapi: ["/openapi.json", "openapi.json"]
+    }.each do |endpoint, (path, file)|
+      it "can share what #{endpoint} returns" do
+        stub_get(path, file)
 
-      expect(Ractor.shareable?(Sferik::Client.new.talks)).to be(true)
+        expect(Ractor.shareable?(Sferik::Client.new.public_send(endpoint))).to be(true)
+      end
+
+      it "can share what #{endpoint} returns from a cached client" do
+        stub_get(path, file)
+
+        expect(Ractor.shareable?(Sferik::Client.new.cached.public_send(endpoint))).to be(true)
+      end
+    end
+
+    it "can share what webfinger returns, which is asked for as another kind of JSON" do
+      stub_get("/.well-known/webfinger?resource=acct%3Asferik%40sferik.net", "webfinger.json", accept: "application/jrd+json")
+
+      expect(Ractor.shareable?(Sferik::Client.new.webfinger)).to be(true)
+    end
+
+    it "can share what check_in returns, which is posted for" do
+      stub_request(:post, "https://sferik.net/who").with(query: {"token" => "0123456789abcdef", "page" => "/"}).to_return(body: fixture("check_in.json"))
+
+      expect(Ractor.shareable?(Sferik::Client.new.check_in("0123456789abcdef"))).to be(true)
+    end
+
+    it "can share what write returns, which is what the server says" do
+      stub_request(:post, "https://sferik.net/write").to_return(status: 202, body: %({"message":"message sent to sferik"}))
+
+      expect(Ractor.shareable?(Sferik::Client.new.write("Hello from Ruby"))).to be(true)
+    end
+
+    it "can share what a reader of a list, of a dictionary, and of a resource returns, and the raw attributes" do
+      talks = Sferik::Talks.new(JSON.parse(fixture("talks.json")))
+
+      expect([talks.talks, talks.places, talks.first, talks.attributes]).to all(satisfy { |value| Ractor.shareable?(value) })
+    end
+
+    it "can share one that has nothing in it" do
+      expect(Ractor.shareable?(Sferik::Talks.new({}))).to be(true)
     end
 
     it "can share what a cached client returns, which is what it keeps" do
