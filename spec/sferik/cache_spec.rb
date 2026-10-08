@@ -131,100 +131,34 @@ RSpec.describe "Sferik::Cache" do
       expect(request).to have_been_made.twice
     end
 
-    # Stub the URL to answer with a response that's good for a minute, and has been kept for that long already, and
-    # then with whatever is given
-    def stub_spent(age: "60", **headers)
-      stub_request(:get, url).to_return(body: "one", headers: {"Cache-Control" => "public, max-age=60", "Age" => age, **headers})
-    end
-
-    it "asks once more, at once, for a response that comes as old as it's good for, and answers with what that gets" do
-      request = stub_spent.then.to_return(body: "two", headers: {"Cache-Control" => "public, max-age=60"})
-
-      expect([get(url).body, get(url).body, made(request)]).to eq(["two", "two", 2])
-    end
-
-    it "asks once more for a response that comes older than it's good for" do
-      request = stub_spent(age: "75").then.to_return(body: "two", headers: {"Cache-Control" => "public, max-age=60"})
-
-      expect([get(url).body, made(request)]).to eq(["two", 2])
-    end
-
-    it "asks no more than once more, and answers with a second response that's as old" do
-      request = stub_spent.then.to_return(body: "two", headers: {"Cache-Control" => "public, max-age=60", "Age" => "60"})
-
-      expect([get(url).body, made(request)]).to eq(["two", 2])
-    end
-
-    it "says not to be answered from a cache when it asks once more, and not when it first asks" do
-      stub_spent.then.to_return(body: "two")
+    it "says not to be answered from a cache, when it first asks" do
+      stub_fresh
       get(url)
 
-      expect([a_request(:get, url).with(headers: {"Cache-Control" => "no-cache"}), a_request(:get, url).with { |request| !request.headers.key?("Cache-Control") }])
-        .to all(have_been_made.once)
+      expect(a_request(:get, url).with(headers: {"Cache-Control" => "no-cache"})).to have_been_made.once
     end
 
-    it "asks once more with the ETag of the response that came old" do
-      stub_spent("ETag" => '"v1"').then.to_return(status: 304, headers: {"Cache-Control" => "public, max-age=60"})
-      get(url)
-
-      expect(a_request(:get, url).with(headers: {"If-None-Match" => '"v1"'})).to have_been_made.once
-    end
-
-    it "asks once more without an ETag, for a response that came old and has none" do
-      stub_spent
-      get(url)
-
-      expect(a_request(:get, url).with { |request| !request.headers.key?("If-None-Match") }).to have_been_made.twice
-    end
-
-    it "asks once more without the ETag it first asked with, when what came old isn't kept" do
-      stub_fresh.then.to_return(status: 404, body: "gone", headers: {"Cache-Control" => "public, max-age=60", "Age" => "60"})
+    it "says not to be answered from a cache, when it asks whether a response has changed" do
+      stub_fresh.then.to_return(status: 304)
       get(url)
       wait(60)
       get(url)
 
-      expect(a_request(:get, url).with(headers: {"If-None-Match" => '"v1"'})).to have_been_made.once
+      expect(a_request(:get, url).with(headers: {"Cache-Control" => "no-cache", "If-None-Match" => '"v1"'})).to have_been_made.once
     end
 
-    it "answers with the response that came old, and keeps it for as long as the server then says, when it hasn't changed" do
-      request = stub_spent("ETag" => '"v1"').then.to_return(status: 304, headers: {"Cache-Control" => "public, max-age=60", "Age" => "10"})
-      bodies = [get(url).body, wait(49.9) && get(url).body]
+    it "asks once for a response that comes as old as it's good for all the same, and again the next time" do
+      request = stub_request(:get, url).to_return(body: "one", headers: {"Cache-Control" => "public, max-age=60", "Age" => "60"})
+        .then.to_return(body: "two", headers: {"Cache-Control" => "public, max-age=60"})
 
-      expect([bodies, made(request), entries.values.map(&:expires)]).to eq([%w[one one], 2, [150.0]])
+      expect([get(url).body, made(request), get(url).body, made(request)]).to eq(["one", 1, "two", 2])
     end
 
-    it "answers with the response that came old when the server answers the second time with an error of its own" do
-      stub_spent.then.to_return(status: 503, body: "down")
-
-      expect([get(url).body, entries.values.map { |entry| entry.response.body }]).to eq(["one", ["one"]])
-    end
-
-    it "answers with the response that came old when no answer comes the second time" do
-      stub_spent.then.to_timeout
-
-      expect(get(url).body).to eq("one")
-    end
-
-    it "holds its lock twice more for a response that came old: to read what it kept of it, and to keep what comes" do
-      stub_spent.then.to_return(body: "two")
-      allow(lock).to receive(:synchronize).and_call_original
+    it "asks again the next time for a response that comes older than it's good for" do
+      request = stub_request(:get, url).to_return(body: "one", headers: {"Cache-Control" => "public, max-age=60", "Age" => "75"})
       get(url)
 
-      expect(lock).to have_received(:synchronize).exactly(6).times
-    end
-
-    it "doesn't ask once more for a response that says how old it is, but not how long it's good for" do
-      request = stub_request(:get, url).to_return(body: "one", headers: {"Age" => "60"})
-      get(url)
-
-      expect(request).to have_been_made.once
-    end
-
-    it "doesn't ask once more for a response that says to check each time, however old it says it is" do
-      request = stub_spent("Cache-Control" => "no-cache, max-age=60")
-      get(url)
-
-      expect(request).to have_been_made.once
+      expect([get(url).body, made(request), entries.values.map(&:expires)]).to eq(["one", 2, [85.0]])
     end
 
     it "keeps a response that hasn't changed for as long as the server then says, less how long that answer has been kept" do

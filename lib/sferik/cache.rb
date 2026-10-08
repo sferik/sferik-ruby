@@ -15,9 +15,10 @@ module Sferik
   # which says nothing of whether it has changed: the next request asks again.
   #
   # A response that has already been kept somewhere on its way, as one from Cloudflare's cache has, says for how long
-  # (Age), and is good for that much less. One that comes older than it's good for is asked for once more, at once,
-  # with a request that says not to answer from a cache: the cache on its way answers with what it has while it
-  # fetches another, which is the one to have, and the site makes that request wait for it. And a cache that's told to (stale) answers with a response that's no longer
+  # (Age), and is good for that much less. That cache answers with what it has, when that's no longer good, while it
+  # builds another for whoever asks next. So each request this cache makes says not to be answered that way
+  # (Cache-Control: no-cache), which the site takes to mean that it should wait for the new one: what's still good
+  # there is its answer all the same. And a cache that's told to (stale) answers with a response that's no longer
   # good, when the server can't be asked whether it has changed, or answers with an error of its own.
   #
   # Threads that ask for the same thing at once, when it isn't kept or is no longer good, make one request between
@@ -244,8 +245,11 @@ module Sferik
 
     # Send a GET request, and keep what comes back
     #
-    # The request says which version of its response is kept, so that the server sends a body only for another. An
-    # error of the server's own (a 5xx) leaves what's kept as it is, to be asked after again.
+    # The request says which version of its response is kept, so that the server sends a body only for another. And
+    # it says not to be answered from a cache (Cache-Control: no-cache): the one in front of the site answers with
+    # what it has kept past what it's good for, otherwise, which would be no longer good when it came, and to be
+    # asked for again. What that cache has that's still good is its answer either way. An error of the server's own
+    # (a 5xx) leaves what's kept as it is, to be asked after again.
     #
     # @api private
     # @param key [Array] the URL and the media type asked for
@@ -255,34 +259,11 @@ module Sferik
     #   an error of its own and the cache answers with what's no longer good
     def ask(key, entry, request)
       request["if-none-match"] = entry.etag if entry # no header, for a response that has no ETag
+      request["cache-control"] = "no-cache"
       response = @connections.request(request)
       return spared(entry, response) if entry && response.is_a?(Net::HTTPServerError)
 
-      answer = renewed(key, entry, response)
-      Freshness.spent?(response) ? again(key, request, answer) : answer
-    end
-
-    # Ask once more for a response that came older than it's good for
-    #
-    # A cache on its way answered with what it had at once, and fetches another for whoever asks next. But asked
-    # again at once, it hasn't got that one yet, as often as not: so this request says not to be answered from a
-    # cache (Cache-Control: no-cache), which the site takes to mean that it should wait for the new one. What comes
-    # back is kept, whatever its age, and isn't asked after a third time. If nothing does, or an error of the
-    # server's own, the first answer stands.
-    #
-    # @api private
-    # @param key [Array] the URL and the media type asked for
-    # @param request [Net::HTTP::Get] the request, to send again
-    # @param answer [Net::HTTPResponse] what the first answer came to
-    # @return [Net::HTTPResponse] the response: the second answer's, or the first's if no second came
-    def again(key, request, answer)
-      entry = @lock.synchronize { @entries[key] }
-      request["if-none-match"] = entry&.etag # no header, when nothing was kept, or it has no ETag
-      request["cache-control"] = "no-cache"
-      response = @connections.request(request)
-      response.is_a?(Net::HTTPServerError) ? answer : renewed(key, entry, response)
-    rescue NetworkError
-      answer
+      renewed(key, entry, response)
     end
 
     # Keep what the server answers with, or go on keeping what it says hasn't changed

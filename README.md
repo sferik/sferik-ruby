@@ -259,9 +259,9 @@ What an endpoint builds of a response is kept with it: for as long as the client
 
 A response that Cloudflare's cache answered with has been kept there for a while already, which it says (`Age`), and
 is good for that much less here: one that's good for five minutes, and has been kept for four, is asked for again in
-one. One that comes older than it's good for is asked for once more, at once: Cloudflare's cache answers with what it
-has while it builds another, and the second request says not to be answered from a cache (`Cache-Control: no-cache`),
-so the site has it wait for that one.
+one. Cloudflare's cache answers with what it has, when that's no longer good, while it builds another for whoever
+asks next: so each request a cached client makes says not to be answered that way (`Cache-Control: no-cache`), and the
+site has it wait for the new one. What's still good there is its answer all the same.
 
 When the server can't be reached to say whether a response that's no longer good has changed, the request raises
 `NetworkError`, as any other would, and when the server answers with an error of its own (a 5xx), `ServerError`. The

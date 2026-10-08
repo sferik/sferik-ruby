@@ -321,7 +321,6 @@ module Sferik
 
     def self.lifetime: (Net::HTTPResponse answer) -> Integer
     def self.left: (Net::HTTPResponse answer) -> Integer
-    def self.spent?: (Net::HTTPResponse answer) -> bool
     def self.keepable?: (Net::HTTPResponse answer) -> bool
   end
 
@@ -373,7 +372,6 @@ module Sferik
     def renewed: (key key, Entry? entry, Net::HTTPResponse response) -> Net::HTTPResponse
     def spared: (Entry entry, Net::HTTPResponse response) -> Net::HTTPResponse
     def remember: [T] (key key, Entry entry, T made) -> T
-    def again: (key key, Net::HTTPRequest request, Net::HTTPResponse answer) -> Net::HTTPResponse
     def keep: (key key, Entry entry, Net::HTTPResponse answer) -> void
     def hold: (key key, Entry entry) -> void
     def expiry: (Net::HTTPResponse latest) -> Numeric

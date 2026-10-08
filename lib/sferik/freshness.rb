@@ -41,18 +41,6 @@ module Sferik
       lifetime(answer) - answer["age"].to_i
     end
 
-    # Whether a response came older than it's good for
-    #
-    # A cache on its way may answer with one at once, and fetch another for whoever asks next (as Cloudflare's does
-    # for the site): asked again, it may have that one.
-    #
-    # @api private
-    # @param answer [Net::HTTPResponse] the answer
-    # @return [Boolean] true if it says how long the response is good for, and that it has been kept for as long
-    def self.spent?(answer)
-      lifetime(answer).positive? && !left(answer).positive?
-    end
-
     # Whether an answer lets a response be kept
     #
     # @api private
