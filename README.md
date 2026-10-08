@@ -79,7 +79,7 @@ contributions.total                      # => 7747
 contributions.longest_streak             # => 32
 contributions.days.max_by(&:count).date  # => #<Date: 2026-08-28>
 contributions.last_push                  # => #<Sferik::Push repo="sferik/x-ruby" sha="d30399b..." at=2026-10-06 16:18:55 UTC>
-contributions.as_of                      # => 2026-10-08 01:15:02 UTC, when the numbers were fetched
+contributions.as_of                      # => 2026-10-08 01:00:00 UTC, the hour the numbers were fetched in
 ```
 
 ### Projects
@@ -91,7 +91,7 @@ projects.map(&:name)        # => ["multi_json", "multi_xml", "simplecov", ...]
 projects.size               # => 28; there's length, empty?, last, and [] too
 projects.total_downloads    # => 5_473_478_762, across every gem @sferik owns
 projects.filter_map(&:downloads).sum  # of those listed: downloads is nil for a project that isn't a gem
-projects.as_of              # => 2026-10-08 01:15:02 UTC, when the downloads were fetched
+projects.as_of              # => 2026-10-08 01:00:00 UTC, the hour the downloads were fetched in
 ```
 
 ### Talks

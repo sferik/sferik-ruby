@@ -20,7 +20,8 @@
   came (`Unanswered`), but not if the server couldn't be connected to. And if the server says the message is still
   being sent (a 409), `write` asks after it once more, as much later as the server says to
 - `Sferik.contributions` and `Sferik.projects` say when their numbers are from, as `as_of`, and whether that's
-  now, as `live?`: it's false for a snapshot, and for numbers the site last fetched more than two hours ago
+  now, as `live?`: it's false for a snapshot, and for numbers the site last fetched more than two hours ago. `as_of`
+  is to the hour, so that numbers that haven't changed are the same response, which a cached client isn't sent again
 - `Sferik.status` says whether the site gets its numbers from GitHub as it should, with its token: when GitHub was
   last asked with it, when it last answered, and what went wrong if it didn't. The numbers are live either way, since
   the site asks another way when the token fails. And it says when the site last loaded each of its live values, as

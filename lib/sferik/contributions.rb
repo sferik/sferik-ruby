@@ -63,12 +63,14 @@ module Sferik
     # @!method as_of
     #   When the numbers are from
     #
-    #   That's when they were fetched, or the last day of the snapshot, if they're that.
+    #   That's the hour they were fetched in, or the last day of the snapshot, if they're that. It's to the hour so
+    #   that numbers that are fetched again, and haven't changed, are the same response, which a {Client#cached}
+    #   client isn't sent again: {Status::Loaded#contributions} is when they were fetched, to the second.
     #
     #   @api public
     #   @return [Time] when the numbers are from
     #   @example
-    #     contributions.as_of # => 2026-10-08 01:15:02 UTC
+    #     contributions.as_of # => 2026-10-08 01:00:00 UTC
     timestamp :as_of, Time
 
     # @!method command

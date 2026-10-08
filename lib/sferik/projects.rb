@@ -83,12 +83,14 @@ module Sferik
     # @!method as_of
     #   When the downloads are from
     #
-    #   That's when they were fetched, or the day of the snapshot, if they're that.
+    #   That's the hour they were fetched in, or the day of the snapshot, if they're that. It's to the hour so that
+    #   downloads that are fetched again, and haven't changed, are the same response, which a {Client#cached} client
+    #   isn't sent again: {Status::Loaded#gems} is when they were fetched, to the second.
     #
     #   @api public
     #   @return [Time] when the downloads are from
     #   @example
-    #     projects.as_of # => 2026-10-08 01:15:02 UTC
+    #     projects.as_of # => 2026-10-08 01:00:00 UTC
     timestamp :as_of, Time
 
     # @!method command

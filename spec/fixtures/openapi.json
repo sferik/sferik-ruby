@@ -1180,7 +1180,7 @@
           "asOf": {
             "type": "string",
             "format": "date-time",
-            "description": "When the graph was fetched, or the last day of the snapshot when live is false"
+            "description": "When the graph was fetched, to the hour (so that the response is the same one until the graph changes, or the hour does: /status says when to the second), or the last day of the snapshot when live is false"
           }
         },
         "required": ["command", "total", "longestStreak", "contributions", "since", "lastPush", "live", "asOf"],
@@ -1255,7 +1255,7 @@
           "asOf": {
             "type": "string",
             "format": "date-time",
-            "description": "When the downloads were fetched, or the day of the snapshot when live is false"
+            "description": "When the downloads were fetched, to the hour (so that the response is the same one until the numbers change, or the hour does: /status says when to the second), or the day of the snapshot when live is false"
           }
         },
         "required": ["command", "projects", "total", "more", "live", "asOf"],
