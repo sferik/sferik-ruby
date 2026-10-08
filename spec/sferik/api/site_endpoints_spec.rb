@@ -94,6 +94,12 @@ RSpec.describe Sferik::API::SiteEndpoints do
         true
       end
 
+      # The threads started since some were listed, and still there: but for the one Ruby's Timeout starts the first
+      # time it's used, and keeps, which is these examples' own if one of them is the first to wait with it
+      def left_behind(threads)
+        (Thread.list - threads).reject { |thread| thread.name.to_s.include?("Timeout") }
+      end
+
       it "yields who's reading the site, with the terminal that checked in, and returns what the block does" do
         expect(client.check_in(token) { |who| [who.class, who.you, :done] }).to match([Sferik::Who, /\Attys\d{3}\z/, :done])
       end
@@ -116,14 +122,14 @@ RSpec.describe Sferik::API::SiteEndpoints do
         client.check_in(token) { a_minute_later(request) }
         minutes << nil
 
-        expect([Thread.list, times_made(request)]).to eq([threads, 2])
+        expect([left_behind(threads), times_made(request)]).to eq([[], 2])
       end
 
       it "checks it in no more when the block raises, and raises what it did", :aggregate_failures do
         threads = Thread.list
 
         expect { client.check_in(token) { a_minute_later(request) && raise("stop") } }.to raise_error(RuntimeError, "stop")
-        expect(Thread.list).to eq(threads)
+        expect(left_behind(threads)).to be_empty
       end
 
       it "checks it in again a minute after a check-in the server fails", :aggregate_failures do
