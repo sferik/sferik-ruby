@@ -73,10 +73,11 @@ RSpec.describe Sferik::CLI do
   end
 
   it "prints the version in a process that has loaded neither the client nor what it's built of" do
+    # The script goes in on standard input, since a command line's quotes don't reach JRuby whole on Windows
     script = 'require "sferik/cli"; status = Sferik::CLI.new.run(["--version"]); p [status, defined?(Sferik::Client), defined?(Net::HTTP)]'
-    output, = Open3.capture2e(RbConfig.ruby, "-I", File.expand_path("../../lib", __dir__), "-e", script)
+    output, = Open3.capture2e(RbConfig.ruby, "-I", File.expand_path("../../lib", __dir__), stdin_data: script)
 
-    expect(output).to eq("#{Sferik::VERSION}\n[0, nil, nil]\n")
+    expect(output.lines.map(&:chomp)).to eq([Sferik::VERSION, "[0, nil, nil]"])
   end
 
   described_class.const_get(:COMMANDS).each do |command, path|
