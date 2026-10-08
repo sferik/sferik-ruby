@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "json"
+
 RSpec.describe Sferik::Resource do
   let(:talk) { Sferik::Talk.new("title" => "Writing Fast Ruby", "event" => "Baruco", "featured" => true, "slides" => nil) }
   let(:home) { Sferik::Home.new("pages" => {"talks" => "/talks"}, "modules" => [{"id" => "whoami"}]) }
@@ -656,6 +658,48 @@ RSpec.describe Sferik::Resource do
       figure = Sferik::Figure.new("type" => "figure", "href" => "https://xkcd.com/2347/", "src" => "/img/dependency.webp", "alt" => "A tower")
 
       expect(figure.inspect).to eq('#<Sferik::Figure href="https://xkcd.com/2347/" src="/img/dependency.webp">')
+    end
+  end
+
+  # A response object can be handed to another Ractor as it is, without being copied: everything in it is frozen, all
+  # the way down, its dates and times too. Nothing sets out to make that so, which is why this checks that it stays so:
+  # one instance variable that isn't frozen, anywhere inside one, and it no longer holds.
+  context "when it's to be shared with another Ractor", skip: !defined?(Ractor) && "this Ruby has no Ractors" do
+    # Each fixture, and the class of the response object an endpoint builds of it
+    {
+      "home.json" => Sferik::Home, "whoami.json" => Sferik::Whoami, "contributions.json" => Sferik::Contributions, "src.json" => Sferik::Projects,
+      "name.json" => Sferik::NameChange, "talks.json" => Sferik::Talks, "podcasts.json" => Sferik::Talks, "finger.json" => Sferik::Finger,
+      "resume.json" => Sferik::Resume, "dependency.json" => Sferik::Dependency, "who.json" => Sferik::Who, "check_in.json" => Sferik::Who,
+      "version.json" => Sferik::Deployment, "webfinger.json" => Sferik::WebFinger
+    }.each do |file, resource|
+      it "can share a #{resource} built of #{file}, and everything in it" do
+        expect(Ractor.shareable?(resource.new(JSON.parse(fixture(file))))).to be(true)
+      end
+    end
+
+    it "can share one built by hand, of what wasn't frozen" do
+      talk = Sferik::Talk.new("title" => +"Writing Fast Ruby", "date" => +"2015-11", "featured" => true)
+
+      expect(Ractor.shareable?(talk)).to be(true)
+    end
+
+    it "can share what an endpoint returns" do
+      stub_get("/talks", "talks.json")
+
+      expect(Ractor.shareable?(Sferik::Client.new.talks)).to be(true)
+    end
+
+    it "can share what a cached client returns, which is what it keeps" do
+      stub_request(:get, "https://sferik.net/talks").to_return(body: fixture("talks.json"), headers: {"Cache-Control" => "public, max-age=60"})
+      cached = Sferik::Client.new.cached
+
+      expect(Array.new(2) { cached.talks }).to all(satisfy { |talks| Ractor.shareable?(talks) })
+    end
+
+    it "can share the dates and times in one, which are frozen too" do
+      push = Sferik::Push.new("at" => "2026-10-01T12:00:00Z")
+
+      expect([push.at, Sferik::Talk.new("date" => "2015-11").date]).to all(satisfy { |value| Ractor.shareable?(value) })
     end
   end
 end
