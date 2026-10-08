@@ -689,6 +689,12 @@ RSpec.describe "Sferik::Cache" do
     end
   end
 
+  describe "#uncached" do
+    it "is the connections it makes its requests over, for another cache to be built over" do
+      expect(cache.uncached).to be(connections)
+    end
+  end
+
   describe "#keeping" do
     it "yields a cache that doesn't answer with what's no longer good either, when the server can't be reached" do
       stub_fresh.then.to_timeout

@@ -236,6 +236,10 @@ module Sferik
     # stale_if_error, the client answers with the response it kept instead, however old: for a script that would
     # rather go on with what it last knew.
     #
+    # On a client that keeps its responses already, this is a cache of its own all the same, with nothing kept, over
+    # that client's connections: not one over the other's, which would take a response the other had kept a while
+    # for one that had just come.
+    #
     # @api public
     # @param stale_if_error [Boolean] whether to answer with a response that's no longer good when the server can't
     #   be reached, doesn't answer, or answers with an error of its own
@@ -246,7 +250,7 @@ module Sferik
     #   loop { puts client.who.size; sleep 1 }
     # @example Go on with the last answer when the network is down, or the server is
     #   client = Sferik.client.cached(stale_if_error: true)
-    def cached(stale_if_error: false) = dup.keep(Cache.new(connections, stale: boolean(:stale_if_error, stale_if_error)))
+    def cached(stale_if_error: false) = dup.keep(Cache.new(connections.uncached, stale: boolean(:stale_if_error, stale_if_error)))
 
     # Whether the client keeps the responses to its GET requests
     #

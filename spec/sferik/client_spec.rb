@@ -902,6 +902,14 @@ RSpec.describe Sferik::Client do
       expect(a_request(:get, "https://sferik.net/whoami")).to have_been_made.twice
     end
 
+    it "returns a client with a cache of its own, with nothing kept, when the one it's called on keeps its responses already" do
+      keeping = described_class.new(cache: true)
+      keeping.get("/whoami")
+      keeping.cached.get("/whoami")
+
+      expect(a_request(:get, "https://sferik.net/whoami")).to have_been_made.twice
+    end
+
     it "returns a client that uses the timeouts of the one it's called on" do
       allow(Net::HTTP).to receive(:start).and_call_original
       described_class.new(open_timeout: 1, read_timeout: 2, write_timeout: 3).cached.get("/whoami")

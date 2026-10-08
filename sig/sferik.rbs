@@ -315,6 +315,7 @@ module Sferik
     def made: [T] (URI::Generic uri, String accept, Net::HTTPResponse response) { () -> T } -> T
     def keeping: [T] () { (_Connections connections) -> T } -> T
     def close: () -> nil
+    def uncached: () -> _Connections
   end
 
   module Freshness
@@ -362,6 +363,7 @@ module Sferik
     def initialize: (_Connections connections, ?^() -> Numeric clock, ?Hash[key, Entry] entries, ?Mutex lock, ?stale: bool) -> void
     def keeping: [T] () { (_Connections connections) -> T } -> T
     def close: () -> nil
+    def uncached: () -> _Connections
     def request: (Net::HTTPRequest request) -> Net::HTTPResponse
     def made: [T] (URI::Generic uri, String accept, Net::HTTPResponse response) { () -> T } -> T
     def over: (_Connections connections) -> Cache
@@ -397,6 +399,7 @@ module Sferik
     def request: (Net::HTTPRequest request) -> Net::HTTPResponse
     def made: [T] (URI::Generic _uri, String _accept, Net::HTTPResponse _response) { () -> T } -> T
     def close: () -> nil
+    def uncached: () -> Connections
 
     private
 

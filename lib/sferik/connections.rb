@@ -104,6 +104,14 @@ module Sferik
       nil
     end
 
+    # The connections themselves, which keep no responses
+    #
+    # A {Cache} has the ones it's over instead, for another cache to be built over.
+    #
+    # @api private
+    # @return [Connections] the connections
+    def uncached = self
+
     private
 
     # The connection to the host of a URL

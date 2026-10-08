@@ -137,6 +137,14 @@ module Sferik
     # @return [nil]
     def close = @connections.close
 
+    # The connections requests are made over, which keep no responses
+    #
+    # They're what another cache is built over, so that it isn't over this one.
+    #
+    # @api private
+    # @return [Connections] the connections
+    def uncached = @connections
+
     # Send a request, unless it's a GET whose response is kept and still good
     #
     # @api private
