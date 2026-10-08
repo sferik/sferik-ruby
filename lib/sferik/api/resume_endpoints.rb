@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../json_parsing"
 require_relative "../resume"
 
 module Sferik
@@ -8,8 +7,6 @@ module Sferik
     # The endpoints for the resume, as data, LaTeX, or a PDF
     # @api public
     module ResumeEndpoints
-      include JSONParsing
-
       # Returns the resume as a JSON Resume document
       #
       # @api public
@@ -17,7 +14,7 @@ module Sferik
       # @example
       #   Sferik.resume.work.first.position
       def resume
-        Resume.new(parse_json(get("/resume")))
+        json("/resume") { |attributes| Resume.new(attributes) }
       end
 
       # Returns the resume as a LaTeX document, ready for pdflatex or tectonic

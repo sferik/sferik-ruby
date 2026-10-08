@@ -120,9 +120,11 @@ module Sferik
     CODE: Integer
   end
 
-  # What the endpoints need from the class that includes them: a way to send a request
+  # What the endpoints need from the class that includes them: a way to send a request, and to make something of
+  # the JSON that comes back
   interface _Requests
     def get: (String path, ?accept: String) -> String
+    def json: [T] (String path, ?accept: String) { (Hash[String, untyped] attributes) -> T } -> T
     def post: (String path, ?String body, ?accept: String, ?idempotency_key: String?) -> String
   end
 
@@ -140,7 +142,6 @@ module Sferik
     include TalkEndpoints
 
     module ProfileEndpoints : Object, _Requests
-      include JSONParsing
       include Validation
 
       def home: () -> Home
@@ -154,23 +155,17 @@ module Sferik
     end
 
     module CodeEndpoints : Object, _Requests
-      include JSONParsing
-
       def contributions: () -> Contributions
       def projects: () -> Projects
     end
 
     module TalkEndpoints : Object, _Requests
-      include JSONParsing
-
       def talks: () -> Talks
       def talks_feed: () -> String
       def podcasts: () -> Array[Podcast]
     end
 
     module ResumeEndpoints : Object, _Requests
-      include JSONParsing
-
       def resume: () -> Resume
       def resume_latex: () -> String
       def resume_pdf: () -> String
@@ -264,6 +259,7 @@ module Sferik
 
   class Client
     include API
+    include JSONParsing
     include Validation
 
     UNLABELED: Array[Encoding]
@@ -283,6 +279,7 @@ module Sferik
     def close: () -> nil
     def cached: (?stale_if_error: bool) -> Client
     def inspect: () -> String
+    def json: [T] (String path, ?accept: String) { (Hash[String, untyped] attributes) -> T } -> T
 
     @connections: _Connections?
 
@@ -290,6 +287,8 @@ module Sferik
 
     private
 
+    def got: (URI::Generic uri, String accept) -> Net::HTTPResponse
+    def success: (Net::HTTPResponse response) -> Net::HTTPResponse
     def connections: () -> _Connections
     def uri_for: (String path) -> URI::Generic
     def fetch: (URI::Generic uri, String accept, Integer redirects) -> Net::HTTPResponse
@@ -304,6 +303,7 @@ module Sferik
   # What a client makes its requests over: connections, or a cache over them
   interface _Connections
     def request: (Net::HTTPRequest request) -> Net::HTTPResponse
+    def made: [T] (URI::Generic uri, String accept, Net::HTTPResponse response) { () -> T } -> T
     def keeping: [T] () { (_Connections connections) -> T } -> T
     def close: () -> nil
   end
@@ -313,8 +313,10 @@ module Sferik
       attr_reader response: Net::HTTPResponse
       attr_reader etag: String?
       attr_reader expires: Numeric
+      attr_reader made: untyped
 
-      def self.new: (Net::HTTPResponse response, String? etag, Numeric expires) -> Entry
+      def self.new: (Net::HTTPResponse response, String? etag, Numeric expires, untyped made) -> Entry
+      def with: (?expires: Numeric, ?made: untyped) -> Entry
     end
 
     class Flight
@@ -344,6 +346,7 @@ module Sferik
     def keeping: [T] () { (_Connections connections) -> T } -> T
     def close: () -> nil
     def request: (Net::HTTPRequest request) -> Net::HTTPResponse
+    def made: [T] (URI::Generic uri, String accept, Net::HTTPResponse response) { () -> T } -> T
     def over: (_Connections connections) -> Cache
 
     private
@@ -354,7 +357,9 @@ module Sferik
     def ask: (key key, Entry? entry, Net::HTTPRequest request) -> Net::HTTPResponse
     def renewed: (key key, Entry? entry, Net::HTTPResponse response) -> Net::HTTPResponse
     def spared: (Entry entry, Net::HTTPResponse response) -> Net::HTTPResponse
-    def keep: (key key, Net::HTTPResponse response, Net::HTTPResponse latest) -> void
+    def remember: [T] (key key, Entry entry, T made) -> T
+    def keep: (key key, Entry entry, String? control) -> void
+    def expiry: (Net::HTTPResponse latest) -> Numeric
     def fresh_for: (String control) -> Integer
   end
 
@@ -373,6 +378,7 @@ module Sferik
     def initialize: (timeouts timeouts, ?kept? kept) -> void
     def keeping: [T] (?kept kept) { (Connections connections) -> T } -> T
     def request: (Net::HTTPRequest request) -> Net::HTTPResponse
+    def made: [T] (URI::Generic _uri, String _accept, Net::HTTPResponse _response) { () -> T } -> T
     def close: () -> nil
 
     private

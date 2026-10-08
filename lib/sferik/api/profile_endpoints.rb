@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "uri"
-require_relative "../json_parsing"
 require_relative "../dependency"
 require_relative "../finger"
 require_relative "../home"
@@ -15,7 +14,6 @@ module Sferik
     # The endpoints about Erik: the bio, the comic, contact details, the name change, the motto, and the account
     # @api public
     module ProfileEndpoints
-      include JSONParsing
       include Validation
 
       # Returns the profile and the home page's modules
@@ -27,7 +25,7 @@ module Sferik
       # @example
       #   Sferik.home.profile.tagline
       def home
-        Home.new(parse_json(get("")))
+        json("") { |attributes| Home.new(attributes) }
       end
 
       # Returns the bio: paragraphs of HTML
@@ -37,7 +35,7 @@ module Sferik
       # @example
       #   Sferik.whoami.blocks.map(&:html)
       def whoami
-        Whoami.new(parse_json(get("/whoami")))
+        json("/whoami") { |attributes| Whoami.new(attributes) }
       end
 
       # Returns the xkcd comic on the home page: xkcd 2347, adapted
@@ -47,7 +45,7 @@ module Sferik
       # @example
       #   Sferik.dependency.figure.alt
       def dependency
-        Dependency.new(parse_json(get("/dependency")))
+        json("/dependency") { |attributes| Dependency.new(attributes) }
       end
 
       # Returns contact details and profiles elsewhere
@@ -57,7 +55,7 @@ module Sferik
       # @example
       #   Sferik.finger.profiles.map(&:url)
       def finger
-        Finger.new(parse_json(get("/finger")))
+        json("/finger") { |attributes| Finger.new(attributes) }
       end
 
       # Returns contact details and profiles as a contact card (a vCard)
@@ -79,7 +77,7 @@ module Sferik
       # @example
       #   Sferik.name_change.year # => 2017
       def name_change
-        NameChange.new(parse_json(get("/name")))
+        json("/name") { |attributes| NameChange.new(attributes) }
       end
 
       # Returns the motto: ~/.signature, which the home page shows as cat .signature
@@ -108,7 +106,7 @@ module Sferik
       #   Sferik.webfinger("acct:sferik@sferik.org")
       def webfinger(resource = "acct:sferik@sferik.net")
         query = URI.encode_www_form(resource: check(:resource, resource, String))
-        WebFinger.new(parse_json(get("/.well-known/webfinger?#{query}", accept: "application/jrd+json")))
+        json("/.well-known/webfinger?#{query}", accept: "application/jrd+json") { |attributes| WebFinger.new(attributes) }
       end
     end
   end

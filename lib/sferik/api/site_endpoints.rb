@@ -31,7 +31,7 @@ module Sferik
       # @example
       #   Sferik.who.map(&:page) # => ["/", "/talks"]
       def who
-        Who.new(parse_json(get("/who")))
+        json("/who") { |attributes| Who.new(attributes) }
       end
 
       # Checks in a terminal, and returns everyone reading the site
@@ -115,7 +115,7 @@ module Sferik
       # @example
       #   Sferik.openapi["paths"].keys
       def openapi
-        parse_json(get("/openapi.json"))
+        json("/openapi.json", &:itself)
       end
 
       # Returns which commit of the site is deployed, and when it was
@@ -125,7 +125,7 @@ module Sferik
       # @example
       #   Sferik.deployment.commit # => "6a34226a3f351a78339b75430055a018ac30c964"
       def deployment
-        Deployment.new(parse_json(get("/version")))
+        json("/version") { |attributes| Deployment.new(attributes) }
       end
 
       private

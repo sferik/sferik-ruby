@@ -900,6 +900,73 @@ RSpec.describe Sferik::Client do
     end
   end
 
+  describe "#json" do
+    before { stub_request(:get, "https://sferik.net/whoami").to_return(body: '{"command":"whoami"}', headers: {"ETag" => '"v1"', "Cache-Control" => "public, max-age=60"}) }
+
+    it "returns what the block makes of the parsed JSON, which is frozen" do
+      expect(client.json("/whoami") { |attributes| [attributes, attributes.frozen?] }).to eq([{"command" => "whoami"}, true])
+    end
+
+    it "asks for JSON, unless it's told what kind" do
+      client.json("/whoami", &:itself)
+
+      expect(a_request(:get, "https://sferik.net/whoami").with(headers: {"Accept" => "application/json"})).to have_been_made
+    end
+
+    it "asks for the kind of JSON it's told to" do
+      client.json("/whoami", accept: "application/jrd+json", &:itself)
+
+      expect(a_request(:get, "https://sferik.net/whoami").with(headers: {"Accept" => "application/jrd+json"})).to have_been_made
+    end
+
+    it "makes something of each response, for a client that keeps none" do
+      one, two = Array.new(2) { client.json("/whoami", &:dup) }
+
+      expect(one).to eq(two).and(satisfy { |made| !made.equal?(two) })
+    end
+
+    it "makes something once of a response that a cached client keeps, and answers with that again" do
+      one, two = client.cached.then { |cached| Array.new(2) { cached.json("/whoami", &:dup) } }
+
+      expect(one).to be(two)
+    end
+
+    it "makes something of each media type a URL is asked for as, for a cached client" do
+      cached = client.cached
+
+      expect(cached.json("/whoami", &:dup)).not_to be(cached.json("/whoami", accept: "application/jrd+json", &:dup))
+    end
+
+    it "raises InvalidResponse for a response that isn't a JSON object" do
+      stub_request(:get, "https://sferik.net/who").to_return(body: "[]")
+
+      expect { client.json("/who", &:itself) }.to raise_error(Sferik::InvalidResponse, "Expected a JSON object, got Array")
+    end
+
+    it "raises what a response that isn't a success comes to" do
+      stub_request(:get, "https://sferik.net/nope").to_return(status: 404)
+
+      expect { client.json("/nope", &:itself) }.to raise_error(Sferik::NotFound)
+    end
+
+    it "follows redirects, as get does" do
+      stub_request(:get, "https://sferik.net/me").to_return(status: 302, headers: {"Location" => "/whoami"})
+
+      expect(client.json("/me", &:itself)).to eq({"command" => "whoami"})
+    end
+
+    it "raises InvalidURL for a path that can't be in a URL" do
+      expect { client.json("/who ami", &:itself) }.to raise_error(Sferik::InvalidURL)
+    end
+
+    it "returns the same resource from an endpoint of a cached client, for as long as the response is kept" do
+      cached = client.cached
+      whoami = cached.whoami
+
+      expect(cached.whoami).to be(whoami).and(have_attributes(command: "whoami"))
+    end
+  end
+
   describe "#inspect" do
     it "shows the host" do
       expect(client.inspect).to eq("#<Sferik::Client https://sferik.net>")

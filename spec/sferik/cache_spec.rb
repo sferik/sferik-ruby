@@ -519,6 +519,107 @@ RSpec.describe "Sferik::Cache" do
     end
   end
 
+  describe "#made" do
+    # What the cache makes of a response to the URL: something new, each time its block is called
+    def made_of(response, address = url, accept = "application/json", through: cache)
+      through.made(URI(address), accept, response) { Object.new }
+    end
+
+    it "returns what the block makes of a response that isn't kept, each time" do
+      response = stub_fresh(control: "no-store") && get(url)
+
+      expect(Array.new(2) { made_of(response) }.uniq.size).to eq(2)
+    end
+
+    it "returns what the block makes of a response that's kept, and doesn't call it again" do
+      response = stub_fresh && get(url)
+
+      expect(Array.new(2) { made_of(response) }.uniq.size).to eq(1)
+    end
+
+    it "keeps what was made with the response" do
+      response = stub_fresh && get(url)
+      made = made_of(response)
+
+      expect(entries.values.map { |entry| [entry.response, entry.made] }).to eq([[response, made]])
+    end
+
+    it "makes something each time of a response that isn't the one kept, and keeps what was made of the one that is" do
+      response = stub_fresh && get(url)
+      other = stub_fresh(body: "two", url: "#{url}?x=1") && get("#{url}?x=1")
+
+      expect([made_of(response), made_of(other), made_of(other), made_of(response)].uniq.size).to eq(3)
+    end
+
+    it "keeps what's made of each media type a URL is asked for as apart" do
+      stub_fresh
+      json, text = get(url), get(url, "text/plain")
+
+      expect(Array.new(2) { [made_of(json), made_of(text, url, "text/plain")] }.flatten.uniq.size).to eq(2)
+    end
+
+    it "goes on keeping what was made of a response that the server says hasn't changed" do
+      stub_fresh.then.to_return(status: 304, headers: {"Cache-Control" => "public, max-age=60"})
+      made = made_of(get(url))
+      wait(60)
+
+      expect([made_of(get(url)), entries.values.map(&:expires)]).to eq([made, [220.0]])
+    end
+
+    it "makes something of a response that has changed" do
+      stub_fresh.then.to_return(body: "two", headers: {"Cache-Control" => "public, max-age=60"})
+      made = made_of(get(url))
+      wait(60)
+
+      expect(made_of(get(url))).not_to be(made)
+    end
+
+    it "doesn't keep what was made of a response that another has taken the place of meanwhile" do
+      stub_fresh.then.to_return(body: "two", headers: {"Cache-Control" => "public, max-age=60"})
+      first = get(url)
+      cache.made(URI(url), "application/json", first) { wait(60) && get(url) }
+
+      expect(entries.values.map { |entry| [entry.response.body, entry.made] }).to eq([["two", nil]])
+    end
+
+    it "returns what was made of a response that's no longer kept by then, and keeps nothing" do
+      stub_fresh.then.to_return(status: 404)
+      first = get(url)
+      made = cache.made(URI(url), "application/json", first) { wait(60) && get(url).code }
+
+      expect([made, entries]).to eq(["404", {}])
+    end
+
+    it "holds its lock to read what's kept, and to keep what was made" do
+      response = stub_fresh && get(url)
+      allow(lock).to receive(:synchronize).and_call_original
+      made_of(response)
+
+      expect(lock).to have_received(:synchronize).twice
+    end
+
+    it "doesn't hold its lock while something is made" do
+      response = stub_fresh && get(url)
+
+      expect(cache.made(URI(url), "application/json", response) { lock.locked? }).to be(false)
+    end
+
+    it "holds its lock once, for what's already made" do
+      response = stub_fresh && get(url)
+      made_of(response)
+      allow(lock).to receive(:synchronize).and_call_original
+      made_of(response)
+
+      expect(lock).to have_received(:synchronize).once
+    end
+
+    it "answers with what a cache over other connections made, and it with this one's" do
+      response = stub_fresh && get(url)
+
+      expect([made_of(response), cache.keeping { |kept| made_of(response, through: kept) }].uniq.size).to eq(1)
+    end
+  end
+
   describe "#close" do
     it "closes the connections it makes its requests over, and returns nil" do
       opened = []

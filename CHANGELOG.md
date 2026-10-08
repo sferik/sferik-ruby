@@ -34,7 +34,8 @@
   been kept on its way already (`Age`) is good for that much less. A server error (a 5xx)
   leaves what's kept as it is, to be asked after again. With `cached(stale_if_error: true)`, the client
   answers with what it kept, however old, when the server can't be reached. Threads that ask it for the same thing
-  at once make one request between them
+  at once make one request between them, and what an endpoint builds of a response is kept with it, so the JSON of
+  one that's kept is parsed once
 - Configuration, with `Sferik.configure` or the options of `Sferik.new`: `host`, `user_agent`, `open_timeout`,
   `read_timeout`, `write_timeout`, and `max_redirects`. A wrong one raises ArgumentError when the client is built
 - Errors are all `Sferik::Error`: `InvalidURL`, `NetworkError` (and `Unanswered`, for a request that was sent and got

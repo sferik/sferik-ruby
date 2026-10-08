@@ -76,6 +76,21 @@ module Sferik
       raise (http ? Unanswered : NetworkError), "#{e.class}: #{e} (#{request.method} #{request.uri})"
     end
 
+    # What a block makes of a response, made each time
+    #
+    # Only a {Cache} keeps what's made.
+    #
+    # @api private
+    # @param _uri [URI::HTTP] the URL that was asked for
+    # @param _accept [String] the media type it was asked for as
+    # @param _response [Net::HTTPResponse] the response that came
+    # @yield what to make of the response
+    # @yieldreturn [Object] what's made of it
+    # @return [Object] what the block returned
+    def made(_uri, _accept, _response)
+      yield
+    end
+
     # Close the connections that are kept, and keep none of them
     #
     # One that another process opened, which a fork inherits, is only let go of: closing it here would close it for

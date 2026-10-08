@@ -20,9 +20,12 @@ module Sferik
   # Threads that ask for the same thing at once, when it isn't kept or is no longer good, make one request between
   # them: the first asks, and the rest wait for its answer, which is theirs too. If it gets none, each asks for itself.
   #
+  # What a client makes of a response (the JSON parsed, and a resource built of it) is kept with the response, and
+  # made once: see {#made}.
+  #
   # @api private
   class Cache
-    # A response that's kept, with its ETag, if it has one, and when on the clock it's good until
+    # A response that's kept, with its ETag, if it has one, when on the clock it's good until, and what was made of it
     #
     # @!attribute [r] response
     #   The response
@@ -36,7 +39,11 @@ module Sferik
     #   When the response is good until
     #   @api private
     #   @return [Numeric] the time on the cache's clock, in seconds
-    Entry = Data.define(:response, :etag, :expires)
+    # @!attribute [r] made
+    #   What was made of the response
+    #   @api private
+    #   @return [Object, nil] what {Cache#made}'s block returned, or nil if nothing has been made of it yet
+    Entry = Data.define(:response, :etag, :expires, :made)
     private_constant :Entry
 
     # A request on its way, whose answer is for every thread that asks for the same thing before it comes
@@ -149,6 +156,27 @@ module Sferik
       (entry && @clock.call < entry.expires) ? entry.response : share(key) { renew(key, entry, request) }
     end
 
+    # What a block makes of a response, which is made once of a response that's kept
+    #
+    # The cache answers with a response it keeps again and again, and what's made of it would be the same each time:
+    # so that's kept with it, and the block isn't called again until another response is. It should make something
+    # that can't be changed, since every caller gets the same one.
+    #
+    # @api private
+    # @param uri [URI::HTTP] the URL that was asked for
+    # @param accept [String] the media type it was asked for as
+    # @param response [Net::HTTPResponse] the response that came
+    # @yield what to make of the response
+    # @yieldreturn [Object] what's made of it, which isn't nil or false
+    # @return [Object] what the block returned: this time, or the first time for this response
+    def made(uri, accept, response)
+      key = [uri, accept] #: key
+      entry = @lock.synchronize { @entries[key] }
+      return yield unless entry && entry.response.equal?(response)
+
+      entry.made || remember(key, entry, yield)
+    end
+
     protected
 
     # Make this cache's requests over other connections
@@ -245,9 +273,22 @@ module Sferik
     # @param response [Net::HTTPResponse] the server's answer
     # @return [Net::HTTPResponse] the response: the one kept, if the server says it hasn't changed
     def renewed(key, entry, response)
-      kept = entry.response if entry && response.instance_of?(Net::HTTPNotModified)
-      keep(key, kept || response, response)
-      kept || response
+      kept = entry if response.instance_of?(Net::HTTPNotModified)
+      latest = kept ? kept.with(expires: expiry(response)) : Entry.new(response, response["etag"], expiry(response), nil)
+      keep(key, latest, response["cache-control"])
+      latest.response
+    end
+
+    # Keep what was made of a response with it, if it's still the one that's kept
+    #
+    # @api private
+    # @param key [Array] the URL and the media type asked for
+    # @param entry [Entry] the response kept, when it was made
+    # @param made [Object] what was made of it
+    # @return [Object] what was made of it
+    def remember(key, entry, made)
+      @lock.synchronize { @entries[key] = entry.with(made:) if @entries[key].equal?(entry) }
+      made
     end
 
     # What to answer with when the server fails, and a response is kept
@@ -265,20 +306,30 @@ module Sferik
 
     # Keep a response, or forget the one kept
     #
-    # It's kept for as long as the latest answer says it's good for, less how long that answer says it has been kept
-    # already (Age). Only a 200 is kept, and not one that says not to keep it: anything else leaves nothing kept. (An
-    # error of the server's own, with a response kept, never gets here.)
+    # Only a 200 is kept, and not one that says not to keep it: anything else leaves nothing kept. (An error of the
+    # server's own, with a response kept, never gets here.)
     #
     # @api private
     # @param key [Array] the URL and the media type asked for
-    # @param response [Net::HTTPResponse] the response to keep
-    # @param latest [Net::HTTPResponse] the latest answer: the response itself, or a 304 that says it hasn't changed
+    # @param entry [Entry] the response to keep, with when it's good until
+    # @param control [String, nil] the Cache-Control of the latest answer, if it has one: the response's, or a 304's
+    #   that says it hasn't changed
     # @return [void]
-    def keep(key, response, latest)
-      control = latest["cache-control"].to_s
-      expires = @clock.call + fresh_for(control) - latest["age"].to_i
-      entry = Entry.new(response, response["etag"], expires) if response.instance_of?(Net::HTTPOK) && !NO_STORE.match?(control)
-      @lock.synchronize { entry ? @entries[key] = entry : @entries.delete(key) }
+    def keep(key, entry, control)
+      keepable = entry.response.instance_of?(Net::HTTPOK) && !control&.match?(NO_STORE)
+      @lock.synchronize { keepable ? @entries[key] = entry : @entries.delete(key) }
+    end
+
+    # When a response is good until
+    #
+    # That's for as long as the latest answer says it's good for, less how long that answer says it has been kept
+    # already (Age).
+    #
+    # @api private
+    # @param latest [Net::HTTPResponse] the latest answer: the response itself, or a 304 that says it hasn't changed
+    # @return [Numeric] the time on the cache's clock, in seconds
+    def expiry(latest)
+      @clock.call + fresh_for(latest["cache-control"].to_s) - latest["age"].to_i
     end
 
     # The seconds a Cache-Control says a response is good for

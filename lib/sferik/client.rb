@@ -8,6 +8,7 @@ require_relative "cache"
 require_relative "configuration"
 require_relative "connections"
 require_relative "errors"
+require_relative "json_parsing"
 require_relative "validation"
 
 module Sferik
@@ -24,6 +25,7 @@ module Sferik
   # @api public
   class Client
     include API
+    include JSONParsing
     include Validation
 
     # The encodings of a body that names no charset of its own, which is sent as it is: binary, and US-ASCII
@@ -132,10 +134,7 @@ module Sferik
     # @example Get the bio as terminal output
     #   Sferik.client.get("/whoami", accept: "text/plain")
     def get(path, accept: "application/json")
-      response = fetch(uri_for(check(:path, path, String)), one_line(:accept, check(:accept, accept, String)), max_redirects)
-      raise error_for(response) unless response.is_a?(Net::HTTPSuccess)
-
-      Body.of(response)
+      Body.of(got(uri_for(check(:path, path, String)), one_line(:accept, check(:accept, accept, String))))
     end
 
     # Perform a POST request and return the response body
@@ -166,10 +165,7 @@ module Sferik
     def post(path, body = "", accept: "application/json", idempotency_key: nil)
       request = Net::HTTP::Post.new(uri_for(check(:path, path, String)), post_headers(accept, idempotency_key))
       request.body = utf8(check(:body, body, String))
-      response = connections.request(request)
-      raise error_for(response) unless response.is_a?(Net::HTTPSuccess)
-
-      Body.of(response)
+      Body.of(success(connections.request(request)))
     end
 
     # Make the requests in a block over connections that are closed when it ends
@@ -220,6 +216,9 @@ module Sferik
     # call of this starts with nothing kept. Threads that ask for the same thing at once, when it isn't kept or is no
     # longer good, make one request between them: the first asks, and the rest wait for its answer.
     #
+    # What an endpoint builds of a response is kept with it, so for as long as a response is answered with, the
+    # endpoint returns the same object, and the JSON isn't parsed again.
+    #
     # A response that Cloudflare's cache answered with has been kept there for a while already, which it says (Age),
     # and is good for that much less here.
     #
@@ -247,8 +246,28 @@ module Sferik
     # @return [String] the description
     # @example
     #   client.inspect # => "#<Sferik::Client https://sferik.net>"
-    def inspect
-      "#<#{self.class} #{host}>"
+    def inspect = "#<#{self.class} #{host}>"
+
+    # Perform a GET request, and return what a block makes of the JSON that comes back
+    #
+    # It's what the endpoints of {API} build their resources with. A {#cached} client answers with the response it
+    # kept for as long as it's good, and with what was made of it too: the JSON isn't parsed again, nor the resource
+    # built, until the response is another. Everything an endpoint returns is frozen all the way down, so it's safe
+    # for every caller to have the same one.
+    #
+    # @api private
+    # @param path [String] the path, starting with a slash, with any query
+    # @param accept [String] the media type to ask for, which is JSON of some kind
+    # @yield [attributes] what to make of the response
+    # @yieldparam attributes [Hash{String => Object}] the parsed JSON, deep-frozen
+    # @yieldreturn [Object] what's made of it, which can't be changed
+    # @return [Object] what the block returned: this time, or the first time for this response
+    # @raise [InvalidResponse] if the response isn't a JSON object
+    # @raise [Error] if the request fails, as {#get} raises
+    def json(path, accept: "application/json")
+      uri = uri_for(path)
+      response = got(uri, accept)
+      connections.made(uri, accept, response) { yield parse_json(Body.of(response)) }
     end
 
     protected
@@ -264,6 +283,23 @@ module Sferik
     end
 
     private
+
+    # Send a GET request, following redirects, for a response that's a success
+    #
+    # @api private
+    # @param uri [URI::HTTP] the URL
+    # @param accept [String] the media type to ask for
+    # @return [Net::HTTPResponse] the response
+    # @raise [HTTPError] if the response isn't a success
+    def got(uri, accept) = success(fetch(uri, accept, max_redirects))
+
+    # A response that's a success, or else its error
+    #
+    # @api private
+    # @param response [Net::HTTPResponse] the response
+    # @return [Net::HTTPResponse] the response
+    # @raise [HTTPError] if the response isn't a success
+    def success(response) = response.is_a?(Net::HTTPSuccess) ? response : raise(error_for(response))
 
     # The connections requests are made over
     #
@@ -351,9 +387,7 @@ module Sferik
     # @api private
     # @param accept [String] the media type to ask for
     # @return [Hash{String => String}] the headers
-    def headers(accept)
-      {"Accept" => accept, "User-Agent" => user_agent}
-    end
+    def headers(accept) = {"Accept" => accept, "User-Agent" => user_agent}
 
     # The headers of a POST request
     #

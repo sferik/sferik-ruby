@@ -250,6 +250,9 @@ What it keeps is in memory, by URL and format, for as long as the client is, so 
 `cached` starts with nothing kept. It's safe to share between threads, and works in `keep_alive` too. Threads that ask
 for the same thing at once make one request between them: the first asks, and the rest wait for its answer.
 
+What an endpoint builds of a response is kept with it: for as long as the client answers with the response it kept,
+`client.talks` is the same object, and the JSON isn't parsed again. Everything in it is frozen, so that's safe to share.
+
 A response that Cloudflare's cache answered with has been kept there for a while already, which it says (`Age`), and
 is good for that much less here: one that's good for a minute, and has been kept for 55 seconds, is asked for again in
 five.
