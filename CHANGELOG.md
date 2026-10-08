@@ -33,7 +33,8 @@
   after that asks with the response's ETag, so the server sends the body only if it has changed. A response that has
   been kept on its way already (`Age`) is good for that much less. A server error (a 5xx)
   leaves what's kept as it is, to be asked after again. With `cached(stale_if_error: true)`, the client
-  answers with what it kept, however old, when the server can't be reached
+  answers with what it kept, however old, when the server can't be reached. Threads that ask it for the same thing
+  at once make one request between them
 - Configuration, with `Sferik.configure` or the options of `Sferik.new`: `host`, `user_agent`, `open_timeout`,
   `read_timeout`, `write_timeout`, and `max_redirects`. A wrong one raises ArgumentError when the client is built
 - Errors are all `Sferik::Error`: `InvalidURL`, `NetworkError` (and `Unanswered`, for a request that was sent and got

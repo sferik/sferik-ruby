@@ -317,6 +317,15 @@ module Sferik
       def self.new: (Net::HTTPResponse response, String? etag, Numeric expires) -> Entry
     end
 
+    class Flight
+      @landed: Queue
+      @response: Net::HTTPResponse?
+
+      def initialize: () -> void
+      def fly: () { () -> Net::HTTPResponse } -> Net::HTTPResponse
+      def response: () -> Net::HTTPResponse?
+    end
+
     type key = [URI::Generic, String]
 
     CLOCK: ^() -> Float
@@ -328,15 +337,19 @@ module Sferik
     @clock: ^() -> Numeric
     @entries: Hash[key, Entry]
     @lock: Mutex
+    @flights: Hash[key, Flight]
     @stale: bool
 
     def initialize: (_Connections connections, ?^() -> Numeric clock, ?Hash[key, Entry] entries, ?Mutex lock, ?stale: bool) -> void
     def keeping: [T] () { (_Connections connections) -> T } -> T
     def close: () -> nil
     def request: (Net::HTTPRequest request) -> Net::HTTPResponse
+    def over: (_Connections connections) -> Cache
 
     private
 
+    def share: (key key) { () -> Net::HTTPResponse } -> Net::HTTPResponse
+    def lead: (key key, Flight flight) { () -> Net::HTTPResponse } -> Net::HTTPResponse
     def renew: (key key, Entry? entry, Net::HTTPRequest request) -> Net::HTTPResponse
     def ask: (key key, Entry? entry, Net::HTTPRequest request) -> Net::HTTPResponse
     def renewed: (key key, Entry? entry, Net::HTTPResponse response) -> Net::HTTPResponse

@@ -31,6 +31,31 @@ RSpec.describe "Sferik::Cache" do
     now[0] += seconds
   end
 
+  # Stub the URL to answer each request only once a test gives it a body to answer with (or an error to raise), and
+  # return the stub, and where the test puts those
+  def stub_slow(answers = Thread::Queue.new)
+    request = stub_request(:get, url).to_return do
+      answer = answers.pop
+      answer.is_a?(String) ? {body: answer, headers: {"Cache-Control" => "public, max-age=60"}} : raise(answer)
+    end
+    [request, answers]
+  end
+
+  # Ask for a URL on another thread, which is returned once it waits: for the server, or for a request on its way
+  def asking(url = self.url, through: cache)
+    thread = Thread.new { get(url, through:) }
+    thread.report_on_exception = false
+    Thread.pass while thread.status.eql?("run")
+    thread
+  end
+
+  # What a thread's request came to: the body of its response, or the class of the error it raised
+  def outcome(thread)
+    thread.value.body
+  rescue Sferik::Error => e
+    e.class
+  end
+
   describe "#request" do
     it "answers with the response it kept for as long as the response said it's good for, without a request" do
       request = stub_fresh
@@ -344,12 +369,12 @@ RSpec.describe "Sferik::Cache" do
       expect(get(url).body).to eq("one")
     end
 
-    it "holds its lock to read what it kept, and to keep what it gets" do
+    it "holds its lock to read what it kept, to say a request is on its way and that it no longer is, and to keep what it gets" do
       stub_fresh
       allow(lock).to receive(:synchronize).and_call_original
       get(url)
 
-      expect(lock).to have_received(:synchronize).twice
+      expect(lock).to have_received(:synchronize).exactly(4).times
     end
 
     it "holds its lock only to read, for a response that's still good" do
@@ -365,6 +390,37 @@ RSpec.describe "Sferik::Cache" do
       stub_request(:get, url).to_return { {body: lock.locked?.to_s} }
 
       expect(get(url).body).to eq("false")
+    end
+
+    it "makes one request for the threads that ask for the same thing at once, and answers each with its response" do
+      request, answers = stub_slow
+      threads = Array.new(3) { asking }
+      %w[one two three].each { |body| answers << body }
+
+      expect([threads.map(&:value).uniq.map(&:body), made(request)]).to eq([["one"], 1])
+    end
+
+    it "has a thread that waited ask for itself, when the request it waited for got no answer" do
+      request, answers = stub_slow
+      threads = Array.new(2) { asking }
+      [Timeout::Error.new, "two"].each { |answer| answers << answer }
+
+      expect([threads.map { |thread| outcome(thread) }, made(request)]).to eq([[Sferik::Unanswered, "two"], 2])
+    end
+
+    it "has a thread wait only for a request for the same thing" do
+      answers = stub_slow.last
+      stub_fresh(body: "two", url: "#{url}?x=1")
+      first = asking
+      answers << get("#{url}?x=1").body # which doesn't wait for the first, and is what the first is answered with
+
+      expect(outcome(first)).to eq("two")
+    end
+
+    it "asks again for a thread that asks once a request has its answer, which is none of its own" do
+      request = stub_fresh(control: "no-cache")
+
+      expect([get(url), get(url)].uniq.size + made(request)).to eq(4)
     end
 
     it "raises what the connections do" do
@@ -515,7 +571,33 @@ RSpec.describe "Sferik::Cache" do
       allow(lock).to receive(:synchronize).and_call_original
       cache.keeping { |kept| get(url, through: kept) }
 
-      expect(lock).to have_received(:synchronize).twice
+      expect(lock).to have_received(:synchronize).exactly(4).times
+    end
+
+    it "yields a cache that waits for a request of this one's that's on its way" do
+      request, answers = stub_slow
+      threads = [asking, cache.keeping { |kept| asking(through: kept) }]
+      %w[one two].each { |body| answers << body }
+
+      expect([threads.map { |thread| outcome(thread) }, made(request)]).to eq([%w[one one], 1])
+    end
+
+    it "yields a cache that makes its requests over connections of its own, which are closed afterwards" do
+      stub_fresh
+      opened = []
+      allow(Net::HTTP).to receive(:start).and_wrap_original { |start, *args, **options| start.call(*args, **options).tap { |http| opened << http } }
+      cache.keeping { |kept| get(url, through: kept) }
+
+      expect(opened.map(&:started?)).to eq([false])
+    end
+
+    it "leaves this cache making its requests over the connections it had" do
+      [url, "https://sferik.net/talks"].each { |address| stub_fresh(url: address) }
+      allow(Net::HTTP).to receive(:start).and_call_original
+      cache.keeping { |kept| get(url, through: kept) }
+      get("https://sferik.net/talks")
+
+      expect(Net::HTTP).to have_received(:start).twice
     end
 
     it "yields a cache whose connections are kept open, and closes them afterwards" do

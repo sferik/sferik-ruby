@@ -217,7 +217,8 @@ module Sferik
     # minute), and for that long the client answers with it, without a request. After that it asks with the
     # response's ETag, and the server sends the body only if it has changed. What's kept is by URL and media type,
     # in memory, for as long as the client is, and is safe to share between threads: keep the client, since each
-    # call of this starts with nothing kept.
+    # call of this starts with nothing kept. Threads that ask for the same thing at once, when it isn't kept or is no
+    # longer good, make one request between them: the first asks, and the rest wait for its answer.
     #
     # A response that Cloudflare's cache answered with has been kept there for a while already, which it says (Age),
     # and is good for that much less here.

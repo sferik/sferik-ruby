@@ -17,6 +17,9 @@ module Sferik
   # (Age), and is good for that much less. And a cache that's told to (stale) answers with a response that's no longer
   # good, when the server can't be asked whether it has changed, or answers with an error of its own.
   #
+  # Threads that ask for the same thing at once, when it isn't kept or is no longer good, make one request between
+  # them: the first asks, and the rest wait for its answer, which is theirs too. If it gets none, each asks for itself.
+  #
   # @api private
   class Cache
     # A response that's kept, with its ETag, if it has one, and when on the clock it's good until
@@ -35,6 +38,43 @@ module Sferik
     #   @return [Numeric] the time on the cache's clock, in seconds
     Entry = Data.define(:response, :etag, :expires)
     private_constant :Entry
+
+    # A request on its way, whose answer is for every thread that asks for the same thing before it comes
+    #
+    # @api private
+    class Flight
+      # Initialize a flight, which hasn't landed
+      #
+      # @api private
+      # @return [Flight] the flight
+      def initialize
+        @landed = Queue.new
+      end
+
+      # Make the request, and say what it got
+      #
+      # That's said to the threads that are waiting, and to any that ask later.
+      #
+      # @api private
+      # @yield the request to make
+      # @yieldreturn [Net::HTTPResponse] the response
+      # @return [Net::HTTPResponse] the response
+      def fly
+        @response = yield
+      ensure
+        @landed.close
+      end
+
+      # Wait for the request to get its answer, and return it
+      #
+      # @api private
+      # @return [Net::HTTPResponse, nil] the response, or nil if the request got none
+      def response
+        @landed.deq
+        @response
+      end
+    end
+    private_constant :Flight
 
     # The time, in seconds, on a clock that only goes forward
     CLOCK = -> { Process.clock_gettime(Process::CLOCK_MONOTONIC) }
@@ -58,7 +98,7 @@ module Sferik
     # @param connections [Connections, Cache] what to make requests over
     # @param clock [#call] what tells the time, in seconds
     # @param entries [Hash{Array => Entry}] the responses kept, by URL and media type
-    # @param lock [Mutex] what's held to read or change them
+    # @param lock [Mutex] what's held to read or change them, and the requests on their way
     # @param stale [Boolean] whether to answer with a response that's no longer good, when the server can't be reached,
     #   or answers with an error of its own
     # @return [Cache] the cache
@@ -67,10 +107,14 @@ module Sferik
       @clock = clock
       @entries = entries
       @lock = lock
+      @flights = {} #: Hash[key, Flight]
       @stale = stale
     end
 
     # Yield a cache of the same responses over connections that are kept open
+    #
+    # It's this cache in all but its connections: what one keeps, the other has, and a request of one's that's on its
+    # way is one the other waits for.
     #
     # @api private
     # @yield [cache] the requests to make
@@ -78,7 +122,7 @@ module Sferik
     # @yieldreturn [Object] anything
     # @return [Object] what the block returns
     def keeping
-      @connections.keeping { |kept| yield self.class.new(kept, @clock, @entries, @lock, stale: @stale) }
+      @connections.keeping { |kept| yield dup.over(kept) }
     end
 
     # Close the connections requests are made over, and keep the responses
@@ -102,10 +146,57 @@ module Sferik
 
       key = [request.uri, request.fetch("accept")] #: key
       entry = @lock.synchronize { @entries[key] }
-      (entry && @clock.call < entry.expires) ? entry.response : renew(key, entry, request)
+      (entry && @clock.call < entry.expires) ? entry.response : share(key) { renew(key, entry, request) }
+    end
+
+    protected
+
+    # Make this cache's requests over other connections
+    #
+    # @api private
+    # @param connections [Connections, Cache] the connections
+    # @return [Cache] the cache itself
+    def over(connections)
+      @connections = connections
+      self
     end
 
     private
+
+    # Make a request, unless one for the same thing is on its way
+    #
+    # Then wait for that one, and answer with what it gets. If it gets no answer, the request is made after all.
+    #
+    # @api private
+    # @param key [Array] the URL and the media type asked for
+    # @yield the request to make
+    # @yieldreturn [Net::HTTPResponse] the response
+    # @return [Net::HTTPResponse] the response: this request's, or the one that was on its way
+    def share(key, &ask)
+      mine = Flight.new
+      flight = @lock.synchronize { @flights[key] ||= mine }
+      return flight.response || ask.call unless flight.equal?(mine)
+
+      lead(key, mine, &ask)
+    end
+
+    # Make a request that other threads may be waiting for, and tell them what it gets
+    #
+    # It's no longer on its way before they're told, so that a thread that asks after it has landed starts another.
+    #
+    # @api private
+    # @param key [Array] the URL and the media type asked for
+    # @param flight [Flight] the request on its way
+    # @yield the request to make
+    # @yieldreturn [Net::HTTPResponse] the response
+    # @return [Net::HTTPResponse] the response
+    def lead(key, flight, &ask)
+      flight.fly do
+        ask.call
+      ensure
+        @lock.synchronize { @flights.delete(key) }
+      end
+    end
 
     # Send a GET request, or answer with what's kept if the server can't be reached
     #
