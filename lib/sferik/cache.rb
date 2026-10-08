@@ -20,6 +20,8 @@ module Sferik
   # Threads that ask for the same thing at once, when it isn't kept or is no longer good, make one request between
   # them: the first asks, and the rest wait for its answer, which is theirs too. If it gets none, each asks for itself.
   #
+  # A hundred responses are kept at most: one more, and the one that was asked of the server longest ago is forgotten.
+  #
   # What a client makes of a response (the JSON parsed, and a resource built of it) is kept with the response, and
   # made once: see {#made}.
   #
@@ -99,6 +101,11 @@ module Sferik
     NO_STORE = /\bno-store\b/i
     private_constant :NO_STORE
 
+    # The most responses to keep: far more than the API has, but an end to what a client keeps of URLs that are made
+    # up as it goes, each with a query of its own
+    LIMIT = 100
+    private_constant :LIMIT
+
     # Initialize a cache
     #
     # @api private
@@ -136,9 +143,7 @@ module Sferik
     #
     # @api private
     # @return [nil]
-    def close
-      @connections.close
-    end
+    def close = @connections.close
 
     # Send a request, unless it's a GET whose response is kept and still good
     #
@@ -307,7 +312,8 @@ module Sferik
     # Keep a response, or forget the one kept
     #
     # Only a 200 is kept, and not one that says not to keep it: anything else leaves nothing kept. (An error of the
-    # server's own, with a response kept, never gets here.)
+    # server's own, with a response kept, never gets here.) One that's kept is the latest, whether or not one was
+    # kept for the same thing before.
     #
     # @api private
     # @param key [Array] the URL and the media type asked for
@@ -317,7 +323,23 @@ module Sferik
     # @return [void]
     def keep(key, entry, control)
       keepable = entry.response.instance_of?(Net::HTTPOK) && !control&.match?(NO_STORE)
-      @lock.synchronize { keepable ? @entries[key] = entry : @entries.delete(key) }
+      @lock.synchronize do
+        @entries.delete(key)
+        hold(key, entry) if keepable
+      end
+    end
+
+    # Keep a response as the latest, and no more than the most there may be
+    #
+    # One too many, and the response kept longest ago is forgotten. The lock is held by whatever calls this.
+    #
+    # @api private
+    # @param key [Array] the URL and the media type asked for, which nothing is kept for
+    # @param entry [Entry] the response to keep
+    # @return [void]
+    def hold(key, entry)
+      @entries[key] = entry
+      @entries.shift if @entries.size > LIMIT
     end
 
     # When a response is good until

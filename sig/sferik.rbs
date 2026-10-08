@@ -334,6 +334,7 @@ module Sferik
     MAX_AGE: Regexp
     NO_CACHE: Regexp
     NO_STORE: Regexp
+    LIMIT: Integer
 
     @connections: _Connections
     @clock: ^() -> Numeric
@@ -359,6 +360,7 @@ module Sferik
     def spared: (Entry entry, Net::HTTPResponse response) -> Net::HTTPResponse
     def remember: [T] (key key, Entry entry, T made) -> T
     def keep: (key key, Entry entry, String? control) -> void
+    def hold: (key key, Entry entry) -> void
     def expiry: (Net::HTTPResponse latest) -> Numeric
     def fresh_for: (String control) -> Integer
   end

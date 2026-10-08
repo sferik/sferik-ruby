@@ -246,7 +246,8 @@ client.talks  # asks the server
 client.talks  # doesn't, for a minute; after that, asks whether the talks have changed
 ```
 
-What it keeps is in memory, by URL and format, for as long as the client is, so keep the client: each call of
+What it keeps is in memory, by URL and format, for as long as the client is (a hundred responses at most, the latest
+it asked for), so keep the client: each call of
 `cached` starts with nothing kept. It's safe to share between threads, and works in `keep_alive` too. Threads that ask
 for the same thing at once make one request between them: the first asks, and the rest wait for its answer.
 

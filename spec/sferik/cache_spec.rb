@@ -339,6 +339,35 @@ RSpec.describe "Sferik::Cache" do
       expect([get(url).code, get(url).code]).to eq(%w[304 304])
     end
 
+    # Ask for the URL with each of some queries, which each get a response that's good for a minute
+    def get_each(numbers)
+      stub_request(:get, /\A#{Regexp.escape(url)}\?n=\d+\z/).to_return(body: "one", headers: {"ETag" => '"v1"', "Cache-Control" => "public, max-age=60"})
+      numbers.each { |n| get("#{url}?n=#{n}") }
+    end
+
+    # The queries of the URLs that responses are kept for, in the order they were kept
+    def kept_numbers = entries.keys.map { |uri, _| Integer(uri.query.delete_prefix("n=")) }
+
+    it "keeps a hundred responses" do
+      get_each(1..100)
+
+      expect(kept_numbers).to eq([*1..100])
+    end
+
+    it "forgets the response it asked for longest ago, when it keeps one more than a hundred" do
+      get_each(1..101)
+
+      expect(kept_numbers).to eq([*2..101])
+    end
+
+    it "takes a response it asked after again for the latest, which is the last to be forgotten" do
+      get_each(1..100)
+      wait(60)
+      get_each([1, 101])
+
+      expect(kept_numbers).to eq([*3..100, 1, 101])
+    end
+
     it "keeps each media type a URL is asked for as apart" do
       json = stub_fresh.with(headers: {"Accept" => "application/json"})
       text = stub_fresh(body: "text").with(headers: {"Accept" => "text/plain"})
