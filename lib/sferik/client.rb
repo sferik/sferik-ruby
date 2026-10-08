@@ -17,8 +17,9 @@ module Sferik
   # the resume, LaTeX and PDF), and {#get} asks for whatever you like. {#post} sends what the two endpoints that
   # write take: a terminal checking in, and a message.
   #
-  # Each request opens a connection and closes it. To make several over one, make them in {#keep_alive}. And each
-  # GET asks the server: {#cached} is a client that keeps the responses, and asks again only for what may have changed.
+  # A thread's requests to a host are made over one connection, which is left open between them, and opened again
+  # if it has sat unused: {#keep_alive} is for connections that are closed when its block ends. And each GET asks the
+  # server: {#cached} is a client that keeps the responses, and asks again only for what may have changed.
   #
   # @api public
   class Client
@@ -171,21 +172,22 @@ module Sferik
       Body.of(response)
     end
 
-    # Keep connections open for the requests made in a block
+    # Make the requests in a block over connections that are closed when it ends
     #
-    # A client opens a connection for each request, and closes it. The one this yields keeps each connection it
-    # opens, one per host, and makes its next request to that host over it, which saves connecting again: with
-    # https, most of the time a request takes. They're closed when the block ends. Net::HTTP opens one again that
+    # A client makes each thread's requests to a host over one connection, which saves connecting again (with https,
+    # most of the time a request takes), and leaves it open for the thread's next: it's closed when the thread is
+    # collected, or the process ends. The client this yields opens connections of its own instead, one per host, and
+    # closes them when the block ends, for when one mustn't be left open. Either way, Net::HTTP opens one again that
     # has sat unused for more than two seconds, which the server may have closed by then. The client yielded is for
     # one thread at a time, as a connection is, and after the block it's a client like any other.
     #
     # @api public
     # @yield [client] the requests to make
-    # @yieldparam client [Client] a client with the same options, which keeps its connections open
+    # @yieldparam client [Client] a client with the same options, and connections of its own
     # @yieldreturn [Object] anything
     # @return [Object] what the block returns
     # @raise [ArgumentError] if no block is given
-    # @example Get the bio, the talks, and the resume over one connection
+    # @example Get the bio, the talks, and the resume over one connection, and close it
     #   Sferik.client.keep_alive { |client| [client.whoami, client.talks, client.resume] }
     def keep_alive
       raise ArgumentError, "keep_alive must be given a block" unless block_given?
@@ -246,7 +248,7 @@ module Sferik
 
     # The connections requests are made over
     #
-    # Those {#keep_alive} gave this client, which are kept open, or else ones that open one for each request.
+    # Those {#keep_alive} gave this client, which it closes, or else ones the thread keeps open.
     #
     # @api private
     # @return [Connections] the connections

@@ -339,7 +339,9 @@ module Sferik
     NETWORK_ERRORS: Array[singleton(Exception)]
 
     type timeouts = { open_timeout: Numeric, read_timeout: Numeric, write_timeout: Numeric }
-    type kept = Hash[[String?, String?, Integer?], Net::HTTP]
+    type kept = Hash[[Integer, String?, String?, Integer?, timeouts], Net::HTTP]
+
+    OPENED: Symbol
 
     @timeouts: timeouts
     @kept: kept?
@@ -350,9 +352,9 @@ module Sferik
 
     private
 
-    def connection: (URI::Generic uri) { (Net::HTTP http) -> Net::HTTPResponse } -> Net::HTTPResponse
+    def connection: (URI::Generic uri) -> Net::HTTP
+    def kept: () -> kept
     def start: (URI::Generic uri) -> Net::HTTP
-             | [T] (URI::Generic uri) { (Net::HTTP http) -> T } -> T
   end
 
   module PartialDate

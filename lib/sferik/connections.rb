@@ -8,8 +8,12 @@ require_relative "errors"
 module Sferik
   # The connections a client makes its requests over
   #
-  # A client's own open one for each request, and close it. Those of {Client#keep_alive} keep each one they open,
-  # by scheme, host, and port, and make the next request there over it.
+  # Each one opened is kept, and the next request to the same scheme, host, and port is made over it, which saves
+  # connecting again: with https, most of the time a request takes. A client's own are kept by the thread that makes
+  # the request (or the fiber, which is as far as Thread.current goes), since a connection is for one at a time, and
+  # by the process, since one that a fork inherits is its parent's. They're never closed here: Net::HTTP opens one
+  # again that has sat unused for more than two seconds, which the server may have closed by then, and what a thread
+  # leaves behind is closed when it's collected. Those of {Client#keep_alive} are kept for its block, and closed after.
   #
   # @api private
   class Connections
@@ -18,25 +22,29 @@ module Sferik
       Net::HTTPHeaderSyntaxError, Net::ProtocolError, Zlib::Error].freeze
     private_constant :NETWORK_ERRORS
 
+    # Where a thread keeps the connections it has opened
+    OPENED = :sferik_connections
+    private_constant :OPENED
+
     # Initialize the connections of a client
     #
     # @api private
     # @param timeouts [Hash{Symbol => Numeric}] the seconds to wait: open_timeout, read_timeout, and write_timeout
-    # @param kept [Hash{Array => Net::HTTP}, nil] where to keep the connections opened, or nil to keep none
+    # @param kept [Hash{Array => Net::HTTP}, nil] where to keep the connections opened, or nil for the thread to
     # @return [Connections] the connections
     def initialize(timeouts, kept = nil)
       @timeouts = timeouts
       @kept = kept
     end
 
-    # Yield connections that are kept open, and close them afterwards
+    # Yield connections of their own, and close them afterwards
     #
     # They have the same timeouts as these.
     #
     # @api private
     # @param kept [Hash{Array => Net::HTTP}] where to keep the connections opened
     # @yield [connections] the requests to make
-    # @yieldparam connections [Connections] connections that are kept open
+    # @yieldparam connections [Connections] connections that are closed after the block
     # @yieldreturn [Object] anything
     # @return [Object] what the block returns
     def keeping(kept = {})
@@ -53,47 +61,45 @@ module Sferik
     # @raise [Unanswered] if the server was connected to, and its response didn't come, or can't be read
     # @raise [NetworkError] if the server can't be connected to
     def request(request)
-      uri = request.uri
-      connected = false
-      connection(uri) do |http|
-        connected = true
-        http.request(request)
-      end
+      http = connection(request.uri)
+      http.request(request)
     rescue *NETWORK_ERRORS => e
-      raise (connected ? Unanswered : NetworkError), "#{e.class}: #{e} (#{request.method} #{uri})"
+      raise (http ? Unanswered : NetworkError), "#{e.class}: #{e} (#{request.method} #{request.uri})"
     end
 
     private
 
-    # Yield a connection to the host of a URL
+    # The connection to the host of a URL
     #
-    # It's the one kept for that scheme, host, and port, opened if there's none yet, and left open. If none are
-    # kept, it's a new one, closed after the block.
+    # It's the one kept for that scheme, host, and port, by this process, with these timeouts, opened if there's none
+    # yet, and left open.
     #
     # @api private
     # @param uri [URI::HTTP] the URL
-    # @yield [http] the request to make
-    # @yieldparam http [Net::HTTP] the connection
-    # @yieldreturn [Net::HTTPResponse] the response
-    # @return [Net::HTTPResponse] the response
-    def connection(uri, &)
-      kept = @kept
-      return start(uri, &) unless kept
+    # @return [Net::HTTP] the connection
+    def connection(uri)
+      kept[[Process.pid, uri.scheme, uri.hostname, uri.port, @timeouts]] ||= start(uri)
+    end
 
-      yield(kept[[uri.scheme, uri.hostname, uri.port]] ||= start(uri))
+    # Where the connections opened are kept
+    #
+    # @api private
+    # @return [Hash{Array => Net::HTTP}] where these were given to keep theirs, or else where the thread keeps its own
+    def kept
+      given = @kept
+      return given if given
+
+      Thread.current[OPENED] ||= {}
     end
 
     # Open a connection to the host of a URL
     #
     # @api private
     # @param uri [URI::HTTP] the URL
-    # @yield [http] what to do with the connection, which is closed afterwards
-    # @yieldparam http [Net::HTTP] the connection
-    # @yieldreturn [Object] anything
-    # @return [Object, Net::HTTP] what the block returns, or without one, the connection, left open
-    def start(uri, &)
+    # @return [Net::HTTP] the connection, left open
+    def start(uri)
       hostname = uri.hostname #: String
-      Net::HTTP.start(hostname, uri.port, use_ssl: uri.scheme.eql?("https"), **@timeouts, &) # steep:ignore BlockTypeMismatch
+      Net::HTTP.start(hostname, uri.port, use_ssl: uri.scheme.eql?("https"), **@timeouts)
     end
   end
   private_constant :Connections

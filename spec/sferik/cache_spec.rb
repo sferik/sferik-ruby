@@ -363,9 +363,9 @@ RSpec.describe "Sferik::Cache" do
     end
 
     it "answers with the response it kept when the server can't be connected to" do
-      stub_fresh
-      first = get(url)
+      first = stub_fresh && get(url)
       wait(60)
+      Thread.current[:sferik_connections] = nil # as on another thread, which has no connection open
       allow(Net::HTTP).to receive(:start).and_raise(SocketError, "getaddrinfo: nodename nor servname provided")
 
       expect(get(url)).to be(first)

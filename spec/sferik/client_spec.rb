@@ -565,8 +565,101 @@ RSpec.describe Sferik::Client do
     end
   end
 
+  describe "the connections a thread keeps" do
+    # Every connection opened: the host, the port, whether it's https, and the timeouts
+    let(:opened) { [] }
+
+    before do
+      allow(Net::HTTP).to receive(:start).and_wrap_original do |start, *args, **options, &block|
+        opened << [*args, options.fetch(:use_ssl), options.fetch(:read_timeout), block]
+        start.call(*args, **options, &block)
+      end
+      stub_request(:get, "https://sferik.net/whoami").to_return(body: "one")
+      stub_request(:get, "https://sferik.net/talks").to_return(body: "two")
+    end
+
+    it "makes every request to a host over one connection, left open between them and after" do
+      stub_request(:post, "https://sferik.net/write").to_return(body: "three")
+      bodies = [client.get("/whoami"), client.get("/talks"), client.post("/write", "Hello")]
+
+      expect([bodies, opened]).to eq([%w[one two three], [["sferik.net", 443, true, 10, nil]]])
+    end
+
+    it "leaves the connection open" do
+      allow(Net::HTTP).to receive(:start).and_wrap_original { |start, *args, **options| start.call(*args, **options).tap { |http| opened << http } }
+      client.get("/whoami")
+
+      expect(opened.map(&:started?)).to eq([true])
+    end
+
+    it "makes the requests of another client with the same timeouts over the same connection" do
+      [client, described_class.new(user_agent: "another")].each { |one| one.get("/whoami") }
+
+      expect(opened.size).to eq(1)
+    end
+
+    it "makes the requests of Sferik itself over it too" do
+      2.times { Sferik.text("/whoami") }
+
+      expect(opened.size).to eq(1)
+    end
+
+    {open_timeout: 1, read_timeout: 2, write_timeout: 3}.each do |timeout, seconds|
+      it "opens another for a client with another #{timeout}, which a connection is opened with" do
+        [client, described_class.new(timeout => seconds), client].each { |one| one.get("/whoami") }
+
+        expect(opened.size).to eq(2)
+      end
+    end
+
+    [
+      ["port", "http://localhost:3746/whoami", [["localhost", 3745, false, 10, nil], ["localhost", 3746, false, 10, nil]]],
+      ["host", "http://127.0.0.1:3745/whoami", [["localhost", 3745, false, 10, nil], ["127.0.0.1", 3745, false, 10, nil]]],
+      ["scheme", "https://localhost:3745/whoami", [["localhost", 3745, false, 10, nil], ["localhost", 3745, true, 10, nil]]]
+    ].each do |part, elsewhere, connections|
+      it "keeps a connection of its own for another #{part}, as a redirect may lead to" do
+        stub_request(:get, "http://localhost:3745/whoami").to_return(status: 302, headers: {"Location" => elsewhere})
+        stub_request(:get, elsewhere).to_return(body: "ok")
+        2.times { described_class.new(host: "http://localhost:3745").get("/whoami") }
+
+        expect(opened).to eq(connections)
+      end
+    end
+
+    it "opens one for each thread, since a connection is for one at a time" do
+      client.get("/whoami")
+      Thread.new { 2.times { client.get("/whoami") } }.join
+      client.get("/whoami")
+
+      expect(opened.size).to eq(2)
+    end
+
+    it "opens one for each process, since one that a fork inherits is its parent's" do
+      client.get("/whoami")
+      allow(Process).to receive(:pid).and_return(Process.pid + 1)
+      2.times { client.get("/whoami") }
+
+      expect(opened.size).to eq(2)
+    end
+
+    it "opens no connection until a request is made" do
+      described_class.new
+
+      expect(opened).to eq([])
+    end
+
+    it "opens one again the next time, when one couldn't be opened" do
+      allow(Net::HTTP).to receive(:start).and_wrap_original do |start, *args, **options|
+        ((opened << args).size > 1) ? start.call(*args, **options) : raise(SocketError, "getaddrinfo: nodename nor servname provided")
+      end
+      first = client.get("/whoami") rescue :failed # rubocop:disable Style/RescueModifier
+
+      expect([first, client.get("/whoami"), opened.size]).to eq([:failed, "one", 2])
+    end
+  end
+
   describe "#keep_alive" do
-    # Every connection opened, and how: with a block, which closes it, or without one, which leaves it open
+    # Every connection opened, and how: without a block, which leaves it open
     let(:opened) { [] }
 
     before do
@@ -623,11 +716,18 @@ RSpec.describe Sferik::Client do
       expect(Net::HTTP).to have_received(:start).with("sferik.net", 443, use_ssl: true, open_timeout: 1, read_timeout: 2, write_timeout: 3)
     end
 
-    it "leaves the client it's called on opening a connection for each request" do
+    it "leaves the client it's called on making its requests over the thread's connection, which stays open" do
       client.keep_alive { |kept| kept.get("/whoami") }
-      client.get("/whoami")
+      2.times { client.get("/whoami") }
 
-      expect(opened.map(&:first)).to eq(%i[kept closed])
+      expect(opened.map { |connection| [connection.first, connection.last.started?] }).to eq([[:kept, false], [:kept, true]])
+    end
+
+    it "makes its requests over a connection of its own, not the thread's" do
+      client.get("/whoami")
+      client.keep_alive { |kept| kept.get("/whoami") }
+
+      expect(opened.map { |connection| connection.last.started? }).to eq([true, false])
     end
 
     it "returns what the block returns" do

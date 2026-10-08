@@ -18,6 +18,8 @@ RSpec.configure do |config|
   config.disable_monkey_patching!
   config.expect_with(:rspec) { |c| c.syntax = :expect }
   config.before { Sferik.reset }
+  # Each example starts with no connection open: a thread keeps the ones it opens, and they all run on one
+  config.before { Thread.current[:sferik_connections] = nil }
 end
 
 # The path of a fixture: a response saved from the API
