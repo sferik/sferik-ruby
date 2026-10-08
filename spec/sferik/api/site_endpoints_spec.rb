@@ -51,6 +51,110 @@ RSpec.describe Sferik::API::SiteEndpoints do
       expect { client.check_in("0123456789abcdef", page: :talks) }.to raise_error(ArgumentError, "page must be String, not :talks")
     end
 
+    context "with a block" do
+      # A minute passes for the thread that checks in again each time one is pushed here
+      let(:minutes) { Queue.new }
+      # How long that thread has asked to sleep, each time it has
+      let(:slept) { Queue.new }
+      # Every connection opened, in order: the caller's, then the one the check-ins are made over
+      let(:opened) { [] }
+      let!(:request) { stub_check_in("token" => token, "page" => "/") }
+
+      before do
+        allow(Kernel).to receive(:sleep) do |seconds|
+          slept << seconds
+          minutes.pop
+        end
+        allow(Net::HTTP).to receive(:start).and_wrap_original { |start, *args, **options| start.call(*args, **options).tap { |http| opened << http } }
+      end
+
+      # The terminal's token
+      def token = "0123456789abcdef"
+
+      # How many times a stubbed request has been made
+      def times_made(request)
+        WebMock::RequestRegistry.instance.times_executed(request.request_pattern)
+      end
+
+      # Have every connection opened from here on take a while to close
+      def close_slowly
+        allow(Net::HTTP).to receive(:start).and_wrap_original do |start, *args, **options|
+          start.call(*args, **options).tap do |http|
+            opened << http
+            allow(http).to receive(:finish).and_wrap_original { |finish| sleep(0.05) && finish.call }
+          end
+        end
+      end
+
+      # Let a minute pass, and wait for the check-in that follows it
+      def a_minute_later(request)
+        made = times_made(request)
+        minutes << nil
+        Timeout.timeout(5) { Thread.pass until times_made(request) > made }
+        true
+      end
+
+      it "yields who's reading the site, with the terminal that checked in, and returns what the block does" do
+        expect(client.check_in(token) { |who| [who.class, who.you, :done] }).to match([Sferik::Who, /\Attys\d{3}\z/, :done])
+      end
+
+      it "checks the terminal in again every minute, for as long as the block runs" do
+        client.check_in(token) { 2.times { a_minute_later(request) } }
+
+        expect([times_made(request), Array.new(slept.size) { slept.pop }.uniq]).to eq([3, [60]])
+      end
+
+      it "checks it in again on the page it's on" do
+        talks = stub_check_in("token" => token, "page" => "/talks")
+        client.check_in(token, page: "/talks") { a_minute_later(talks) }
+
+        expect([times_made(talks), times_made(request)]).to eq([2, 0])
+      end
+
+      it "checks it in no more once the block ends, and leaves no thread behind" do
+        threads = Thread.list
+        client.check_in(token) { a_minute_later(request) }
+        minutes << nil
+
+        expect([Thread.list, times_made(request)]).to eq([threads, 2])
+      end
+
+      it "checks it in no more when the block raises, and raises what it did", :aggregate_failures do
+        threads = Thread.list
+
+        expect { client.check_in(token) { a_minute_later(request) && raise("stop") } }.to raise_error(RuntimeError, "stop")
+        expect(Thread.list).to eq(threads)
+      end
+
+      it "checks it in again a minute after a check-in the server fails", :aggregate_failures do
+        said = {body: fixture("check_in.json")}
+        flaky = stub_request(:post, "https://sferik.net/who").with(query: {"token" => token, "page" => "/resume"})
+          .to_return(said).then.to_return(status: 500).then.to_timeout.then.to_return(said)
+
+        expect { client.check_in(token, page: "/resume") { 3.times { a_minute_later(flaky) } } }.not_to output.to_stderr
+        expect(times_made(flaky)).to eq(4)
+      end
+
+      it "checks it in over a connection of its own, which is closed when the block ends" do
+        during = client.check_in(token) { a_minute_later(request) && opened.map(&:started?) }
+
+        expect([during, opened.map(&:started?)]).to eq([[true, true], [true, false]])
+      end
+
+      it "waits for that connection to be closed before it returns" do
+        close_slowly
+        client.check_in(token) { a_minute_later(request) }
+
+        expect(opened.last).not_to be_started
+      end
+
+      it "leaves the connections of a block that keeps its own open to it" do
+        during = client.keep_alive { |kept| kept.check_in(token) { a_minute_later(request) && opened.map(&:started?) } }
+
+        expect(during).to eq([true, true])
+      end
+    end
+
     it "raises ClientError for a token that isn't one, with what the server says" do
       stub_request(:post, "https://sferik.net/who").with(query: {"token" => "short", "page" => "/"})
         .to_return(status: 400, body: %({"error":"token and page are required","code":"bad_token"}\n), headers: {"Content-Type" => "application/json; charset=utf-8"})

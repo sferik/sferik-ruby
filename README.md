@@ -145,6 +145,15 @@ who.you                               # => "ttys001", your terminal
 who.size                              # => 3, with you
 ```
 
+With a block, the terminal stays logged in for as long as the block runs: a thread checks it in again every minute,
+over a connection of its own, and stops when the block ends. A check-in that fails then is tried again a minute later.
+
+```ruby
+Sferik.check_in(token) do |who|
+  Sferik.write(gets, tty: who.you)    # however long the message takes to type, the terminal is still logged in
+end
+```
+
 ### Send me a message
 
 ```ruby
@@ -351,11 +360,18 @@ tty=$(sferik check-in)                    # => ttys003, say
 echo "Hello from $tty" | sferik write --tty "$tty"
 ```
 
+With `--watch`, it prints the name and stays logged in, checking in again every minute, until it's interrupted
+(Ctrl-C), when it exits 130:
+
+```sh
+sferik check-in --watch                   # => ttys003, and `sferik who` lists it for as long as this runs
+```
+
 It exits 0 when it has printed what it was asked for, 1 when a request fails (the site can't be reached, or says no),
 and 2 when the command line is wrong (an unknown command or option, more than one format, a format for what prints no
 resource, or one that comes in one format alone (`write`, `check-in`, `help`, `--version`, `signature`, `webfinger`,
-`feed`, `deployment`, `status`, or `openapi`), `--tty` or `--token` for another command, or a host that isn't an http or
-https URL, from `--host` or `SFERIK_HOST`), so a script can tell the two apart.
+`feed`, `deployment`, `status`, or `openapi`), `--tty`, `--token`, or `--watch` for another command, or a host that
+isn't an http or https URL, from `--host` or `SFERIK_HOST`), so a script can tell the two apart.
 
 To ask a local copy of the site instead of sferik.net, name it with `--host` or the `SFERIK_HOST` environment
 variable (one that's set but empty counts as not set):

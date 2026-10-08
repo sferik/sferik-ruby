@@ -9,8 +9,9 @@ module Sferik
   # Each command prints a resource of the site as text, the same text `curl sferik.net/finger` gets, or with --json
   # as JSON. The resume also comes as a PDF with --pdf, and as LaTeX with --latex, and finger as a contact card with
   # --vcard. The write command sends me what it reads from standard input, as the shell's write sferik does, and the
-  # check-in command logs in a terminal, as each browser tab on the site does, and prints its name. It asks sferik.net, or a copy of the site at the URL
-  # that --host or the SFERIK_HOST environment variable names.
+  # check-in command logs in a terminal, as each browser tab on the site does, and prints its name: with --watch, it
+  # keeps it logged in until it's interrupted. It asks sferik.net, or a copy of the site at the URL that --host or
+  # the SFERIK_HOST environment variable names.
   #
   # @api public
   # @example
@@ -20,6 +21,7 @@ module Sferik
   #   Sferik::CLI.new.run(["signature"])       # prints my motto
   #   Sferik::CLI.new.run(["write"])           # sends me a message, read from standard input
   #   Sferik::CLI.new.run(["check-in"])        # logs in a terminal, and prints its name
+  #   Sferik::CLI.new.run(["check-in", "--watch"]) # and keeps it logged in, until it's interrupted
   class CLI
     # The commands, and the path of the resource each one prints
     COMMANDS = {
@@ -61,6 +63,7 @@ module Sferik
             --vcard      print a contact card, for finger
             --tty NAME   for write: the terminal the message is from, as check-in names it
             --token KEY  for check-in: the terminal's token, to keep its name (random, by default)
+            --watch      for check-in: stay logged in until interrupted (Ctrl-C)
             --host URL   ask a copy of the site at URL (or set SFERIK_HOST)
         -h, --help       print this
         -v, --version    print the version
@@ -74,11 +77,12 @@ module Sferik
     # The options that name a format, and the media type each asks for
     FORMATS = {"--json" => "application/json", "--pdf" => "application/pdf", "--latex" => "application/x-latex", "--vcard" => "text/vcard"}.freeze
 
-    # The options that take a value, and what each is noted as
-    VALUES = {"--tty NAME" => :tty, "--token KEY" => :token, "--host URL" => :host}.freeze
+    # The options that are noted as they're given, and what each is noted as: its value, for one that takes a value,
+    # and true for one that takes none
+    VALUES = {"--tty NAME" => :tty, "--token KEY" => :token, "--host URL" => :host, "--watch" => :watch}.freeze
 
     # The options that are for one command alone, and the command each is for
-    OWNERS = {tty: "write", token: "check-in"}.freeze
+    OWNERS = {tty: "write", token: "check-in", watch: "check-in"}.freeze
 
     # What prints no resource of the site, by the command or option that asks for it, and the method that does each.
     # Or what there is of the site in one format alone, which is printed as that: the method, then the path and the format
@@ -111,7 +115,7 @@ module Sferik
     # @param argv [Array<String>] the command line, without the program's name
     # @return [Integer] the exit status: 0, 1 for a request that fails, 2 for a command line that's wrong (an unknown
     #   command or option, more than one format, a format for what prints no resource, or an option for another
-    #   command), or 130 when interrupted
+    #   command), or 130 when interrupted, as check-in --watch always is
     # @example
     #   Sferik::CLI.new.run(["talks"]) # => 0
     def run(argv)
@@ -176,7 +180,7 @@ module Sferik
     # @api private
     # @param options [Hash{Symbol => Object}] where to note the options: the media types to :accept, which it adds each
     #   format named to, the :host to ask, what to :print instead of a resource (:usage or :version), the :tty a
-    #   message is from, and the :token to check in with
+    #   message is from, the :token to check in with, and whether to :watch, which is to stay logged in
     # @return [OptionParser] the parser
     def parser(options)
       OptionParser.new do |flags|
@@ -232,19 +236,44 @@ module Sferik
     # Log in a terminal, as each browser tab on the site does, and print its name
     #
     # The name is what write's --tty takes. A terminal keeps it for as long as it checks in with the same token, at
-    # least every three minutes: without --token, each check-in is a new terminal's.
+    # least every three minutes: without --token, each check-in is a new terminal's. With --watch, the command goes
+    # on checking it in, every minute, until it's interrupted.
     #
     # @api private
     # @param options [Hash{Symbol => Object}] the options of the command line
     # @return [Integer] the exit status: 1 if every terminal is taken
     def check_in(options)
-      ask(options) do |client|
-        tty = client.check_in(options.fetch(:token) { SecureRandom.uuid }).you
-        raise Error, "every terminal is taken: try again in a few minutes" unless tty
-
-        "#{tty}\n"
-      end
+      ask(options) { |client| options.key?(:watch) ? stay(client, token(options)) : named(client.check_in(token(options))) }
     end
+
+    # The token a terminal checks in with
+    #
+    # @api private
+    # @param options [Hash{Symbol => Object}] the options of the command line
+    # @return [String] the one --token gives, or else a random one, which is a new terminal's
+    def token(options) = options.fetch(:token) { SecureRandom.uuid }
+
+    # Log in a terminal, print its name, and keep it logged in until interrupted
+    #
+    # The name is printed at once, and not kept for the end, which never comes: the client checks the terminal in
+    # again every minute for as long as its block runs, and the block sleeps until Ctrl-C wakes it. It's flushed,
+    # too, since what reads it (a script that wants the name for write's --tty) may be waiting for it.
+    #
+    # @api private
+    # @param client [Client] the client
+    # @param token [String] the terminal's token
+    # @return [String] nothing more to print, if the sleep ends without an interrupt
+    # @raise [Error] if every terminal is taken
+    # @raise [Interrupt] when the command is interrupted, which is how it ends
+    def stay(client, token) = client.check_in(token) { |who| say(named(who)) && @out.flush && Kernel.sleep }.then { "" }
+
+    # The name of the terminal that checked in, as a line
+    #
+    # @api private
+    # @param who [Who] what the site answered the check-in with
+    # @return [String] the terminal's name, and a newline
+    # @raise [Error] if every terminal is taken
+    def named(who) = who.you ? "#{who.you}\n" : raise(Error, "every terminal is taken: try again in a few minutes")
 
     # Print what there is of the site in one format alone
     #

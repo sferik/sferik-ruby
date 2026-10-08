@@ -15,7 +15,11 @@ RSpec.describe Sferik::CLI do
 
       def write(message, tty:) = "write: #{message.inspect} sent to sferik#{" by #{tty}" if tty}#{@from}"
 
-      def check_in(token) = Struct.new(:you).new("ttys#{token.size.to_s.rjust(3, "0")}#{@from}")
+      # With a block, the terminal is logged in for as long as it runs
+      def check_in(token)
+        who = Struct.new(:you).new("ttys#{token.size.to_s.rjust(3, "0")}#{@from}")
+        block_given? ? yield(who) : who
+      end
     end
   end
   let(:usage) { described_class.const_get(:USAGE) }
@@ -127,7 +131,7 @@ RSpec.describe Sferik::CLI do
   end
 
   it "lists every option in the usage" do
-    expect(usage.scan(/(?<= )--?[a-z]+/)).to eq(%w[--json --pdf --latex --vcard --tty --token --host -h --help -v --version])
+    expect(usage.scan(/(?<= )--?[a-z]+/)).to eq(%w[--json --pdf --latex --vcard --tty --token --watch --host -h --help -v --version])
   end
 
   it "prints a command as JSON with --json" do
@@ -313,6 +317,79 @@ RSpec.describe Sferik::CLI do
     end
 
     expect(run_cli("check-in", with: full)).to eq([1, "", "sferik: every terminal is taken: try again in a few minutes\n"])
+  end
+
+  # A client that notes what becomes of a check-in, in order: whether it came with a block, and when the block was done
+  def logging(log, you: "ttys001")
+    Class.new do
+      define_method(:initialize) { |host:| }
+      define_method(:check_in) do |_token, &block|
+        log << (block ? :kept : :once)
+        who = Struct.new(:you).new(you)
+        block ? block.call(who).tap { log << :left } : who
+      end
+    end
+  end
+
+  # Run check-in --watch, which sleeps until it's interrupted: so not for long, if it's a sleep that nothing here wakes
+  def watch(*argv, **)
+    Timeout.timeout(2) { run_cli("check-in", "--watch", *argv, **) }
+  end
+
+  it "check-in checks in once, and doesn't stay logged in" do
+    log = []
+    run_cli("check-in", with: logging(log))
+
+    expect(log).to eq([:once])
+  end
+
+  it "check-in --watch prints the terminal's name, and stays logged in until it's interrupted" do
+    allow(Kernel).to receive(:sleep).and_raise(Interrupt)
+
+    expect(watch("--token", "0123456789abcdef")).to eq([130, "ttys016\n", ""])
+  end
+
+  it "check-in --watch sleeps until it's interrupted, however long that is, while the terminal is kept logged in" do
+    log = []
+    allow(Kernel).to receive(:sleep) { |*forever| log << [:slept, *forever] }
+    watch(with: logging(log))
+
+    expect(log).to eq([:kept, [:slept], :left])
+  end
+
+  it "check-in --watch has printed the terminal's name by the time it sleeps, to whatever reads it" do
+    printed = []
+    allow(out).to receive(:flush) { printed << out.string.dup }
+    allow(Kernel).to receive(:sleep) { printed << :slept }
+    watch("--token", "0123456789abcdef")
+
+    expect(printed).to eq(["ttys016\n", :slept])
+  end
+
+  it "check-in --watch prints nothing more, and succeeds, if its sleep ends without an interrupt" do
+    allow(Kernel).to receive(:sleep)
+
+    expect(watch("--token", "0123456789abcdef")).to eq([0, "ttys016\n", ""])
+  end
+
+  it "check-in --watch logs in the terminal with a random token, unless it's given one" do
+    allow(SecureRandom).to receive(:uuid).and_return("0f8fad5b-d9cb-469f-a165-70867728950e")
+    allow(Kernel).to receive(:sleep)
+
+    expect(watch).to eq([0, "ttys036\n", ""])
+  end
+
+  it "check-in --watch says so when every terminal is taken, and fails without waiting", :aggregate_failures do
+    allow(Kernel).to receive(:sleep)
+
+    expect(watch(with: logging([], you: nil))).to eq([1, "", "sferik: every terminal is taken: try again in a few minutes\n"])
+    expect(Kernel).not_to have_received(:sleep)
+  end
+
+  [%w[finger], %w[write], []].each do |argv|
+    it "takes no --watch for #{argv.first || "the home page"}, which checks nothing in: it says so, then the usage, and asks for nothing" do
+      expect(run_cli(*argv, "--watch", with: failing(RuntimeError))).to eq([2, "", "sferik: --watch is for check-in\n\n#{usage}"])
+    end
   end
 
   it "check-in reports errors from the API, and fails" do

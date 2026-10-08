@@ -156,14 +156,19 @@ module Sferik
   #   @example
   #     Sferik.who.map(&:page) # => ["/", "/talks"]
   #   @see API::SiteEndpoints#who What it raises, and more about it
-  # @!method self.check_in(token, page: "/")
-  #   Checks in a terminal, and returns everyone reading the site
+  # @!method self.check_in(token, page: "/", &block)
+  #   Checks in a terminal, or keeps one logged in while a block runs
   #   @api public
   #   @param token [String] a random token, one per terminal, of 16 to 64 letters, digits, underscores, and hyphens
   #   @param page [String] the page the terminal is on: "/", "/talks", or "/resume"
-  #   @return [Who] everyone reading the site, with the terminal that checked in as {Who#you}
+  #   @yield [who] what to do while the terminal is logged in: it's checked in again every minute until the block ends
+  #   @yieldparam who [Who] everyone reading the site when the terminal checked in, with the terminal as {Who#you}
+  #   @return [Who, Object] everyone reading the site, with the terminal that checked in as {Who#you}, or what the
+  #     block returns, if there is one
   #   @example
   #     Sferik.check_in(SecureRandom.uuid).you # => "ttys001"
+  #   @example Stay logged in for as long as it takes to write a message
+  #     Sferik.check_in(SecureRandom.uuid) { |who| Sferik.write(gets, tty: who.you) }
   #   @see API::SiteEndpoints#check_in What it raises, and more about it
   # @!method self.write(message, tty: nil, key: SecureRandom.uuid)
   #   Sends Erik a message, as the shell's write sferik does

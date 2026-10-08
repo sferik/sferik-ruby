@@ -31,6 +31,7 @@ module Sferik
   def self.resume_pdf: () -> String
   def self.who: () -> Who
   def self.check_in: (String token, ?page: String) -> Who
+                   | [T] (String token, ?page: String) { (Who who) -> T } -> T
   def self.write: (String message, ?tty: String?, ?key: String) -> String
   def self.text: (?String path) -> String
   def self.openapi: () -> Hash[String, untyped]
@@ -128,6 +129,7 @@ module Sferik
     def get: (String path, ?accept: String) -> String
     def json: [T] (String path, ?accept: String) { (Hash[String, untyped] attributes) -> T } -> T
     def post: (String path, ?String body, ?accept: String, ?idempotency_key: String?) -> String
+    def keep_alive: [T] () { (Client client) -> T } -> T
   end
 
   module JSONParsing
@@ -179,6 +181,7 @@ module Sferik
 
       def who: () -> Who
       def check_in: (String token, ?page: String) -> Who
+                  | [T] (String token, ?page: String) { (Who who) -> T } -> T
       def write: (String message, ?tty: String?, ?key: String) -> String
       def text: (?String path) -> String
       def openapi: () -> Hash[String, untyped]
@@ -186,8 +189,12 @@ module Sferik
       def status: () -> Status
 
       PAUSE: Integer
+      BEAT: Integer
 
       private
+
+      def logged_in: [T] (String token, String page, Who who) { (Who who) -> T } -> T
+      def beat: (String token, String page) -> bot
 
       def deliver: (String path, String message, String key) -> String
       def settle: (String path, String message, String key) -> String
@@ -208,6 +215,7 @@ module Sferik
       def get: (String path, ?accept: String) -> String
       def write: (String message, ?tty: String?) -> String
       def check_in: (String token) -> Who
+                  | [T] (String token) { (Who who) -> T } -> T
     end
 
     # The environment: ENV, or a Hash
@@ -241,6 +249,9 @@ module Sferik
     def unformatted: (Hash[Symbol, untyped] options) { () -> Integer } -> Integer
     def write: (Hash[Symbol, untyped] options) -> Integer
     def check_in: (Hash[Symbol, untyped] options) -> Integer
+    def token: (Hash[Symbol, untyped] options) -> String
+    def stay: (_Client client, String token) -> String
+    def named: (Who who) -> String
     def only: (String path, String accept, Hash[Symbol, untyped] options) -> Integer
     def ask: (Hash[Symbol, untyped] options) { (_Client client) -> String } -> Integer
     def clients: () -> _Clients

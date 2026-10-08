@@ -14,7 +14,8 @@
   `size`, `length`, `empty?`, `last`, and `[]` as well, and they match array patterns (`in [newest, *]`). Their `to_h`
   is of their readers, like any resource's, and with a block it's of the list, like an Array's
 - `Sferik.check_in(token)` checks in a terminal, as each browser tab on the site does (on the home page, or on the
-  one that `page:` names), and returns who's reading with the terminal's name as `you`. `Sferik.write("...")` sends
+  one that `page:` names), and returns who's reading with the terminal's name as `you`. With a block, it keeps the
+  terminal logged in for as long as the block runs, checking it in again every minute. `Sferik.write("...")` sends
   Erik a message, as the shell's `write sferik` does. Each message goes with a random key (or the one `key:` gives),
   which the server doesn't email twice, so `write` sends it once more, five seconds later, if it was sent and no answer
   came (`Unanswered`), but not if the server couldn't be connected to. And if the server says the message is still
@@ -63,9 +64,10 @@
   and the API's description, and `sferik signature` and `sferik webfinger` the motto, and where sferik@sferik.net points
   to.
   `sferik write` sends Erik the message it reads from standard input, and `sferik check-in` logs in a terminal and
-  prints its name, which `sferik write --tty` takes. It exits 1 when a request fails, and 2 when the command line is
-  wrong, as one that names two formats is, or a format for what prints no resource (`sferik write`, `sferik help`, or
-  `sferik --version`) or one that comes in one format alone (`sferik feed`)
+  prints its name, which `sferik write --tty` takes, and with `--watch` keeps it logged in until it's interrupted. It
+  exits 1 when a request fails, and 2 when the command line is wrong, as one that names two formats is, or a format
+  for what prints no resource (`sferik write`, `sferik help`, or `sferik --version`) or one that comes in one format
+  alone (`sferik feed`)
 - The command loads the client only when it asks the site for something: `sferik --version` and `sferik --help`
   don't wait for it
 - RBS signatures, checked by Steep

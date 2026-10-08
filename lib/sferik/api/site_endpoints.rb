@@ -23,6 +23,11 @@ module Sferik
       PAUSE = 5
       private_constant :PAUSE
 
+      # The seconds between the check-ins of a terminal that a block keeps logged in: as often as a browser tab
+      # checks in, and a third of how long the server keeps one logged in that doesn't
+      BEAT = 60
+      private_constant :BEAT
+
       # Returns everyone reading the site right now
       #
       # There's a terminal per browser tab, as the shell's who lists them, and they're Enumerable: `Sferik.who.size`
@@ -41,10 +46,19 @@ module Sferik
       # It's what each browser tab does when it opens, and every minute it's in view. A terminal is logged in for
       # three minutes after it last checked in, and keeps its name for as long as it checks in with the same token.
       #
+      # With a block, the terminal stays logged in for as long as the block runs: it's checked in again every minute,
+      # as a tab in view is, by a thread of its own, over a connection of its own. A check-in that fails then is
+      # tried again a minute later, and raises nothing: the terminal is logged out only when three have failed in a
+      # row. When the block ends, the check-ins do, and the server logs the terminal out three minutes later.
+      #
       # @api public
       # @param token [String] a random token, one per terminal, of 16 to 64 letters, digits, underscores, and hyphens
       # @param page [String] the page the terminal is on: "/", "/talks", or "/resume"
-      # @return [Who] everyone reading the site, with the terminal that checked in as {Who#you}
+      # @yield [who] what to do while the terminal is logged in
+      # @yieldparam who [Who] everyone reading the site when the terminal checked in, with the terminal as {Who#you}
+      # @yieldreturn [Object] anything
+      # @return [Who, Object] everyone reading the site, with the terminal that checked in as {Who#you}, or what the
+      #   block returns, if there is one
       # @raise [ArgumentError] if the token or the page isn't a String
       # @raise [ClientError] if the token isn't one, or there's no such page: {HTTPError#error_code} is "bad_token" or
       #   "bad_page"
@@ -52,9 +66,12 @@ module Sferik
       #   Sferik.check_in(SecureRandom.uuid).you # => "ttys001"
       # @example Check in on another page
       #   Sferik.check_in(SecureRandom.uuid, page: "/talks")
-      def check_in(token, page: "/")
+      # @example Stay logged in for as long as it takes to write a message, which says which terminal it's from
+      #   Sferik.check_in(SecureRandom.uuid) { |who| Sferik.write(gets, tty: who.you) }
+      def check_in(token, page: "/", &)
         query = URI.encode_www_form(token: check(:token, token, String), page: check(:page, page, String))
-        Who.new(parse_json(post("/who?#{query}")))
+        who = Who.new(parse_json(post("/who?#{query}")))
+        block_given? ? logged_in(token, page, who, &) : who
       end
 
       # Sends Erik a message, as the shell's write sferik does
@@ -144,6 +161,47 @@ module Sferik
       end
 
       private
+
+      # Keep a terminal logged in while a block runs
+      #
+      # A thread checks it in again every minute, over a connection of its own: the client's is for one thread at a
+      # time, and the block may be using it. The thread ends when the block does, and its connection is closed.
+      #
+      # @api private
+      # @param token [String] the terminal's token
+      # @param page [String] the page the terminal is on
+      # @param who [Who] everyone reading the site when the terminal checked in
+      # @yield [who] what to do while the terminal is logged in
+      # @yieldparam who [Who] everyone reading the site when the terminal checked in
+      # @yieldreturn [Object] anything
+      # @return [Object] what the block returns
+      def logged_in(token, page, who)
+        beating = Thread.new { keep_alive { |client| client.__send__(:beat, token, page) } }
+        begin
+          yield who
+        ensure
+          beating.kill
+          beating.join
+        end
+      end
+
+      # Check a terminal in every minute, for as long as the thread lives
+      #
+      # A check-in that fails is one the server never had, and the next is a minute later all the same: a terminal
+      # is logged in for three minutes after its last, so it takes three failing in a row to log it out.
+      #
+      # @api private
+      # @param token [String] the terminal's token
+      # @param page [String] the page the terminal is on
+      # @return [void] never: only the thread ending stops it
+      def beat(token, page)
+        loop do
+          Kernel.sleep(BEAT)
+          check_in(token, page:)
+        rescue Error
+          # tried again in a minute
+        end
+      end
 
       # Send a message, and once more if no answer comes: its key makes that safe
       #
