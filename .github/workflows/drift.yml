@@ -3,6 +3,11 @@
 # the others so that it never blocks a merge or a release: don't make it a required check. A scheduled run that finds
 # a change opens an issue (or comments on the open one), on top of GitHub's usual email about a failed workflow.
 #
+# It runs daily, and whenever the site is deployed, which is when its API changes: the site's own workflow says so
+# here (a repository_dispatch, of the type deployed), if it has a token of this repository's to say it with
+# (DRIFT_TOKEN, among sferik-web's secrets). So a change is noticed within minutes of the deploy that made it, and
+# within a day without the token. A run the site starts opens an issue as a scheduled one does.
+#
 # It asks the live site one thing more while it's there: whether its numbers are live, and whether GitHub answers it
 # with its token (rake live). The site gets its numbers another way when the token fails, so nothing else would say
 # that it has: a token that has expired opens an issue here too.
@@ -10,6 +15,8 @@ name: API drift
 on:
   schedule:
     - cron: "41 7 * * *" # daily, 07:41 UTC
+  repository_dispatch:
+    types: [deployed] # sent by sferik-web's deploy
   workflow_dispatch:
 permissions:
   contents: read
@@ -28,7 +35,7 @@ jobs:
 
   alert:
     needs: check
-    if: failure() && github.event_name == 'schedule'
+    if: failure() && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -41,7 +48,7 @@ jobs:
       run: |
         title="The sferik.net API has changed"
         number=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')
-        body="The daily check of the live OpenAPI description against spec/fixtures/openapi.json found a difference: $RUN_URL. Run \`bundle exec rake fixtures\` and catch the library up."
+        body="The check of the live OpenAPI description against spec/fixtures/openapi.json found a difference: $RUN_URL. Run \`bundle exec rake fixtures\` and catch the library up."
         if [ -n "$number" ]; then
           gh issue comment "$number" --body "$body"
         else
@@ -62,7 +69,7 @@ jobs:
 
   live-alert:
     needs: live
-    if: failure() && github.event_name == 'schedule'
+    if: failure() && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -75,7 +82,7 @@ jobs:
       run: |
         title="sferik.net isn't getting its live numbers as it should"
         number=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')
-        body="The daily check of the live site found numbers it hasn't loaded for two hours, or that GitHub hasn't answered with the site's token for as long: $RUN_URL. The run says which. If it's the token, it has likely expired: set a new one with \`wrangler secret put GITHUB_TOKEN\` in sferik-web."
+        body="The check of the live site found numbers it hasn't loaded for two hours, or that GitHub hasn't answered with the site's token for as long: $RUN_URL. The run says which. If it's the token, it has likely expired: set a new one with \`wrangler secret put GITHUB_TOKEN\` in sferik-web."
         if [ -n "$number" ]; then
           gh issue comment "$number" --body "$body"
         else

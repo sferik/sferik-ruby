@@ -483,7 +483,9 @@ HOST=http://localhost:3745 bundle exec rake fixtures
 ```
 
 `bundle exec rake drift` checks the saved description against the live one, and fails if the API has changed since.
-It runs daily in `.github/workflows/drift.yml`, which opens an issue when it does. So does `bundle exec rake live`,
+It runs daily in `.github/workflows/drift.yml`, and whenever the site is deployed (its deploy says so, with a
+`repository_dispatch`, if sferik-web has a `DRIFT_TOKEN` secret: a fine-grained token with read and write access to
+this repository's contents), and opens an issue when it fails. So does `bundle exec rake live`,
 which asks the live site for its status, and fails if it hasn't loaded one of its live values for two hours (the
 downloads, the stars, the contributions, or the latest push), or GitHub hasn't answered it with its token for as long.
 
