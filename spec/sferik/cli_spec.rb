@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "open3"
+require "rbconfig"
 require "stringio"
 
 RSpec.describe Sferik::CLI do
@@ -44,6 +46,37 @@ RSpec.describe Sferik::CLI do
     [described_class.new(client: with, input:, out:, err:, env:).run(argv), out.string, err.string]
   rescue SystemExit
     raise "The command exited, rather than return its status"
+  end
+
+  # Run a command line, and return what the command loaded to do it, in order: nothing is loaded again here, since
+  # the specs have loaded it all
+  def loaded_by(*argv)
+    cli = described_class.new(client:, input: StringIO.new("hello"), out:, err:, env: {})
+    loaded = []
+    allow(cli).to receive(:require_relative) { |name| loaded << name }
+    cli.run(argv)
+    loaded
+  rescue SystemExit
+    raise "The command exited, rather than return its status"
+  end
+
+  [["--version"], ["--help"], ["help"], ["nope"], ["whoami", "--json", "--pdf"]].each do |argv|
+    it "loads nothing more for #{argv.join(" ")}, which asks the site for nothing" do
+      expect(loaded_by(*argv)).to eq([])
+    end
+  end
+
+  [["whoami"], [], ["check-in"], ["write"], ["whoami", "--host", "http://localhost:3745"]].each do |argv|
+    it "loads the library, once, for #{argv.empty? ? "no command" : argv.join(" ")}, which asks the site" do
+      expect(loaded_by(*argv)).to eq(["../sferik"])
+    end
+  end
+
+  it "prints the version in a process that has loaded neither the client nor what it's built of" do
+    script = 'require "sferik/cli"; status = Sferik::CLI.new.run(["--version"]); p [status, defined?(Sferik::Client), defined?(Net::HTTP)]'
+    output, = Open3.capture2e(RbConfig.ruby, "-I", File.expand_path("../../lib", __dir__), "-e", script)
+
+    expect(output).to eq("#{Sferik::VERSION}\n[0, nil, nil]\n")
   end
 
   described_class.const_get(:COMMANDS).each do |command, path|

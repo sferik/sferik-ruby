@@ -57,4 +57,6 @@
   `sferik check-in` logs in a terminal and prints its name, which `sferik write --tty` takes. It exits 1 when a request fails, and 2
   when the command line is wrong, as one that names two formats is, or a format for what prints no resource
   (`sferik write`, `sferik help`, or `sferik --version`) or one that comes in one format alone (`sferik feed`)
+- The command loads the client only when it asks the site for something: `sferik --version` and `sferik --help`
+  don't wait for it
 - RBS signatures, checked by Steep

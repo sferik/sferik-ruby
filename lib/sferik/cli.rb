@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 require "optparse"
-require "securerandom"
-require_relative "../sferik"
+require_relative "version"
 
 module Sferik
   # The sferik command: prints what the shell on sferik.net prints, in a real terminal
@@ -89,7 +88,7 @@ module Sferik
     # Initialize a new CLI
     #
     # @api public
-    # @param client [#new] what makes the client for a host (the {Client} class)
+    # @param client [#new, nil] what makes the client for a host: the {Client} class, unless something else is given
     # @param input [IO] where sferik write reads a message from
     # @param out [IO] where output goes
     # @param err [IO] where errors go
@@ -97,7 +96,7 @@ module Sferik
     # @return [CLI] a new instance
     # @example
     #   Sferik::CLI.new(env: {"SFERIK_HOST" => "http://localhost:3745"})
-    def initialize(client: Client, input: $stdin, out: $stdout, err: $stderr, env: ENV)
+    def initialize(client: nil, input: $stdin, out: $stdout, err: $stderr, env: ENV)
       @client = client
       @input = input
       @out = out
@@ -213,11 +212,7 @@ module Sferik
     # @yield what to do, if no option names a format
     # @yieldreturn [Integer] the exit status
     # @return [Integer] the exit status
-    def unformatted(options)
-      return misuse("--json, --pdf, --latex, and --vcard are for the commands that print a resource") if options.fetch(:accept).any?
-
-      yield
-    end
+    def unformatted(options) = options.fetch(:accept).any? ? misuse("--json, --pdf, --latex, and --vcard are for the commands that print a resource") : yield
 
     # Send me the message that standard input has, and print what the server says
     #
@@ -274,9 +269,10 @@ module Sferik
     # @return [Integer] the exit status: 0, 1 for a request that fails, or 2 for a host that isn't a URL
     # @raise [ArgumentError] if the request, or printing its response, raises one
     def ask(options)
+      maker = clients # which loads the library, before anything here asks it for its host, or for an error
       named = @env.fetch("SFERIK_HOST", "") # one that's set but empty names no host, as if it weren't set
       host = options.fetch(:host) { named.empty? ? Sferik.host : named }
-      client = @client.new(host:)
+      client = maker.new(host:)
       print_body(yield(client))
     rescue Error, ArgumentError => e
       raise if e.is_a?(ArgumentError) && client # only one from building the client is about the host
@@ -284,6 +280,21 @@ module Sferik
       @err.puts("sferik: #{e}")
       e.is_a?(Error) ? 1 : 2
     end
+
+    # What makes the client for a host, once the library is loaded
+    #
+    # @api private
+    # @return [#new] what the command was given to make clients with, or else the {Client} class
+    def clients = library.then { @client || Client }
+
+    # Load the library, when a command first asks the site for something
+    #
+    # Printing the usage or the version asks for nothing, and loading the client, with everything it's built of,
+    # takes about as long as the rest of either does: so only a command that needs it waits for it.
+    #
+    # @api private
+    # @return [Boolean] whether this is what loaded it: the client, its errors, and the configuration
+    def library = require_relative("../sferik")
 
     # Print the body of a response: a binary one, as a PDF is, in binary mode
     #

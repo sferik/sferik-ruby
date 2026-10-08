@@ -219,13 +219,13 @@ module Sferik
     OWNERS: Hash[Symbol, String]
     ACTIONS: Hash[Symbol | String, Array[Symbol | String]]
 
-    @client: _Clients
+    @client: _Clients?
     @input: IO
     @out: IO
     @err: IO
     @env: _Environment
 
-    def initialize: (?client: _Clients, ?input: IO, ?out: IO, ?err: IO, ?env: _Environment) -> void
+    def initialize: (?client: _Clients?, ?input: IO, ?out: IO, ?err: IO, ?env: _Environment) -> void
     def run: (Array[String] argv) -> Integer
 
     private
@@ -241,6 +241,8 @@ module Sferik
     def check_in: (Hash[Symbol, untyped] options) -> Integer
     def only: (String path, String accept, Hash[Symbol, untyped] options) -> Integer
     def ask: (Hash[Symbol, untyped] options) { (_Client client) -> String } -> Integer
+    def clients: () -> _Clients
+    def library: () -> bool
     def print_body: (String body) -> Integer
     def say: (String text) -> Integer
     def misuse: (_ToS problem) -> Integer
