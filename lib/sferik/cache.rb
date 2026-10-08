@@ -10,11 +10,12 @@ module Sferik
   # with it, and no request is made. After that, the request says which version is kept (If-None-Match, with the
   # response's ETag), and the server answers 304 Not Modified, without a body, if that's still the one. A response
   # that says not to keep it (no-store) isn't kept, and one that says to check each time (no-cache) is checked each
-  # time. Only a 200 is kept.
+  # time. Only a 200 is kept, and what's kept stays kept when the server answers with an error of its own (a 5xx),
+  # which says nothing of whether it has changed: the next request asks again.
   #
   # A response that has already been kept somewhere on its way, as one from Cloudflare's cache has, says for how long
   # (Age), and is good for that much less. And a cache that's told to (stale) answers with a response that's no longer
-  # good, when the server can't be asked whether it has changed.
+  # good, when the server can't be asked whether it has changed, or answers with an error of its own.
   #
   # @api private
   class Cache
@@ -58,7 +59,8 @@ module Sferik
     # @param clock [#call] what tells the time, in seconds
     # @param entries [Hash{Array => Entry}] the responses kept, by URL and media type
     # @param lock [Mutex] what's held to read or change them
-    # @param stale [Boolean] whether to answer with a response that's no longer good, when the server can't be reached
+    # @param stale [Boolean] whether to answer with a response that's no longer good, when the server can't be reached,
+    #   or answers with an error of its own
     # @return [Cache] the cache
     def initialize(connections, clock = CLOCK, entries = {}, lock = Mutex.new, stale: false)
       @connections = connections
@@ -91,7 +93,8 @@ module Sferik
     #
     # @api private
     # @param request [Net::HTTPRequest] the request, to a URL
-    # @return [Net::HTTPResponse] the response, which may be one that was kept
+    # @return [Net::HTTPResponse] the response, which may be one that was kept, or the server's error if the cache isn't
+    #   to answer with what's kept instead
     # @raise [NetworkError] if the server can't be reached, or its response can't be read, and there's no response
     #   kept to answer with instead, or the cache isn't to
     def request(request)
@@ -126,25 +129,54 @@ module Sferik
 
     # Send a GET request, and keep what comes back
     #
-    # The request says which version of its response is kept, so that the server sends a body only for another.
+    # The request says which version of its response is kept, so that the server sends a body only for another. An
+    # error of the server's own (a 5xx) leaves what's kept as it is, to be asked after again.
     #
     # @api private
     # @param key [Array] the URL and the media type asked for
     # @param entry [Entry, nil] the response kept, which is no longer good, if there is one
     # @param request [Net::HTTP::Get] the request
-    # @return [Net::HTTPResponse] the response: the one kept, if the server says it hasn't changed
+    # @return [Net::HTTPResponse] the response: the one kept, if the server says it hasn't changed, or answers with
+    #   an error of its own and the cache answers with what's no longer good
     def ask(key, entry, request)
       request["if-none-match"] = entry.etag if entry # no header, for a response that has no ETag
       response = @connections.request(request)
+      return spared(entry, response) if entry && response.is_a?(Net::HTTPServerError)
+
+      renewed(key, entry, response)
+    end
+
+    # Keep what the server answers with, or go on keeping what it says hasn't changed
+    #
+    # @api private
+    # @param key [Array] the URL and the media type asked for
+    # @param entry [Entry, nil] the response kept, which is no longer good, if there is one
+    # @param response [Net::HTTPResponse] the server's answer
+    # @return [Net::HTTPResponse] the response: the one kept, if the server says it hasn't changed
+    def renewed(key, entry, response)
       kept = entry.response if entry && response.instance_of?(Net::HTTPNotModified)
       keep(key, kept || response, response)
       kept || response
     end
 
+    # What to answer with when the server fails, and a response is kept
+    #
+    # The server fails when it answers with an error of its own (a 5xx).
+    #
+    # @api private
+    # @param entry [Entry] the response kept, which is no longer good
+    # @param response [Net::HTTPResponse] the server's error
+    # @return [Net::HTTPResponse] the response kept, for a cache that answers with what's no longer good (stale), or
+    #   else the error
+    def spared(entry, response)
+      @stale ? entry.response : response
+    end
+
     # Keep a response, or forget the one kept
     #
     # It's kept for as long as the latest answer says it's good for, less how long that answer says it has been kept
-    # already (Age). Only a 200 is kept, and not one that says not to keep it: anything else leaves nothing kept.
+    # already (Age). Only a 200 is kept, and not one that says not to keep it: anything else leaves nothing kept. (An
+    # error of the server's own, with a response kept, never gets here.)
     #
     # @api private
     # @param key [Array] the URL and the media type asked for

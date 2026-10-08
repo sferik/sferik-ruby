@@ -237,12 +237,14 @@ is good for that much less here: one that's good for a minute, and has been kept
 five.
 
 When the server can't be reached to say whether a response that's no longer good has changed, the request raises
-`NetworkError`, as any other would. A script that would rather go on with what it last knew can ask for that:
+`NetworkError`, as any other would, and when the server answers with an error of its own (a 5xx), `ServerError`. The
+response stays kept either way, and the next request asks after it again. A script that would rather go on with what
+it last knew can ask for that:
 
 ```ruby
 client = Sferik.client.cached(stale_if_error: true)
 client.talks  # asks the server
-client.talks  # a minute later, with the network down: the talks it kept
+client.talks  # a minute later, with the network down, or the server answering 503: the talks it kept
 ```
 
 ## The sferik command

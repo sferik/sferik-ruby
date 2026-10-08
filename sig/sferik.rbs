@@ -334,6 +334,8 @@ module Sferik
 
     def renew: (key key, Entry? entry, Net::HTTPRequest request) -> Net::HTTPResponse
     def ask: (key key, Entry? entry, Net::HTTPRequest request) -> Net::HTTPResponse
+    def renewed: (key key, Entry? entry, Net::HTTPResponse response) -> Net::HTTPResponse
+    def spared: (Entry entry, Net::HTTPResponse response) -> Net::HTTPResponse
     def keep: (key key, Net::HTTPResponse response, Net::HTTPResponse latest) -> void
     def fresh_for: (String control) -> Integer
   end

@@ -240,19 +240,50 @@ RSpec.describe "Sferik::Cache" do
     end
 
     it "forgets the response it kept when the server answers with one that isn't a 200, and answers with that" do
-      stub_fresh.then.to_return(status: 500, body: "down").then.to_return(body: "two")
+      stub_fresh.then.to_return(status: 404, body: "gone").then.to_return(body: "two")
       get(url)
       wait(60)
 
-      expect([get(url).body, get(url).body]).to eq(%w[down two])
+      expect([get(url).body, get(url).body]).to eq(%w[gone two])
     end
 
     it "keeps nothing once the server answers with a response that isn't a 200" do
-      stub_fresh.then.to_return(status: 500, body: "down")
+      stub_fresh.then.to_return(status: 404, body: "gone")
       get(url)
       wait(60)
 
       expect { get(url) }.to change(entries, :size).from(1).to(0)
+    end
+
+    it "answers with an error of the server's own, and goes on keeping the response it kept" do
+      stub_fresh.then.to_return(status: 500, body: "down").then.to_return(status: 304, headers: {"Cache-Control" => "public, max-age=60"})
+      first = get(url)
+      wait(60)
+
+      expect([get(url).body, get(url), get(url)]).to eq(["down", first, first])
+    end
+
+    it "asks after the response it kept with its ETag, the next time, when the server answered with an error of its own" do
+      stub_fresh.then.to_return(status: 503).then.to_return(status: 304)
+      get(url)
+      wait(60)
+      2.times { get(url) }
+
+      expect(a_request(:get, url).with(headers: {"If-None-Match" => '"v1"'})).to have_been_made.twice
+    end
+
+    it "leaves the response it kept as it is when the server answers with an error of its own" do
+      stub_fresh.then.to_return(status: 502, headers: {"Cache-Control" => "public, max-age=60"})
+      get(url)
+      wait(60)
+
+      expect { get(url) }.not_to change(entries, :dup)
+    end
+
+    it "doesn't keep an error of the server's own when it kept nothing" do
+      request = stub_request(:get, url).to_return(status: 500, body: "down", headers: {"Cache-Control" => "public, max-age=60"})
+
+      expect([get(url).body, get(url).body, entries, made(request)]).to eq(["down", "down", {}, 2])
     end
 
     it "keeps nothing once the server says not to keep the response that hasn't changed" do
@@ -399,6 +430,28 @@ RSpec.describe "Sferik::Cache" do
       wait(60)
 
       expect(get(url).code).to eq("404")
+    end
+
+    it "answers with the response it kept, however old, when the server answers with an error of its own" do
+      stub_fresh.then.to_return(status: 503, body: "down")
+      first = get(url)
+      wait(86_400)
+
+      expect(get(url)).to be(first)
+    end
+
+    it "asks again after an error of the server's own, and keeps what it says then" do
+      request = stub_fresh.then.to_return(status: 500).then.to_return(body: "two", headers: {"Cache-Control" => "public, max-age=60"})
+      get(url)
+      wait(60)
+
+      expect([get(url).body, get(url).body, get(url).body, made(request)]).to eq(["one", "two", "two", 3])
+    end
+
+    it "answers with an error of the server's own when it kept nothing to answer with" do
+      stub_request(:get, url).to_return(status: 500, body: "down")
+
+      expect(get(url).body).to eq("down")
     end
 
     it "yields a cache from keeping that answers with what's no longer good too" do
