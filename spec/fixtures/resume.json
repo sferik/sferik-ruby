@@ -207,11 +207,11 @@
     }
   ],
   "speaking": {
-    "summary": "Spoke at 16 conferences in 13 countries on four continents, including RailsConf, RubyConf Australia, RubyConf India, Barcelona Ruby Conference, dotRB, and PolyConf, and gave the closing keynote at Nordic APIs Platform Summit. Talks include *Writing Fast Ruby*, which inspired the community fast-ruby benchmark suite; *Mutation Testing with Mutant*; *Towards a Higher-Level Language*; and *An Introduction to Crystal*. Full list with slides and video at sferik.net/talks."
+    "summary": "Spoke at 17 conferences in 13 countries on four continents, including RailsConf, RubyConf Australia, RubyConf India, Barcelona Ruby Conference, dotRB, and PolyConf, and gave the closing keynote at Nordic APIs Platform Summit. Talks include *Writing Fast Ruby*, which inspired the community fast-ruby benchmark suite; *Mutation Testing with Mutant*; *Towards a Higher-Level Language*; and *An Introduction to Crystal*. Full list with slides and video at sferik.net/talks."
   },
   "meta": {
     "canonical": "https://sferik.net/resume",
     "version": "v1.0.0",
-    "lastModified": "2026-10-01"
+    "lastModified": "2026-10-07"
   }
 }

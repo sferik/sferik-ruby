@@ -100,7 +100,7 @@ resume.work.first.position          # => "Founder"
 resume.work.first.start_date        # => #<Date: 2023-01-01>
 resume.work.first.end_date          # => nil, since it hasn't ended
 resume.patents.map(&:number)        # => ["US20110153423A1", "US20110153414A1"]
-resume.last_modified                # => #<Date: 2026-10-01>
+resume.last_modified                # => #<Date: 2026-10-07>
 
 File.binwrite("resume.pdf", Sferik.resume_pdf)
 File.write("resume.tex", Sferik.resume_latex)

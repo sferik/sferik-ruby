@@ -12,7 +12,7 @@ module Sferik
       #   @api public
       #   @return [String] a summary of talks, with *italic* titles
       #   @example
-      #     speaking.summary # => "Spoke at 16 conferences in 13 countries..."
+      #     speaking.summary # => "Spoke at 17 conferences in 13 countries..."
       attribute :summary
     end
   end

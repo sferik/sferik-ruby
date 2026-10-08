@@ -57,7 +57,7 @@ RSpec.describe Sferik::API::ResumeEndpoints do
     end
 
     it "returns what the resume says about itself" do
-      expect(client.resume.meta).to have_attributes(canonical: "https://sferik.net/resume", version: "v1.0.0", last_modified: Date.new(2026, 10, 1))
+      expect(client.resume.meta).to have_attributes(canonical: "https://sferik.net/resume", version: "v1.0.0", last_modified: Date.new(2026, 10, 7))
     end
   end
 
