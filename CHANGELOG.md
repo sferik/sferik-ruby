@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (2026-10-08)
+## 0.0.1 (2026-10-08)
 
 - Initial release: every endpoint of the sferik.net API (`home`, `whoami`, `dependency`, `finger`, `finger_vcard`,
   `name_change`, `signature`, `webfinger`, `contributions`, `projects`, `talks`, `talks_feed`, `podcasts`, `resume`,
