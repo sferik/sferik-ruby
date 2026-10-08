@@ -344,6 +344,7 @@ module Sferik
     type timeouts = { open_timeout: Numeric, read_timeout: Numeric, write_timeout: Numeric }
     type kept = Hash[[Integer, String?, String?, Integer?, timeouts], Net::HTTP]
 
+    KEEP_ALIVE: Integer
     OPENED: Symbol
 
     @timeouts: timeouts

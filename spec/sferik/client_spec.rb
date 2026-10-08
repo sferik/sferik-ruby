@@ -344,7 +344,7 @@ RSpec.describe Sferik::Client do
       allow(Net::HTTP).to receive(:start).and_call_original
       described_class.new(open_timeout: 1, read_timeout: 2, write_timeout: 3).get("/whoami")
 
-      expect(Net::HTTP).to have_received(:start).with("sferik.net", 443, use_ssl: true, open_timeout: 1, read_timeout: 2, write_timeout: 3)
+      expect(Net::HTTP).to have_received(:start).with("sferik.net", 443, use_ssl: true, keep_alive_timeout: 30, open_timeout: 1, read_timeout: 2, write_timeout: 3)
     end
 
     it "connects to an IPv6 host by its address, without the brackets a URL puts around it" do
@@ -352,7 +352,7 @@ RSpec.describe Sferik::Client do
       allow(Net::HTTP).to receive(:start).and_call_original
       described_class.new(host: "http://[::1]:3745").get("/whoami")
 
-      expect(Net::HTTP).to have_received(:start).with("::1", 3745, use_ssl: false, open_timeout: 5, read_timeout: 10, write_timeout: 10)
+      expect(Net::HTTP).to have_received(:start).with("::1", 3745, use_ssl: false, keep_alive_timeout: 30, open_timeout: 5, read_timeout: 10, write_timeout: 10)
     end
 
     it "uses plain HTTP for an http host" do
@@ -521,7 +521,7 @@ RSpec.describe Sferik::Client do
       allow(Net::HTTP).to receive(:start).and_call_original
       described_class.new(open_timeout: 1, read_timeout: 2, write_timeout: 3).post("/write", "Hello")
 
-      expect(Net::HTTP).to have_received(:start).with("sferik.net", 443, use_ssl: true, open_timeout: 1, read_timeout: 2, write_timeout: 3)
+      expect(Net::HTTP).to have_received(:start).with("sferik.net", 443, use_ssl: true, keep_alive_timeout: 30, open_timeout: 1, read_timeout: 2, write_timeout: 3)
     end
 
     it "doesn't follow a redirect, which is an error" do
@@ -776,7 +776,7 @@ RSpec.describe Sferik::Client do
     it "uses the timeouts of the client it's called on" do
       described_class.new(open_timeout: 1, read_timeout: 2, write_timeout: 3).keep_alive { |kept| kept.get("/whoami") }
 
-      expect(Net::HTTP).to have_received(:start).with("sferik.net", 443, use_ssl: true, open_timeout: 1, read_timeout: 2, write_timeout: 3)
+      expect(Net::HTTP).to have_received(:start).with("sferik.net", 443, use_ssl: true, keep_alive_timeout: 30, open_timeout: 1, read_timeout: 2, write_timeout: 3)
     end
 
     it "leaves the client it's called on making its requests over the thread's connection, which stays open" do
@@ -851,7 +851,7 @@ RSpec.describe Sferik::Client do
       allow(Net::HTTP).to receive(:start).and_call_original
       described_class.new(open_timeout: 1, read_timeout: 2, write_timeout: 3).cached.get("/whoami")
 
-      expect(Net::HTTP).to have_received(:start).with("sferik.net", 443, use_ssl: true, open_timeout: 1, read_timeout: 2, write_timeout: 3)
+      expect(Net::HTTP).to have_received(:start).with("sferik.net", 443, use_ssl: true, keep_alive_timeout: 30, open_timeout: 1, read_timeout: 2, write_timeout: 3)
     end
 
     it "returns a client that keeps what it gets in keep_alive too, over one connection" do

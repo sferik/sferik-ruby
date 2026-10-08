@@ -12,7 +12,7 @@ module Sferik
   # connecting again: with https, most of the time a request takes. A client's own are kept by the thread that makes
   # the request (or the fiber, which is as far as Thread.current goes), since a connection is for one at a time, and
   # by the process, since one that a fork inherits is its parent's. They're never closed here: Net::HTTP opens one
-  # again that has sat unused for more than two seconds, which the server may have closed by then, and what a thread
+  # again that has sat unused for more than half a minute, or that the server has closed by then, and what a thread
   # leaves behind is closed when it's collected, unless {Client#close} closes them first. Those of
   # {Client#keep_alive} are kept for its block, and closed after.
   #
@@ -22,6 +22,14 @@ module Sferik
     NETWORK_ERRORS = [IOError, SocketError, SystemCallError, Timeout::Error, OpenSSL::SSL::SSLError, Net::HTTPBadResponse,
       Net::HTTPHeaderSyntaxError, Net::ProtocolError, Zlib::Error].freeze
     private_constant :NETWORK_ERRORS
+
+    # The seconds a connection may sit unused, and still be the one the next request is made over
+    #
+    # Net::HTTP's own two would open one again for anything that asks every few seconds, as a {Client#cached} client
+    # asking who's reading does, every five. Cloudflare leaves one open for minutes, and Net::HTTP looks whether the
+    # server has closed one before it uses it, whatever this says.
+    KEEP_ALIVE = 30
+    private_constant :KEEP_ALIVE
 
     # Where a thread keeps the connections it has opened
     OPENED = :sferik_connections
@@ -113,7 +121,7 @@ module Sferik
     # @return [Net::HTTP] the connection, left open
     def start(uri)
       hostname = uri.hostname #: String
-      Net::HTTP.start(hostname, uri.port, use_ssl: uri.scheme.eql?("https"), **@timeouts)
+      Net::HTTP.start(hostname, uri.port, use_ssl: uri.scheme.eql?("https"), keep_alive_timeout: KEEP_ALIVE, **@timeouts)
     end
   end
   private_constant :Connections

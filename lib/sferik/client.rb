@@ -178,7 +178,7 @@ module Sferik
     # most of the time a request takes), and leaves it open for the thread's next: it's closed when the thread is
     # collected, or the process ends, or by {#close}. The client this yields opens connections of its own instead, one per host, and
     # closes them when the block ends, for when one mustn't be left open. Either way, Net::HTTP opens one again that
-    # has sat unused for more than two seconds, which the server may have closed by then. The client yielded is for
+    # has sat unused for more than half a minute, or that the server has closed by then. The client yielded is for
     # one thread at a time, as a connection is, and after the block it's a client like any other.
     #
     # @api public

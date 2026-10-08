@@ -24,7 +24,8 @@
   body is sent as UTF-8, converted from the charset of the String it's given (a binary or US-ASCII one is taken for
   UTF-8 already), with an `Idempotency-Key` header if `idempotency_key:` gives one
 - A thread's requests to the site are made over one connection, left open between them, where each would otherwise
-  connect again: with https, most of the time a request takes. Each thread, fiber, and process has its own.
+  connect again: with https, most of the time a request takes. One that has sat unused for half a minute is opened
+  again. Each thread, fiber, and process has its own.
   `Sferik.client.keep_alive { |client| ... }` makes the requests in its block over a connection of their own, which
   is closed when the block ends, and `Sferik.client.close` closes the ones the thread has open
 - `Sferik.client.cached` is a client that keeps the responses to its GETs for as long as each says it's good for, and

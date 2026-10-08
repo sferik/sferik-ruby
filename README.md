@@ -198,7 +198,7 @@ Sferik.talks   # uses it
 Sferik.resume  # and again: three requests in about half the time
 ```
 
-One that sits unused for more than two seconds is opened again, since the server may have closed it by then. It's
+One that sits unused for more than half a minute is opened again, and so is one the server has closed by then. It's
 left open, and closed when its thread is collected, or the process ends. For connections that are closed when
 you're done with them, make the requests in `keep_alive`:
 
