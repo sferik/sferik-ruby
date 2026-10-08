@@ -457,7 +457,8 @@ RSpec.describe "Sferik::Cache" do
       threads = Array.new(2) { asking }
       [Timeout::Error.new, "two"].each { |answer| answers << answer }
 
-      expect([threads.map { |thread| outcome(thread) }, made(request)]).to eq([[Sferik::Unanswered, "two"], 2])
+      # whichever asked first: JRuby may have the second thread get there before the first
+      expect([threads.map { |thread| outcome(thread) }, made(request)]).to match([contain_exactly(Sferik::Unanswered, "two"), 2])
     end
 
     it "has a thread wait only for a request for the same thing" do
