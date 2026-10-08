@@ -189,8 +189,8 @@ module Sferik
     # Print a resource of the site, as text or in the format an option names
     #
     # A PDF is printed as it is: Windows would otherwise write each of its line feeds as a carriage return and one.
-    # It isn't printed to a terminal, which its bytes would garble. A resource comes in one format at a time, so
-    # options that name two are the command line's mistake.
+    # It isn't printed to a terminal, which its bytes would garble, and isn't asked for either, when that's where
+    # it would go. A resource comes in one format at a time, so options that name two are the command line's mistake.
     #
     # @api private
     # @param path [String] the resource's path
@@ -199,7 +199,8 @@ module Sferik
     def show(path, options)
       return misuse("pick one format: --json, --pdf, --latex, or --vcard") if options.fetch(:accept).size > 1
 
-      ask(options) { |client| client.get(path, accept: [*options.fetch(:accept), "text/plain"].first) }
+      accept = [*options.fetch(:accept), "text/plain"].first
+      ask(options) { |client| client.get(path, accept: accept.eql?(FORMATS.fetch("--pdf")) ? redirected(accept) : accept) }
     end
 
     # Do what takes no format, since it prints no resource of the site
@@ -303,12 +304,17 @@ module Sferik
     # @return [Integer] the exit status
     # @raise [Error] if the body is binary and the output is a terminal
     def print_body(body)
-      return say(body) unless body.encoding.equal?(Encoding::BINARY)
-      raise Error, "binary output would garble the terminal: redirect it to a file (sferik resume --pdf > resume.pdf)" if @out.tty?
-
-      @out.binmode
+      redirected(@out).binmode if body.encoding.equal?(Encoding::BINARY)
       say(body)
     end
+
+    # What's for binary output, unless the output is a terminal: then this fails
+    #
+    # @api private
+    # @param binary [Object] what's for binary output: the media type to ask for it as, or where to print it
+    # @return [Object] what was given, if the output isn't a terminal
+    # @raise [Error] if it is
+    def redirected(binary) = @out.tty? ? raise(Error, "binary output would garble the terminal: redirect it to a file (sferik resume --pdf > resume.pdf)") : binary
 
     # Print text
     #

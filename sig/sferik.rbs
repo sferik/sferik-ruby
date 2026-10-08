@@ -244,6 +244,7 @@ module Sferik
     def clients: () -> _Clients
     def library: () -> bool
     def print_body: (String body) -> Integer
+    def redirected: [T] (T binary) -> T
     def say: (String text) -> Integer
     def misuse: (_ToS problem) -> Integer
   end

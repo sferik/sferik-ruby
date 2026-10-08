@@ -209,16 +209,29 @@ RSpec.describe Sferik::CLI do
     expect(run_cli("resume", "--pdf", with: answering("%PDF-1.7\n\xE2".b))).to eq([0, "%PDF-1.7\n\xE2".b, ""])
   end
 
-  it "says to redirect a binary body rather than print it to a terminal, and fails" do
+  it "says to redirect a PDF rather than print it to a terminal, and fails, without asking for it" do
     allow(out).to receive(:tty?).and_return(true)
 
-    expect(run_cli("resume", "--pdf", with: answering("%PDF-1.7\n".b)))
+    expect(run_cli("resume", "--pdf", with: failing(RuntimeError, "asked")))
+      .to eq([1, "", "sferik: binary output would garble the terminal: redirect it to a file (sferik resume --pdf > resume.pdf)\n"])
+  end
+
+  it "asks for what isn't a PDF, to print to a terminal" do
+    allow(out).to receive(:tty?).and_return(true)
+
+    expect(run_cli("resume", "--latex")).to eq([0, "/resume as application/x-latex\n", ""])
+  end
+
+  it "says to redirect any other binary body rather than print it to a terminal, and fails" do
+    allow(out).to receive(:tty?).and_return(true)
+
+    expect(run_cli("resume", with: answering("%PDF-1.7\n".b)))
       .to eq([1, "", "sferik: binary output would garble the terminal: redirect it to a file (sferik resume --pdf > resume.pdf)\n"])
   end
 
   it "leaves the output of a binary body it doesn't print in the mode it is in" do
     allow(out).to receive_messages(tty?: true, binmode: out)
-    run_cli("resume", "--pdf", with: answering("%PDF-1.7\n".b))
+    run_cli("resume", with: answering("%PDF-1.7\n".b))
 
     expect(out).not_to have_received(:binmode)
   end
