@@ -210,6 +210,13 @@ end
 
 The client it yields has the options of the one it's called on, and is for one thread at a time.
 
+To close the connections a thread has open, whenever you like, call `close`. The next request opens one again:
+
+```ruby
+Sferik.whoami
+Sferik.client.close  # before a fork, say, though a child never uses its parent's anyway
+```
+
 ### Asking only for what has changed
 
 Each GET asks the server. A client from `cached` keeps the responses instead: one says how long it's good for (a

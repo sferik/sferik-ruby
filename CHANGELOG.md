@@ -26,7 +26,7 @@
 - A thread's requests to the site are made over one connection, left open between them, where each would otherwise
   connect again: with https, most of the time a request takes. Each thread, fiber, and process has its own.
   `Sferik.client.keep_alive { |client| ... }` makes the requests in its block over a connection of their own, which
-  is closed when the block ends
+  is closed when the block ends, and `Sferik.client.close` closes the ones the thread has open
 - `Sferik.client.cached` is a client that keeps the responses to its GETs for as long as each says it's good for, and
   after that asks with the response's ETag, so the server sends the body only if it has changed. A response that has
   been kept on its way already (`Age`) is good for that much less. With `cached(stale_if_error: true)`, the client

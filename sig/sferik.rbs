@@ -275,6 +275,7 @@ module Sferik
     def get: (String path, ?accept: String) -> String
     def post: (String path, ?String body, ?accept: String, ?idempotency_key: String?) -> String
     def keep_alive: [T] () { (Client client) -> T } -> T
+    def close: () -> nil
     def cached: (?stale_if_error: bool) -> Client
     def inspect: () -> String
 
@@ -299,6 +300,7 @@ module Sferik
   interface _Connections
     def request: (Net::HTTPRequest request) -> Net::HTTPResponse
     def keeping: [T] () { (_Connections connections) -> T } -> T
+    def close: () -> nil
   end
 
   class Cache
@@ -325,6 +327,7 @@ module Sferik
 
     def initialize: (_Connections connections, ?^() -> Numeric clock, ?Hash[key, Entry] entries, ?Mutex lock, ?stale: bool) -> void
     def keeping: [T] () { (_Connections connections) -> T } -> T
+    def close: () -> nil
     def request: (Net::HTTPRequest request) -> Net::HTTPResponse
 
     private
@@ -349,6 +352,7 @@ module Sferik
     def initialize: (timeouts timeouts, ?kept? kept) -> void
     def keeping: [T] (?kept kept) { (Connections connections) -> T } -> T
     def request: (Net::HTTPRequest request) -> Net::HTTPResponse
+    def close: () -> nil
 
     private
 

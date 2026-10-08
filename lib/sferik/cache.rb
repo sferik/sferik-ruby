@@ -79,6 +79,14 @@ module Sferik
       @connections.keeping { |kept| yield self.class.new(kept, @clock, @entries, @lock, stale: @stale) }
     end
 
+    # Close the connections requests are made over, and keep the responses
+    #
+    # @api private
+    # @return [nil]
+    def close
+      @connections.close
+    end
+
     # Send a request, unless it's a GET whose response is kept and still good
     #
     # @api private

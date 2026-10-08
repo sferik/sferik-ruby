@@ -176,7 +176,7 @@ module Sferik
     #
     # A client makes each thread's requests to a host over one connection, which saves connecting again (with https,
     # most of the time a request takes), and leaves it open for the thread's next: it's closed when the thread is
-    # collected, or the process ends. The client this yields opens connections of its own instead, one per host, and
+    # collected, or the process ends, or by {#close}. The client this yields opens connections of its own instead, one per host, and
     # closes them when the block ends, for when one mustn't be left open. Either way, Net::HTTP opens one again that
     # has sat unused for more than two seconds, which the server may have closed by then. The client yielded is for
     # one thread at a time, as a connection is, and after the block it's a client like any other.
@@ -194,6 +194,22 @@ module Sferik
 
       connections.keeping { |kept| yield dup.keep(kept) }
     end
+
+    # Close the connections this thread has open
+    #
+    # A thread's requests are made over connections that are left open for its next, and closed when the thread is
+    # collected, or the process ends. This closes them now: before a fork, say, or when a long-lived process is done
+    # with the site for a while. The next request opens one again. They're the thread's, not this client's alone: any
+    # client's requests on this thread were made over them. On the client {#keep_alive} yields, it's that block's
+    # connections that are closed. What a {#cached} client has kept of the responses stays kept.
+    #
+    # @api public
+    # @return [nil]
+    # @example Close the connection before forking, so the child opens its own
+    #   Sferik.whoami
+    #   Sferik.client.close
+    #   fork { Sferik.talks }
+    def close = connections.close
 
     # A client that keeps the responses to its GET requests
     #

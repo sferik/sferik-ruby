@@ -658,6 +658,69 @@ RSpec.describe Sferik::Client do
     end
   end
 
+  describe "#close" do
+    # Every connection opened
+    let(:opened) { [] }
+
+    before do
+      allow(Net::HTTP).to receive(:start).and_wrap_original { |start, *args, **options| start.call(*args, **options).tap { |http| opened << http } }
+      stub_request(:get, "https://sferik.net/whoami").to_return(body: "one", headers: {"Cache-Control" => "public, max-age=60"})
+      stub_request(:get, "http://localhost:3745/whoami").to_return(body: "two")
+    end
+
+    it "closes every connection the thread has open, to any host" do
+      [client, described_class.new(host: "http://localhost:3745")].each { |one| one.get("/whoami") }
+
+      expect { client.close }.to change { opened.map(&:started?) }.from([true, true]).to([false, false])
+    end
+
+    it "returns nil" do
+      client.get("/whoami")
+
+      expect(client.close).to be_nil
+    end
+
+    it "does nothing when the thread has none open, and opens none" do
+      expect([client.close, opened]).to eq([nil, []])
+    end
+
+    it "leaves the next request to open a connection again" do
+      bodies = [client.get("/whoami"), client.close, client.get("/whoami")]
+
+      expect([bodies, opened.map(&:started?)]).to eq([["one", nil, "one"], [false, true]])
+    end
+
+    it "leaves another thread's open, which aren't this one's to close" do
+      Thread.new { client.get("/whoami") }.join
+      client.close
+
+      expect(opened.map(&:started?)).to eq([true])
+    end
+
+    it "lets go of a connection that another process opened without closing it, since it's that one's" do
+      client.get("/whoami")
+      allow(Process).to receive(:pid).and_return(Process.pid + 1)
+      client.close
+      client.get("/whoami")
+
+      expect(opened.map(&:started?)).to eq([true, true])
+    end
+
+    it "closes the connections of a keep_alive block, on the client it yields, and not the thread's" do
+      client.get("/whoami")
+      client.keep_alive { |kept| [kept.get("/whoami"), kept.close, kept.get("/whoami")] }
+
+      expect(opened.map(&:started?)).to eq([true, false, false])
+    end
+
+    it "closes the connections of a cached client, which keeps the responses it has" do
+      cached = client.cached
+      bodies = [cached.get("/whoami"), cached.close, cached.get("/whoami")]
+
+      expect([bodies, opened.map(&:started?)]).to eq([["one", nil, "one"], [false]])
+    end
+  end
+
   describe "#keep_alive" do
     # Every connection opened, and how: without a block, which leaves it open
     let(:opened) { [] }

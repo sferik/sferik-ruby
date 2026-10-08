@@ -410,6 +410,23 @@ RSpec.describe "Sferik::Cache" do
     end
   end
 
+  describe "#close" do
+    it "closes the connections it makes its requests over, and returns nil" do
+      opened = []
+      allow(Net::HTTP).to receive(:start).and_wrap_original { |start, *args, **options| start.call(*args, **options).tap { |http| opened << http } }
+      stub_fresh && get(url)
+
+      expect([cache.close, opened.map(&:started?)]).to eq([nil, [false]])
+    end
+
+    it "keeps the responses it has" do
+      request = stub_fresh
+      bodies = [get(url).body, cache.close, get(url).body]
+
+      expect([bodies, made(request)]).to eq([["one", nil, "one"], 1])
+    end
+  end
+
   describe "#keeping" do
     it "yields a cache that doesn't answer with what's no longer good either, when the server can't be reached" do
       stub_fresh.then.to_timeout

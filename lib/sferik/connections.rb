@@ -13,7 +13,8 @@ module Sferik
   # the request (or the fiber, which is as far as Thread.current goes), since a connection is for one at a time, and
   # by the process, since one that a fork inherits is its parent's. They're never closed here: Net::HTTP opens one
   # again that has sat unused for more than two seconds, which the server may have closed by then, and what a thread
-  # leaves behind is closed when it's collected. Those of {Client#keep_alive} are kept for its block, and closed after.
+  # leaves behind is closed when it's collected, unless {Client#close} closes them first. Those of
+  # {Client#keep_alive} are kept for its block, and closed after.
   #
   # @api private
   class Connections
@@ -65,6 +66,19 @@ module Sferik
       http.request(request)
     rescue *NETWORK_ERRORS => e
       raise (http ? Unanswered : NetworkError), "#{e.class}: #{e} (#{request.method} #{request.uri})"
+    end
+
+    # Close the connections that are kept, and keep none of them
+    #
+    # One that another process opened, which a fork inherits, is only let go of: closing it here would close it for
+    # the process whose it is.
+    #
+    # @api private
+    # @return [nil]
+    def close
+      kept.each { |key, http| http.finish if key.first.eql?(Process.pid) }
+      kept.clear
+      nil
     end
 
     private
