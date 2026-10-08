@@ -23,7 +23,9 @@
   now, as `live?`: it's false for a snapshot, and for numbers the site last fetched more than two hours ago
 - `Sferik.status` says whether the site gets its numbers from GitHub as it should, with its token: when GitHub was
   last asked with it, when it last answered, and what went wrong if it didn't. The numbers are live either way, since
-  the site asks another way when the token fails
+  the site asks another way when the token fails. And it says when the site last loaded each of its live values, as
+  `loaded`: the downloads and the contributions, which say so themselves, and the stars and the latest push, which
+  say so nowhere else
 - `Sferik.client.get` and `Sferik.client.post` send raw requests. A GET's redirects are followed, up to
   `max_redirects` (10), but never from https to http. A POST is sent only once, and its redirects aren't followed. Its
   body is sent as UTF-8, converted from the charset of the String it's given (a binary or US-ASCII one is taken for

@@ -97,15 +97,23 @@ end
 # after they were last fetched. It's asked every fifteen minutes, so one answer that didn't come is nothing to say
 TOKEN_SILENCE = 2 * 60 * 60
 
+# How long each live value may have gone without being loaded, by the reader of Sferik::Status::Loaded that says when
+# it was. The site says its numbers are live for two hours after they were fetched, and fetches each within one: but
+# for the stars, which a copy that loads them when they're asked for (the Node server) fetches every six
+OVERDUE = {gems: ["downloads", 2], stars: ["stars", 8], contributions: ["contributions", 2], push: ["latest push", 2]}.freeze
+
 desc "Check that the live site's numbers are live, and that GitHub answers it with its token (HOST=http://localhost:3745 for a local copy)"
 task :live do
   require_relative "lib/sferik"
 
   client = Sferik::Client.new(host: ENV.fetch("HOST", Sferik.host))
-  github = client.status.github
+  status = client.status # one request: it says when each value was loaded, and what became of asking with the token
+  github = status.github
   answered = github&.answered
-  problems = {contributions: client.contributions, downloads: client.projects}.reject { |_, numbers| numbers.live? }
-    .map { |name, numbers| "the #{name} aren't live: they're as of #{numbers.as_of}" }
+  problems = OVERDUE.filter_map do |value, (name, hours)|
+    loaded = status.loaded&.public_send(value)
+    "the #{name}: #{loaded ? "last loaded at #{loaded}" : "never loaded"}" unless loaded && Time.now - loaded < hours * 60 * 60
+  end
   unless answered && Time.now - answered < TOKEN_SILENCE
     problems << "GitHub #{answered ? "hasn't answered with the site's token since #{answered}" : "has never answered with the site's token"}: #{github&.error || "it hasn't been asked with one"}"
   end

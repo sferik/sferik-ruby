@@ -35,6 +35,7 @@ module Contract
     Sferik::Resume::Meta => "Resume/properties/meta", Sferik::Dependency => "Dependency", Sferik::Figure => "Figure",
     Sferik::Place => "Place", Sferik::Who => "Who", Sferik::Session => "Session", Sferik::Deployment => "Version",
     Sferik::Status => "Status", Sferik::Status::GitHub => "Status/properties/github",
+    Sferik::Status::Loaded => "Status/properties/loaded",
     Sferik::WebFinger => "WebFinger", Sferik::WebFinger::Link => "WebFinger/properties/links/items"
   }.freeze
 

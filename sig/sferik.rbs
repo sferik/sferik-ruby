@@ -502,11 +502,19 @@ module Sferik
 
   class Status < Resource
     def github: () -> GitHub?
+    def loaded: () -> Loaded?
 
     class GitHub < Resource
       def asked: () -> Time?
       def answered: () -> Time?
       def error: () -> String?
+    end
+
+    class Loaded < Resource
+      def gems: () -> Time?
+      def stars: () -> Time?
+      def contributions: () -> Time?
+      def push: () -> Time?
     end
   end
 

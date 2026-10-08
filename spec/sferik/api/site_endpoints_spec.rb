@@ -316,6 +316,20 @@ RSpec.describe Sferik::API::SiteEndpoints do
         error: "https://api.github.com/graphql: 401")
     end
 
+    it "returns when the site last loaded each live value" do
+      stub_get("/status", "status.json")
+
+      expect(client.status.loaded).to be_a(Sferik::Status::Loaded).and(have_attributes(gems: Time.utc(2026, 10, 8, 21, 45, 7),
+        stars: Time.utc(2026, 10, 8, 21, 45, 7), contributions: Time.utc(2026, 10, 8, 21, 45, 7), push: Time.utc(2026, 10, 8, 21, 45, 8)))
+    end
+
+    it "returns nil for a value the site has never loaded" do
+      stub_request(:get, "https://sferik.net/status").with(headers: {"Accept" => "application/json"})
+        .to_return(body: %({"github":{"asked":null,"answered":null,"error":null},"loaded":{"gems":"2026-10-08T21:45:07Z","stars":null,"contributions":null,"push":null}}\n))
+
+      expect(client.status.loaded).to have_attributes(gems: Time.utc(2026, 10, 8, 21, 45, 7), stars: nil, contributions: nil, push: nil)
+    end
+
     it "returns nil for each from a copy of the site that has no token" do
       stub_request(:get, "https://sferik.net/status").with(headers: {"Accept" => "application/json"})
         .to_return(body: %({"github":{"asked":null,"answered":null,"error":null}}\n))

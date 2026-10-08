@@ -75,7 +75,7 @@ jobs:
       run: |
         title="sferik.net isn't getting its live numbers as it should"
         number=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')
-        body="The daily check of the live site found numbers that aren't live, or that GitHub hasn't answered with the site's token for two hours: $RUN_URL. The run says which. If it's the token, it has likely expired: set a new one with \`wrangler secret put GITHUB_TOKEN\` in sferik-web."
+        body="The daily check of the live site found numbers it hasn't loaded for two hours, or that GitHub hasn't answered with the site's token for as long: $RUN_URL. The run says which. If it's the token, it has likely expired: set a new one with \`wrangler secret put GITHUB_TOKEN\` in sferik-web."
         if [ -n "$number" ]; then
           gh issue comment "$number" --body "$body"
         else

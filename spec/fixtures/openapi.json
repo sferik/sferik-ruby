@@ -802,10 +802,10 @@
       "get": {
         "operationId": "getStatus",
         "summary": "Whether the live numbers come as they should",
-        "description": "The server asks GitHub for the contributions, the stars, and the latest push in one request, with a token. If that fails (a token that has expired, say), it asks for each another way, without the token, and the numbers come all the same: so this says what became of asking with the token. Each is null for a copy of the site that has no token, or hasn't asked yet.",
+        "description": "The server asks GitHub for the contributions, the stars, and the latest push in one request, with a token. If that fails (a token that has expired, say), it asks for each another way, without the token, and the numbers come all the same: so this says what became of asking with the token. Each is null for a copy of the site that has no token, or hasn't asked yet. And it says when each of the live values was last loaded: the downloads, the stars, the contributions, and the latest push.",
         "responses": {
           "200": {
-            "description": "When GitHub was last asked with the token, when it last answered, and what went wrong if it didn't",
+            "description": "When GitHub was last asked with the token, when it last answered, and what went wrong if it didn't, and when each live value was last loaded",
             "content": {
               "application/json": {
                 "schema": {
@@ -1910,9 +1910,37 @@
             },
             "required": ["asked", "answered", "error"],
             "additionalProperties": false
+          },
+          "loaded": {
+            "type": "object",
+            "description": "When each of the live values was last loaded, to the second, or null for one that never has been. /src and /contributions say so of the downloads and the contributions alone (asOf, and live): the stars and the latest push say it only here.",
+            "properties": {
+              "gems": {
+                "type": ["string", "null"],
+                "format": "date-time",
+                "description": "The downloads, from RubyGems"
+              },
+              "stars": {
+                "type": ["string", "null"],
+                "format": "date-time",
+                "description": "The stars, from GitHub"
+              },
+              "contributions": {
+                "type": ["string", "null"],
+                "format": "date-time",
+                "description": "The year of contributions, from GitHub"
+              },
+              "push": {
+                "type": ["string", "null"],
+                "format": "date-time",
+                "description": "The latest push, from GitHub"
+              }
+            },
+            "required": ["gems", "stars", "contributions", "push"],
+            "additionalProperties": false
           }
         },
-        "required": ["github"],
+        "required": ["github", "loaded"],
         "additionalProperties": false
       },
       "WebFinger": {

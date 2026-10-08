@@ -198,6 +198,17 @@ github.answered  # => 2026-10-08 21:45:07 UTC, when it last answered
 github.error     # => nil, or what went wrong the last time: "https://api.github.com/graphql: 401"
 ```
 
+And it says when the site last loaded each of its live values. The downloads and the contributions say when they're
+from themselves (`as_of`), but the stars and the latest push say so only here:
+
+```ruby
+loaded = Sferik.status.loaded
+loaded.gems           # => 2026-10-08 21:45:07 UTC, when the downloads were last loaded
+loaded.stars          # => 2026-10-08 21:45:07 UTC
+loaded.contributions  # => 2026-10-08 21:45:07 UTC
+loaded.push           # => 2026-10-08 21:45:08 UTC, or nil for one that never has been
+```
+
 ### Anything as terminal output
 
 Every resource also comes as text, wrapped to 80 columns, the way `curl sferik.net` shows it:
@@ -472,7 +483,8 @@ HOST=http://localhost:3745 bundle exec rake fixtures
 
 `bundle exec rake drift` checks the saved description against the live one, and fails if the API has changed since.
 It runs daily in `.github/workflows/drift.yml`, which opens an issue when it does. So does `bundle exec rake live`,
-which fails if the live site's numbers aren't live, or GitHub hasn't answered it with its token for two hours.
+which asks the live site for its status, and fails if it hasn't loaded one of its live values for two hours (the
+downloads, the stars, the contributions, or the latest push), or GitHub hasn't answered it with its token for as long.
 
 ## Supported Ruby versions
 
