@@ -557,7 +557,7 @@ module Sferik
     def url: () -> String
   end
 
-  module Collection[unchecked out Elem] : _ToA[Elem]
+  module Collection[unchecked out Elem] : _ToA[Elem], Resource
     def size: () -> Integer
     alias length size
     def empty?: () -> bool
@@ -567,6 +567,8 @@ module Sferik
           | (Integer start, Integer length) -> Array[Elem]?
           | (Range[Integer?] range) -> Array[Elem]?
     def deconstruct: () -> Array[Elem]
+    def to_h: () -> Hash[Symbol, untyped]
+            | [K, V] () { (Elem item) -> [K, V] } -> Hash[K, V]
   end
 
   class Projects < Resource
@@ -583,7 +585,6 @@ module Sferik
     def each: () { (Project project) -> void } -> self
             | () -> Enumerator[Project, self]
          | () -> Enumerator[Project, Array[Project]]
-    def to_h: () -> Hash[Symbol, untyped]
     def as_json: (*untyped _options) -> Hash[String, untyped]
 
     private
@@ -744,7 +745,6 @@ module Sferik
     def each: () { (Session session) -> void } -> self
             | () -> Enumerator[Session, self]
          | () -> Enumerator[Session, Array[Session]]
-    def to_h: () -> Hash[Symbol, untyped]
     def as_json: (*untyped _options) -> Hash[String, untyped]
   end
 

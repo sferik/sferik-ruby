@@ -15,9 +15,6 @@ module Sferik
     include Enumerable
     include Collection
 
-    # Enumerable's #to_h would make a Hash of the terminals; keep the readers, as for any resource
-    define_method(:to_h, Resource.instance_method(:to_h))
-
     # ActiveSupport's Enumerable#as_json would make a list of them; keep the JSON it came from, as for any resource
     define_method(:as_json, Resource.instance_method(:as_json))
 

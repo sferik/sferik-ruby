@@ -8,6 +8,25 @@ RSpec.describe Sferik::Collection do
     expect([Sferik::Projects, Sferik::Talks, Sferik::Who]).to all(include(described_class))
   end
 
+  it "makes a Hash of its readers, as any resource does, and not of the list" do
+    expect(talks.to_h).to eq(talks: talks.talks, places: {}, podcasts: [], speaker_deck: nil, command: nil)
+  end
+
+  it "makes a Hash of the list with a block, as anything Enumerable does" do
+    expect(talks.to_h { |talk| [talk.title, talk] }).to eq("a" => talks[0], "b" => talks[1], "c" => talks[2])
+  end
+
+  it "makes an empty Hash with a block when there are none" do
+    expect(none.to_h { |project| [project.name, project] }).to eq({})
+  end
+
+  it "makes a Hash of the list with a block for Projects and Who too" do
+    who = Sferik::Who.new("users" => [{"tty" => "ttys000", "idle" => 7}])
+    projects = Sferik::Projects.new("projects" => [{"name" => "x", "stars" => 110}])
+
+    expect([who.to_h { |session| [session.tty, session.idle] }, projects.to_h { |project| [project.name, project.stars] }]).to eq([{"ttys000" => 7}, {"x" => 110}])
+  end
+
   it "counts them" do
     expect([talks.size, talks.length, none.size, none.length]).to eq([3, 3, 0, 0])
   end

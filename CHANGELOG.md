@@ -11,7 +11,8 @@
   inside one is built when it is, so a response that isn't what the API documents raises `InvalidResponse` from the
   endpoint that got it, not from a reader later on
 - `Sferik.projects`, `Sferik.talks`, and `Sferik.who` are Enumerable, over their projects, talks, and terminals, with
-  `size`, `length`, `empty?`, `last`, and `[]` as well, and they match array patterns (`in [newest, *]`)
+  `size`, `length`, `empty?`, `last`, and `[]` as well, and they match array patterns (`in [newest, *]`). Their `to_h`
+  is of their readers, like any resource's, and with a block it's of the list, like an Array's
 - `Sferik.check_in(token)` checks in a terminal, as each browser tab on the site does (on the home page, or on the
   one that `page:` names), and returns who's reading with the terminal's name as `you`. `Sferik.write("...")` sends
   Erik a message, as the shell's `write sferik` does. Each message goes with a random key (or the one `key:` gives),

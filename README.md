@@ -335,7 +335,8 @@ Endpoints return immutable objects, nested where the response is: a resume's job
 for example. Two with the same attributes are equal, and they work with pattern matching. Dates the API gives to the
 month or year, like a talk's, are the first day of that month or year. A list the response leaves out is empty, not
 nil. In a pattern and in `to_h`, a predicate goes by its name without the question mark: `live?` is `live:`. Projects,
-talks, and who's reading match array patterns too. One built by hand (`Sferik::Talk.new("title" => "...")`) keeps a
+talks, and who's reading match array patterns too, and with a block their `to_h` makes a Hash of the list, as an
+Array's does (`Sferik.projects.to_h { |project| [project.name, project.stars] }`). One built by hand (`Sferik::Talk.new("title" => "...")`) keeps a
 frozen copy of what it's given, and leaves the original as it was. What it's given must be a Hash with the keys of the
 API's JSON, which are strings (`"startDate"`, not `start_date:`): anything else raises `ArgumentError`. In Rails, a
 resource inside something rendered as JSON is the JSON it came from, since it has `as_json`.
