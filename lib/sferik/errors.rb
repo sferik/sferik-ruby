@@ -102,7 +102,9 @@ module Sferik
     # Which error it is, as the API names it in a JSON response body
     #
     # The two endpoints that write name theirs: "busy" and "full" for a 429 from {API::SiteEndpoints#write} (one message
-    # a minute from an address, and twenty a day in all), "too_long", "empty", "undelivered", and so on.
+    # a minute from an address, and twenty a day in all), "too_long", "empty", "undelivered", and so on. And any
+    # request may be told "not_found", "bad_path" (a path that isn't properly percent-encoded), "method_not_allowed",
+    # or "internal" (the server's own failure), and {API::ProfileEndpoints#webfinger} "no_account".
     #
     # @api public
     # @return [String, nil] the code: nil if the body isn't JSON that names one

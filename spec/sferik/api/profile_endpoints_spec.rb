@@ -119,9 +119,10 @@ RSpec.describe Sferik::API::ProfileEndpoints do
 
     it "raises NotFound for an account there isn't" do
       stub_request(:get, "https://sferik.net/.well-known/webfinger?resource=acct%3Anobody%40example.com")
-        .to_return(status: 404, body: "No such account: acct:nobody@example.com\n", headers: {"Content-Type" => "text/plain; charset=utf-8"})
+        .to_return(status: 404, body: '{"error":"No such account: acct:nobody@example.com","code":"no_account"}', headers: {"Content-Type" => "application/json; charset=utf-8"})
 
-      expect { client.webfinger("acct:nobody@example.com") }.to raise_error(Sferik::NotFound, /No such account/)
+      expect { client.webfinger("acct:nobody@example.com") }
+        .to raise_error(an_instance_of(Sferik::NotFound).and(have_attributes(message: "No such account: acct:nobody@example.com", error_code: "no_account")))
     end
 
     it "raises ArgumentError for an account that isn't a String, before asking" do

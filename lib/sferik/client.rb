@@ -209,13 +209,13 @@ module Sferik
 
     # A client that keeps the responses to its GET requests
     #
-    # It asks again only for what may have changed. A response says how long it's good for (most of the API's, a
-    # minute), and for that long the client answers with it, without a request. After that it asks with the
-    # response's ETag, and the server sends the body only if it has changed. What's kept is by URL and media type,
-    # in memory, for as long as the client is (a hundred responses at most, the latest it asked for), and is safe to
-    # share between threads: keep the client, since each call of this starts with nothing kept. Threads that ask for
-    # the same thing at once, when it isn't kept or is no longer good, make one request between them: the first asks,
-    # and the rest wait for its answer.
+    # It asks again only for what may have changed. A response says how long it's good for (most of the API's, an
+    # hour, and five minutes for what has live numbers in it), and for that long the client answers with it, without
+    # a request. After that it asks with the response's ETag, and the server sends the body only if it has changed.
+    # What's kept is by URL and media type, in memory, for as long as the client is (a hundred responses at most, the
+    # latest it asked for), and is safe to share between threads: keep the client, since each call of this starts
+    # with nothing kept. Threads that ask for the same thing at once, when it isn't kept or is no longer good, make
+    # one request between them: the first asks, and the rest wait for its answer.
     #
     # What an endpoint builds of a response is kept with it, so for as long as a response is answered with, the
     # endpoint returns the same object, and the JSON isn't parsed again.

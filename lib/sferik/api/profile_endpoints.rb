@@ -99,7 +99,7 @@ module Sferik
       # @param resource [String] the account, as an acct: URI
       # @return [WebFinger]
       # @raise [ArgumentError] if the account isn't a String
-      # @raise [NotFound] if there's no such account
+      # @raise [NotFound] if there's no such account: {HTTPError#error_code} is "no_account"
       # @example
       #   Sferik.webfinger.subject # => "acct:sferik@mastodon.social"
       # @example Ask after the account at another of the domains

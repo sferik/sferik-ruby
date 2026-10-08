@@ -236,14 +236,14 @@ Sferik.client.close  # before a fork, say, though a child never uses its parent'
 
 ### Asking only for what has changed
 
-Each GET asks the server. A client from `cached` keeps the responses instead: one says how long it's good for (a
-minute, for most of the API, and five seconds for who's reading), and for that long the client answers with it,
-without a request. After that it asks with the response's ETag, and the server sends the body only if it has changed.
+Each GET asks the server. A client from `cached` keeps the responses instead: one says how long it's good for (an
+hour for what changes only when the site is deployed, five minutes for what has live numbers in it, and five seconds
+for who's reading), and for that long the client answers with it, without a request. After that it asks with the response's ETag, and the server sends the body only if it has changed.
 
 ```ruby
 client = Sferik.client.cached
 client.talks  # asks the server
-client.talks  # doesn't, for a minute; after that, asks whether the talks have changed
+client.talks  # doesn't, for an hour; after that, asks whether the talks have changed
 ```
 
 What it keeps is in memory, by URL and format, for as long as the client is (a hundred responses at most, the latest
@@ -255,8 +255,8 @@ What an endpoint builds of a response is kept with it: for as long as the client
 `client.talks` is the same object, and the JSON isn't parsed again. Everything in it is frozen, so that's safe to share.
 
 A response that Cloudflare's cache answered with has been kept there for a while already, which it says (`Age`), and
-is good for that much less here: one that's good for a minute, and has been kept for 55 seconds, is asked for again in
-five.
+is good for that much less here: one that's good for five minutes, and has been kept for four, is asked for again in
+one.
 
 When the server can't be reached to say whether a response that's no longer good has changed, the request raises
 `NetworkError`, as any other would, and when the server answers with an error of its own (a 5xx), `ServerError`. The
@@ -266,7 +266,7 @@ it last knew can ask for that:
 ```ruby
 client = Sferik.client.cached(stale_if_error: true)
 client.talks  # asks the server
-client.talks  # a minute later, with the network down, or the server answering 503: the talks it kept
+client.talks  # an hour later, with the network down, or the server answering 503: the talks it kept
 ```
 
 ## The sferik command
@@ -417,7 +417,7 @@ Sferik::Error
 ```
 
 The message of an HTTP error is always UTF-8, whatever charset the response was in. `error_code` is which error it is,
-where the API says (`"busy"`, `"too_long"`, `"bad_token"`, `"not_found"`, and so on), and `retry_after` is the seconds
+where the API says (`"busy"`, `"too_long"`, `"bad_token"`, `"not_found"`, `"no_account"`, and so on), and `retry_after` is the seconds
 to wait before trying again, where the response has a Retry-After header: each is nil otherwise.
 
 One can be raised by hand, as a spec that stubs a request does, with nothing but its class, which gives it its code:
