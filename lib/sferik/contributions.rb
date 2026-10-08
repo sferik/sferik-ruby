@@ -49,9 +49,13 @@ module Sferik
     attribute :last_push, "lastPush", type: Push
 
     # @!method live?
-    #   False when GitHub couldn't be reached and the numbers are a snapshot
+    #   Whether the numbers are what GitHub says now
+    #
+    #   They aren't when they're the snapshot, which the site falls back to, or the last that were fetched, more than
+    #   two hours ago, which it goes on with when it can't fetch them again: {#as_of} says when they're from.
+    #
     #   @api public
-    #   @return [Boolean] false when GitHub couldn't be reached and the numbers are a snapshot
+    #   @return [Boolean] false when the numbers are a snapshot, or were last fetched more than two hours ago
     #   @example
     #     contributions.live? # => true
     predicate :live
@@ -59,7 +63,7 @@ module Sferik
     # @!method as_of
     #   When the numbers are from
     #
-    #   That's when they were fetched, or the last day of the snapshot when {#live?} is false.
+    #   That's when they were fetched, or the last day of the snapshot, if they're that.
     #
     #   @api public
     #   @return [Time] when the numbers are from

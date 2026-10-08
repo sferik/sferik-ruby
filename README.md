@@ -358,7 +358,7 @@ frozen object each time it's called. Dates and times are frozen too: to see a ti
 ```ruby
 case Sferik.contributions
 in {total:, longest_streak:, live:}
-  puts "#{total} contributions, longest streak #{longest_streak} days#{" (as of the last snapshot)" unless live}"
+  puts "#{total} contributions, longest streak #{longest_streak} days#{" (not live)" unless live}"
 end
 
 case Sferik.talks

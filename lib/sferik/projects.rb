@@ -69,9 +69,13 @@ module Sferik
     attribute :more
 
     # @!method live?
-    #   False when RubyGems or GitHub couldn't be reached and the numbers are a snapshot
+    #   Whether the downloads are what RubyGems says now
+    #
+    #   They aren't when they're the snapshot, which the site falls back to, or the last that were fetched, more than
+    #   two hours ago, which it goes on with when it can't fetch them again: {#as_of} says when they're from.
+    #
     #   @api public
-    #   @return [Boolean] false when RubyGems or GitHub couldn't be reached and the numbers are a snapshot
+    #   @return [Boolean] false when the downloads are a snapshot, or were last fetched more than two hours ago
     #   @example
     #     projects.live? # => true
     predicate :live
@@ -79,7 +83,7 @@ module Sferik
     # @!method as_of
     #   When the downloads are from
     #
-    #   That's when they were fetched, or the day of the snapshot when {#live?} is false.
+    #   That's when they were fetched, or the day of the snapshot, if they're that.
     #
     #   @api public
     #   @return [Time] when the downloads are from

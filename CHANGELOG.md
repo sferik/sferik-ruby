@@ -19,7 +19,8 @@
   which the server doesn't email twice, so `write` sends it once more, five seconds later, if it was sent and no answer
   came (`Unanswered`), but not if the server couldn't be connected to. And if the server says the message is still
   being sent (a 409), `write` asks after it once more, as much later as the server says to
-- `Sferik.contributions` and `Sferik.projects` say when their numbers are from, as `as_of`
+- `Sferik.contributions` and `Sferik.projects` say when their numbers are from, as `as_of`, and whether that's
+  now, as `live?`: it's false for a snapshot, and for numbers the site last fetched more than two hours ago
 - `Sferik.client.get` and `Sferik.client.post` send raw requests. A GET's redirects are followed, up to
   `max_redirects` (10), but never from https to http. A POST is sent only once, and its redirects aren't followed. Its
   body is sent as UTF-8, converted from the charset of the String it's given (a binary or US-ASCII one is taken for

@@ -1156,7 +1156,7 @@
           },
           "live": {
             "type": "boolean",
-            "description": "false when GitHub couldn't be reached and this is the snapshot"
+            "description": "false when this isn't what GitHub says now: it's the snapshot, or what was last fetched, more than two hours ago (asOf says when)"
           },
           "asOf": {
             "type": "string",
@@ -1231,7 +1231,7 @@
           },
           "live": {
             "type": "boolean",
-            "description": "false when RubyGems or GitHub couldn't be reached and the numbers are the snapshot"
+            "description": "false when the numbers aren't what RubyGems says now: they're the snapshot, or what was last fetched, more than two hours ago (asOf says when)"
           },
           "asOf": {
             "type": "string",
