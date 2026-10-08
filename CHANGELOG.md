@@ -57,13 +57,15 @@
   it its code
 - A `sferik` command, which prints what the shell on sferik.net prints: `sferik finger`, `sferik resume`, and so on.
   With `--json` it prints JSON instead, `sferik resume --pdf` and `sferik resume --latex` print the resume as a PDF and
-  as LaTeX, `sferik finger --vcard` prints a contact card, and `--host` or the `SFERIK_HOST` environment variable names a copy of the site to ask instead of
-  sferik.net. `sferik feed`, `sferik deployment`, `sferik status`, and `sferik openapi` print the talks as an Atom feed, the deployed
-  commit, whether GitHub answers the site with its token, and the API's description, and `sferik signature` and `sferik webfinger` the motto, and where
-  sferik@sferik.net points to. `sferik write` sends Erik the message it reads from standard input, and
-  `sferik check-in` logs in a terminal and prints its name, which `sferik write --tty` takes. It exits 1 when a request fails, and 2
-  when the command line is wrong, as one that names two formats is, or a format for what prints no resource
-  (`sferik write`, `sferik help`, or `sferik --version`) or one that comes in one format alone (`sferik feed`)
+  as LaTeX, `sferik finger --vcard` prints a contact card, and `--host` or the `SFERIK_HOST` environment variable names
+  a copy of the site to ask instead of sferik.net. `sferik feed`, `sferik deployment`, `sferik status`, and
+  `sferik openapi` print the talks as an Atom feed, the deployed commit, whether GitHub answers the site with its token,
+  and the API's description, and `sferik signature` and `sferik webfinger` the motto, and where sferik@sferik.net points
+  to.
+  `sferik write` sends Erik the message it reads from standard input, and `sferik check-in` logs in a terminal and
+  prints its name, which `sferik write --tty` takes. It exits 1 when a request fails, and 2 when the command line is
+  wrong, as one that names two formats is, or a format for what prints no resource (`sferik write`, `sferik help`, or
+  `sferik --version`) or one that comes in one format alone (`sferik feed`)
 - The command loads the client only when it asks the site for something: `sferik --version` and `sferik --help`
   don't wait for it
 - RBS signatures, checked by Steep

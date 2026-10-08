@@ -259,9 +259,10 @@ Sferik.client.close  # before a fork, say, though a child never uses its parent'
 
 ### Asking only for what has changed
 
-Each GET asks the server. A client from `cached` keeps the responses instead: one says how long it's good for (an
-hour for what changes only when the site is deployed, five minutes for what has live numbers in it, and five seconds
-for who's reading), and for that long the client answers with it, without a request. After that it asks with the response's ETag, and the server sends the body only if it has changed.
+Each GET asks the server. A client from `cached` keeps the responses instead: one says how long it's good for (an hour
+for what changes only when the site is deployed, five minutes for what has live numbers in it, and five seconds for
+who's reading), and for that long the client answers with it, without a request. After that it asks with the response's
+ETag, and the server sends the body only if it has changed.
 
 ```ruby
 client = Sferik.client.cached
@@ -308,8 +309,8 @@ sferik resume    # my resume, as a man page
 sferik --help    # every command and option
 ```
 
-The commands that print are `finger`, `whoami`, `talks`, `podcasts`, `resume`, `contributions`, `src`, `name`, `dependency`, and
-`who`; with none, it prints the home page. With `--json`, a command prints JSON instead of text:
+The commands that print are `finger`, `whoami`, `talks`, `podcasts`, `resume`, `contributions`, `src`, `name`,
+`dependency`, and `who`; with none, it prints the home page. With `--json`, a command prints JSON instead of text:
 
 ```sh
 sferik talks --json | jq -r '.talks[].title'
@@ -350,10 +351,11 @@ tty=$(sferik check-in)                    # => ttys003, say
 echo "Hello from $tty" | sferik write --tty "$tty"
 ```
 
-It exits 0 when it has printed what it was asked for, 1 when a request fails (the site can't be reached, or says
-no), and 2 when the command line is wrong (an unknown command or option, more than one format, a format for
-what prints no resource, or one that comes in one format alone (`write`, `check-in`, `help`, `--version`, `signature`, `webfinger`, `feed`, `deployment`, `status`, or `openapi`), `--tty` or `--token` for another command, or a host that isn't an http or https URL, from `--host`
-or `SFERIK_HOST`), so a script can tell the two apart.
+It exits 0 when it has printed what it was asked for, 1 when a request fails (the site can't be reached, or says no),
+and 2 when the command line is wrong (an unknown command or option, more than one format, a format for what prints no
+resource, or one that comes in one format alone (`write`, `check-in`, `help`, `--version`, `signature`, `webfinger`,
+`feed`, `deployment`, `status`, or `openapi`), `--tty` or `--token` for another command, or a host that isn't an http or
+https URL, from `--host` or `SFERIK_HOST`), so a script can tell the two apart.
 
 To ask a local copy of the site instead of sferik.net, name it with `--host` or the `SFERIK_HOST` environment
 variable (one that's set but empty counts as not set):
@@ -367,13 +369,14 @@ SFERIK_HOST=http://localhost:3745 sferik finger
 
 Endpoints return immutable objects, nested where the response is: a resume's jobs are `Sferik::Resume::Work` objects,
 for example. Two with the same attributes are equal, and they work with pattern matching. Dates the API gives to the
-month or year, like a talk's, are the first day of that month or year. A list the response leaves out is empty, not
-nil. In a pattern and in `to_h`, a predicate goes by its name without the question mark: `live?` is `live:`. Projects,
-talks, and who's reading match array patterns too, and with a block their `to_h` makes a Hash of the list, as an
-Array's does (`Sferik.projects.to_h { |project| [project.name, project.stars] }`). One built by hand (`Sferik::Talk.new("title" => "...")`) keeps a
-frozen copy of what it's given, and leaves the original as it was. What it's given must be a Hash with the keys of the
-API's JSON, which are strings (`"startDate"`, not `start_date:`): anything else raises `ArgumentError`. In Rails, a
-resource inside something rendered as JSON is the JSON it came from, since it has `as_json`.
+month or year, like a talk's, are the first day of that month or year. A list the response leaves out is empty, not nil.
+In a pattern and in `to_h`, a predicate goes by its name without the question mark: `live?` is `live:`. Projects, talks,
+and who's reading match array patterns too, and with a block their `to_h` makes a Hash of the list, as an Array's does
+(`Sferik.projects.to_h { |project| [project.name, project.stars] }`). One built by hand
+(`Sferik::Talk.new("title" => "...")`) keeps a frozen copy of what it's given, and leaves the original as it was. What
+it's given must be a Hash with the keys of the API's JSON, which are strings (`"startDate"`, not `start_date:`):
+anything else raises `ArgumentError`. In Rails, a resource inside something rendered as JSON is the JSON it came from,
+since it has `as_json`.
 
 Everything inside a response object is built when it is, so a response that isn't what the API documents raises
 `Sferik::InvalidResponse` from the endpoint that got it, never from a reader later on, and a reader returns the same
@@ -448,8 +451,8 @@ Sferik::Error
 ```
 
 The message of an HTTP error is always UTF-8, whatever charset the response was in. `error_code` is which error it is,
-where the API says (`"busy"`, `"too_long"`, `"bad_token"`, `"not_found"`, `"no_account"`, and so on), and `retry_after` is the seconds
-to wait before trying again, where the response has a Retry-After header: each is nil otherwise.
+where the API says (`"busy"`, `"too_long"`, `"bad_token"`, `"not_found"`, `"no_account"`, and so on), and `retry_after`
+is the seconds to wait before trying again, where the response has a Retry-After header: each is nil otherwise.
 
 One can be raised by hand, as a spec that stubs a request does, with nothing but its class, which gives it its code:
 
@@ -472,10 +475,10 @@ bundle exec rake yardstick # 100% documentation coverage
 bin/console               # an IRB session with the library loaded
 ```
 
-The specs stub requests with responses saved from the API, in `spec/fixtures/`, alongside the API's OpenAPI
-description. A contract spec checks every fixture against its schema there, what a cached client goes by against
-what it says of each GET (`ETag`, `Cache-Control`, `Age`, `If-None-Match`, and the 304), and every key the library reads against
-what its schema documents. To refresh them all from the live site (or a local copy):
+The specs stub requests with responses saved from the API, in `spec/fixtures/`, alongside the API's OpenAPI description.
+A contract spec checks every fixture against its schema there, what a cached client goes by against what it says of each
+GET (`ETag`, `Cache-Control`, `Age`, `If-None-Match`, and the 304), and every key the library reads against what its
+schema documents. To refresh them all from the live site (or a local copy):
 
 ```sh
 bundle exec rake fixtures
