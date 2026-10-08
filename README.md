@@ -473,7 +473,8 @@ bin/console               # an IRB session with the library loaded
 ```
 
 The specs stub requests with responses saved from the API, in `spec/fixtures/`, alongside the API's OpenAPI
-description. A contract spec checks every fixture against its schema there, and every key the library reads against
+description. A contract spec checks every fixture against its schema there, what a cached client goes by against
+what it says of each GET (`ETag`, `Cache-Control`, `Age`, `If-None-Match`, and the 304), and every key the library reads against
 what its schema documents. To refresh them all from the live site (or a local copy):
 
 ```sh

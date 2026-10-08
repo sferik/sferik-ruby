@@ -57,6 +57,24 @@ module Contract
     options = schema.fetch("oneOf", []).map { |option| option.key?("$ref") ? resolve(option.fetch("$ref")) : option }
     schema.fetch("properties", {}).keys + options.flat_map { |option| properties(option) }
   end
+
+  # Every path that takes a GET, and what the document says of it
+  def gets
+    DOCUMENT.fetch("paths").filter_map { |path, item| [path, item.fetch("get")] if item.key?("get") }.to_h
+  end
+
+  # The headers a GET's request may have, by the names the document gives them
+  def request_headers(operation)
+    operation.fetch("parameters").map { |parameter| parameter.key?("$ref") ? resolve(parameter.fetch("$ref")) : parameter }
+      .select { |parameter| parameter.fetch("in") == "header" }.map { |parameter| parameter.fetch("name") }
+  end
+
+  # The headers of one of a GET's responses, by status, with the schema of each
+  def response_headers(operation, status)
+    response = operation.fetch("responses").fetch(status)
+    response = resolve(response.fetch("$ref")) if response.key?("$ref")
+    response.fetch("headers").transform_values { |header| header.key?("$ref") ? resolve(header.fetch("$ref")) : header }
+  end
 end
 
 RSpec.describe Contract do
@@ -80,6 +98,28 @@ RSpec.describe Contract do
     properties = %w[Users Who].map { |name| described_class.properties(described_class.resolve("#/components/schemas/#{name}")) }
 
     expect(properties).to eq([%w[users], %w[you users]])
+  end
+
+  # What a client that keeps its responses goes by (Sferik::Cache, and Sferik::Freshness): each is in the site's
+  # description of its API, so that a change to one is a change the drift check notices
+  described_class.gets.each do |path, operation|
+    it "GET #{path} says which version its response is, how long it's good for, and how long it has been kept" do
+      expect(described_class.response_headers(operation, "200")).to include("ETag" => include("required" => true),
+        "Cache-Control" => include("required" => true), "Age" => include("schema" => include("type" => "integer")))
+    end
+
+    it "GET #{path} takes the version a client has kept, and answers 304 if it's still the one" do
+      expect([described_class.request_headers(operation), described_class.response_headers(operation, "304").keys])
+        .to eq([%w[If-None-Match Cache-Control], %w[ETag Cache-Control Age]])
+    end
+  end
+
+  it "says how long each response is good for as Sferik::Freshness reads it: max-age, or no-cache" do
+    values = described_class.gets.values.flat_map do |operation|
+      described_class.response_headers(operation, "200").fetch("Cache-Control").fetch("schema").values_at("const", "enum").flatten.compact
+    end
+
+    expect(values.uniq).to all(match(/\A(?:public, max-age=\d+|no-cache)\z/)).and(include("public, max-age=300", "public, max-age=3600", "public, max-age=5"))
   end
 
   it "covers every resource class" do

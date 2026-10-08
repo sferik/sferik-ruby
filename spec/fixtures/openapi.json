@@ -4,7 +4,7 @@
     "title": "sferik.net",
     "version": "1.0.0",
     "summary": "Erik Berlin's personal website, as an API",
-    "description": "Every resource is one URL, and the Accept header picks its format: application/json for data, text/plain for terminal output (also what `*/*` gets, so plain `curl` works), text/html for the page where there is one, and for the resume also application/x-latex and application/pdf. Instead of the header, add .json, .txt, .tex, or .pdf to the path. A format the resource doesn't have gets 406, and a path that isn't a resource gets 404 (components.responses.NotFound). The two POSTs answer in plain text, or in JSON for a client that prefers it, where an error has a code to tell it from the others by. Responses allow any origin, except the pages.",
+    "description": "Every resource is one URL, and the Accept header picks its format: application/json for data, text/plain for terminal output (also what `*/*` gets, so plain `curl` works), text/html for the page where there is one, and for the resume also application/x-latex and application/pdf. Instead of the header, add .json, .txt, .tex, or .pdf to the path. A format the resource doesn't have gets 406, and a path that isn't a resource gets 404 (components.responses.NotFound). The two POSTs answer in plain text, or in JSON for a client that prefers it, where an error has a code to tell it from the others by. Responses allow any origin, except the pages. Every GET's response says which version it is (ETag) and how long it's good for (Cache-Control: five minutes for what has live numbers in it, an hour for what changes only with a deploy, five seconds for who's on). Asked for again with its ETag (If-None-Match), one that hasn't changed is a 304, without its body. One that Cloudflare's cache has kept on its way says for how long (Age), and may be past what it's good for, unless the request says not to be answered that way (Cache-Control: no-cache).",
     "contact": {
       "name": "Erik Berlin",
       "url": "https://sferik.net",
@@ -22,6 +22,14 @@
         "operationId": "getHome",
         "summary": "The profile and the home page's modules",
         "description": "What the home page builds itself from. As text/plain, the whole home page as terminal output.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CacheControl"
+          }
+        ],
         "responses": {
           "200": {
             "description": "The resource in the format the Accept header asked for",
@@ -31,6 +39,20 @@
                   "type": "string",
                   "const": "Accept"
                 }
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Cache-Control": {
+                "description": "How long the response is good for: five minutes, since it has live numbers in it. The page (text/html) is to be asked after each time (no-cache), so a new one never waits on an old one",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "enum": ["public, max-age=300", "no-cache"]
+                }
+              },
+              "Age": {
+                "$ref": "#/components/headers/Age"
               }
             },
             "content": {
@@ -51,6 +73,9 @@
               }
             }
           },
+          "304": {
+            "$ref": "#/components/responses/NotModified"
+          },
           "406": {
             "$ref": "#/components/responses/NotAcceptable"
           }
@@ -62,6 +87,14 @@
         "operationId": "getWhoami",
         "summary": "The bio",
         "description": "Paragraphs of HTML and the comic.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CacheControl"
+          }
+        ],
         "responses": {
           "200": {
             "description": "The resource in the format the Accept header asked for",
@@ -71,6 +104,20 @@
                   "type": "string",
                   "const": "Accept"
                 }
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Cache-Control": {
+                "description": "How long the response is good for: five minutes, since it has live numbers in it",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "const": "public, max-age=300"
+                }
+              },
+              "Age": {
+                "$ref": "#/components/headers/Age"
               }
             },
             "content": {
@@ -86,6 +133,9 @@
               }
             }
           },
+          "304": {
+            "$ref": "#/components/responses/NotModified"
+          },
           "406": {
             "$ref": "#/components/responses/NotAcceptable"
           }
@@ -97,6 +147,14 @@
         "operationId": "getDependency",
         "summary": "The xkcd comic",
         "description": "xkcd 2347, adapted. As text/plain, what it shows and where it's from.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CacheControl"
+          }
+        ],
         "responses": {
           "200": {
             "description": "The resource in the format the Accept header asked for",
@@ -106,6 +164,20 @@
                   "type": "string",
                   "const": "Accept"
                 }
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Cache-Control": {
+                "description": "How long the response is good for: an hour, since it changes only with a deploy",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "const": "public, max-age=3600"
+                }
+              },
+              "Age": {
+                "$ref": "#/components/headers/Age"
               }
             },
             "content": {
@@ -121,6 +193,9 @@
               }
             }
           },
+          "304": {
+            "$ref": "#/components/responses/NotModified"
+          },
           "406": {
             "$ref": "#/components/responses/NotAcceptable"
           }
@@ -132,6 +207,14 @@
         "operationId": "getContributions",
         "summary": "A year of GitHub contributions",
         "description": "Live from GitHub, cached for an hour, with a snapshot to fall back on.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CacheControl"
+          }
+        ],
         "responses": {
           "200": {
             "description": "The resource in the format the Accept header asked for",
@@ -141,6 +224,20 @@
                   "type": "string",
                   "const": "Accept"
                 }
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Cache-Control": {
+                "description": "How long the response is good for: five minutes, since it has live numbers in it",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "const": "public, max-age=300"
+                }
+              },
+              "Age": {
+                "$ref": "#/components/headers/Age"
               }
             },
             "content": {
@@ -156,6 +253,9 @@
               }
             }
           },
+          "304": {
+            "$ref": "#/components/responses/NotModified"
+          },
           "406": {
             "$ref": "#/components/responses/NotAcceptable"
           }
@@ -167,6 +267,14 @@
         "operationId": "getSrc",
         "summary": "Projects, with downloads and stars",
         "description": "Live from RubyGems and GitHub, cached, with a snapshot to fall back on.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CacheControl"
+          }
+        ],
         "responses": {
           "200": {
             "description": "The resource in the format the Accept header asked for",
@@ -176,6 +284,20 @@
                   "type": "string",
                   "const": "Accept"
                 }
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Cache-Control": {
+                "description": "How long the response is good for: five minutes, since it has live numbers in it",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "const": "public, max-age=300"
+                }
+              },
+              "Age": {
+                "$ref": "#/components/headers/Age"
               }
             },
             "content": {
@@ -191,6 +313,9 @@
               }
             }
           },
+          "304": {
+            "$ref": "#/components/responses/NotModified"
+          },
           "406": {
             "$ref": "#/components/responses/NotAcceptable"
           }
@@ -202,6 +327,14 @@
         "operationId": "getNameChange",
         "summary": "The name change, as a git commit",
         "description": "Erik Michaels-Ober became Erik Berlin in 2017.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CacheControl"
+          }
+        ],
         "responses": {
           "200": {
             "description": "The resource in the format the Accept header asked for",
@@ -211,6 +344,20 @@
                   "type": "string",
                   "const": "Accept"
                 }
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Cache-Control": {
+                "description": "How long the response is good for: an hour, since it changes only with a deploy",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "const": "public, max-age=3600"
+                }
+              },
+              "Age": {
+                "$ref": "#/components/headers/Age"
               }
             },
             "content": {
@@ -226,6 +373,9 @@
               }
             }
           },
+          "304": {
+            "$ref": "#/components/responses/NotModified"
+          },
           "406": {
             "$ref": "#/components/responses/NotAcceptable"
           }
@@ -236,6 +386,14 @@
       "get": {
         "operationId": "getTalks",
         "summary": "Conference talks and podcasts",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CacheControl"
+          }
+        ],
         "responses": {
           "200": {
             "description": "The resource in the format the Accept header asked for",
@@ -245,6 +403,20 @@
                   "type": "string",
                   "const": "Accept"
                 }
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Cache-Control": {
+                "description": "How long the response is good for: an hour, since it changes only with a deploy. The page (text/html) is to be asked after each time (no-cache), so a new one never waits on an old one",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "enum": ["public, max-age=3600", "no-cache"]
+                }
+              },
+              "Age": {
+                "$ref": "#/components/headers/Age"
               }
             },
             "content": {
@@ -265,6 +437,9 @@
               }
             }
           },
+          "304": {
+            "$ref": "#/components/responses/NotModified"
+          },
           "406": {
             "$ref": "#/components/responses/NotAcceptable"
           }
@@ -276,6 +451,14 @@
         "operationId": "getPodcasts",
         "summary": "Podcast appearances",
         "description": "The podcasts alone, which /talks has too.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CacheControl"
+          }
+        ],
         "responses": {
           "200": {
             "description": "The resource in the format the Accept header asked for",
@@ -285,6 +468,20 @@
                   "type": "string",
                   "const": "Accept"
                 }
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Cache-Control": {
+                "description": "How long the response is good for: an hour, since it changes only with a deploy",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "const": "public, max-age=3600"
+                }
+              },
+              "Age": {
+                "$ref": "#/components/headers/Age"
               }
             },
             "content": {
@@ -300,6 +497,9 @@
               }
             }
           },
+          "304": {
+            "$ref": "#/components/responses/NotModified"
+          },
           "406": {
             "$ref": "#/components/responses/NotAcceptable"
           }
@@ -310,6 +510,14 @@
       "get": {
         "operationId": "getFinger",
         "summary": "Contact details and profiles",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CacheControl"
+          }
+        ],
         "responses": {
           "200": {
             "description": "The resource in the format the Accept header asked for",
@@ -319,6 +527,20 @@
                   "type": "string",
                   "const": "Accept"
                 }
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Cache-Control": {
+                "description": "How long the response is good for: an hour, since it changes only with a deploy",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "const": "public, max-age=3600"
+                }
+              },
+              "Age": {
+                "$ref": "#/components/headers/Age"
               }
             },
             "content": {
@@ -340,6 +562,9 @@
               }
             }
           },
+          "304": {
+            "$ref": "#/components/responses/NotModified"
+          },
           "406": {
             "$ref": "#/components/responses/NotAcceptable"
           }
@@ -351,6 +576,14 @@
         "operationId": "getWho",
         "summary": "Who's logged in",
         "description": "Everyone reading the site right now, a terminal per browser tab, as the shell's who lists them. As text/plain, who's output.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CacheControl"
+          }
+        ],
         "responses": {
           "200": {
             "description": "The resource in the format the Accept header asked for",
@@ -360,6 +593,20 @@
                   "type": "string",
                   "const": "Accept"
                 }
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Cache-Control": {
+                "description": "How long the response is good for: five seconds",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "const": "public, max-age=5"
+                }
+              },
+              "Age": {
+                "$ref": "#/components/headers/Age"
               }
             },
             "content": {
@@ -374,6 +621,9 @@
                 }
               }
             }
+          },
+          "304": {
+            "$ref": "#/components/responses/NotModified"
           },
           "406": {
             "$ref": "#/components/responses/NotAcceptable"
@@ -714,6 +964,14 @@
         "operationId": "getResume",
         "summary": "The resume",
         "description": "JSON Resume as JSON, a man page as text, a LaTeX document, a two-page PDF, or the page.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CacheControl"
+          }
+        ],
         "responses": {
           "200": {
             "description": "The resource in the format the Accept header asked for",
@@ -723,6 +981,20 @@
                   "type": "string",
                   "const": "Accept"
                 }
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Cache-Control": {
+                "description": "How long the response is good for: an hour, since it changes only with a deploy. The page (text/html) is to be asked after each time (no-cache), so a new one never waits on an old one",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "enum": ["public, max-age=3600", "no-cache"]
+                }
+              },
+              "Age": {
+                "$ref": "#/components/headers/Age"
               }
             },
             "content": {
@@ -754,6 +1026,9 @@
               }
             }
           },
+          "304": {
+            "$ref": "#/components/responses/NotModified"
+          },
           "406": {
             "$ref": "#/components/responses/NotAcceptable"
           }
@@ -765,9 +1040,33 @@
         "operationId": "getTalksFeed",
         "summary": "The talks, as a feed",
         "description": "The talks as an Atom feed, newest first. Talks are dated to the month, so each is dated its first day.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CacheControl"
+          }
+        ],
         "responses": {
           "200": {
             "description": "The feed",
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Cache-Control": {
+                "description": "How long the response is good for: an hour, since it changes only with a deploy",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "const": "public, max-age=3600"
+                }
+              },
+              "Age": {
+                "$ref": "#/components/headers/Age"
+              }
+            },
             "content": {
               "application/atom+xml": {
                 "schema": {
@@ -775,6 +1074,9 @@
                 }
               }
             }
+          },
+          "304": {
+            "$ref": "#/components/responses/NotModified"
           }
         }
       }
@@ -784,9 +1086,33 @@
         "operationId": "getVersion",
         "summary": "The deployed commit",
         "description": "Which commit of the site is deployed, and when it was. A copy of the site that wasn't deployed (one run by hand) says null for each.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CacheControl"
+          }
+        ],
         "responses": {
           "200": {
             "description": "The commit, when it was deployed, and where to read it",
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Cache-Control": {
+                "description": "How long the response is good for: no time at all: it's to be asked after each time, with If-None-Match",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "const": "no-cache"
+                }
+              },
+              "Age": {
+                "$ref": "#/components/headers/Age"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -794,6 +1120,9 @@
                 }
               }
             }
+          },
+          "304": {
+            "$ref": "#/components/responses/NotModified"
           }
         }
       }
@@ -803,9 +1132,33 @@
         "operationId": "getStatus",
         "summary": "Whether the live numbers come as they should",
         "description": "The server asks GitHub for the contributions, the stars, and the latest push in one request, with a token. If that fails (a token that has expired, say), it asks for each another way, without the token, and the numbers come all the same: so this says what became of asking with the token. Each is null for a copy of the site that has no token, or hasn't asked yet. And it says when each of the live values was last loaded: the downloads, the stars, the contributions, and the latest push.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CacheControl"
+          }
+        ],
         "responses": {
           "200": {
             "description": "When GitHub was last asked with the token, when it last answered, and what went wrong if it didn't, and when each live value was last loaded",
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Cache-Control": {
+                "description": "How long the response is good for: five minutes, since it has live numbers in it",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "const": "public, max-age=300"
+                }
+              },
+              "Age": {
+                "$ref": "#/components/headers/Age"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -813,6 +1166,9 @@
                 }
               }
             }
+          },
+          "304": {
+            "$ref": "#/components/responses/NotModified"
           }
         }
       }
@@ -822,9 +1178,33 @@
         "operationId": "getSignature",
         "summary": "The motto",
         "description": "~/.signature: the motto the home page shows, as cat .signature.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CacheControl"
+          }
+        ],
         "responses": {
           "200": {
             "description": "The motto, and a newline",
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Cache-Control": {
+                "description": "How long the response is good for: an hour, since it changes only with a deploy",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "const": "public, max-age=3600"
+                }
+              },
+              "Age": {
+                "$ref": "#/components/headers/Age"
+              }
+            },
             "content": {
               "text/plain": {
                 "schema": {
@@ -832,6 +1212,9 @@
                 }
               }
             }
+          },
+          "304": {
+            "$ref": "#/components/responses/NotModified"
           }
         }
       }
@@ -851,11 +1234,33 @@
               "type": "string"
             },
             "example": "acct:sferik@sferik.net"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CacheControl"
           }
         ],
         "responses": {
           "200": {
             "description": "The account's JSON Resource Descriptor",
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Cache-Control": {
+                "description": "How long the response is good for: an hour, since it changes only with a deploy",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "const": "public, max-age=3600"
+                }
+              },
+              "Age": {
+                "$ref": "#/components/headers/Age"
+              }
+            },
             "content": {
               "application/jrd+json": {
                 "schema": {
@@ -863,6 +1268,9 @@
                 }
               }
             }
+          },
+          "304": {
+            "$ref": "#/components/responses/NotModified"
           },
           "400": {
             "description": "No resource parameter",
@@ -1985,7 +2393,64 @@
         "additionalProperties": false
       }
     },
+    "parameters": {
+      "IfNoneMatch": {
+        "name": "If-None-Match",
+        "in": "header",
+        "required": false,
+        "description": "The ETag of the version of the response the client has kept. If that's still the one, the answer is a 304, without the body.",
+        "schema": {
+          "type": "string"
+        },
+        "example": "\"5f2c1a9e-1a4\""
+      },
+      "CacheControl": {
+        "name": "Cache-Control",
+        "in": "header",
+        "required": false,
+        "description": "no-cache says not to answer with what Cloudflare's cache has kept past what it's good for: the response is built now, and the request waits for it. (Only if that fails is what's kept the answer after all.) What the cache has that's still good is the answer either way.",
+        "schema": {
+          "type": "string"
+        },
+        "example": "no-cache"
+      }
+    },
+    "headers": {
+      "ETag": {
+        "description": "Which version of the response this is: asked for again with it (If-None-Match), a response that hasn't changed is a 304, without its body. Each format of a resource has its own. Cloudflare makes it a weak one (W/) for a response it compresses, which names the same version.",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "example": "\"5f2c1a9e-1a4\""
+      },
+      "Age": {
+        "description": "The seconds the response has been kept in Cloudflare's cache on its way, which it's good for that much less. It may be more than the response is good for (Cache-Control's max-age): the cache sends what it has kept past that, for an hour, while it builds another for whoever asks next, unless the request says not to (Cache-Control: no-cache). Absent from a response that was built for this request.",
+        "schema": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
     "responses": {
+      "NotModified": {
+        "description": "The version the request names (If-None-Match) is still the one: no body, and the headers the 200 would have had",
+        "headers": {
+          "ETag": {
+            "$ref": "#/components/headers/ETag"
+          },
+          "Cache-Control": {
+            "description": "How long the response the client has kept is good for, from now",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          "Age": {
+            "$ref": "#/components/headers/Age"
+          }
+        }
+      },
       "NotAcceptable": {
         "description": "No format the Accept header allows; the body lists the formats this resource has",
         "content": {
