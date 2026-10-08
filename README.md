@@ -246,6 +246,9 @@ client.talks  # asks the server
 client.talks  # doesn't, for an hour; after that, asks whether the talks have changed
 ```
 
+With `Sferik.cache = true` (or `Sferik.new(cache: true)`), the client is one that keeps its responses from the start,
+so the methods on `Sferik` itself do: `Sferik.who`, called each second, asks the server every five.
+
 What it keeps is in memory, by URL and format, for as long as the client is (a hundred responses at most, the latest
 it asked for), so keep the client: each call of
 `cached` starts with nothing kept. It's safe to share between threads, and works in `keep_alive` too. Threads that ask
@@ -389,9 +392,11 @@ client.whoami
 | `read_timeout`  | `10`                        | Seconds to wait for a response (see below)       |
 | `write_timeout` | `10`                        | Seconds to wait for a request to be sent         |
 | `max_redirects` | `10`                        | Redirects to follow (never from https to http)   |
+| `cache`         | `false`                     | Keep the responses to GETs (see above)           |
 
 The host must be an http or https URL with no credentials, query, or fragment, the user agent must be on one line, a
-timeout must be positive and finite, and `max_redirects` can't be negative (0 follows none): anything else raises
+timeout must be positive and finite, `max_redirects` can't be negative (0 follows none), and `cache` must be true or
+false: anything else raises
 `ArgumentError` when the client is built.
 
 A request that times out waiting for a response is sent once more, as Net::HTTP does with any GET, so a response that

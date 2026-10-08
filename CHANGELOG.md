@@ -38,7 +38,8 @@
   at once make one request between them, and what an endpoint builds of a response is kept with it, so the JSON of
   one that's kept is parsed once. It keeps a hundred responses at most, the latest it asked for
 - Configuration, with `Sferik.configure` or the options of `Sferik.new`: `host`, `user_agent`, `open_timeout`,
-  `read_timeout`, `write_timeout`, and `max_redirects`. A wrong one raises ArgumentError when the client is built
+  `read_timeout`, `write_timeout`, `max_redirects`, and `cache`, which makes the client one that keeps its responses,
+  as `cached` returns, so that `Sferik.who` and the rest do. A wrong one raises ArgumentError when the client is built
 - Errors are all `Sferik::Error`: `InvalidURL`, `NetworkError` (and `Unanswered`, for a request that was sent and got
   no answer), `TooManyRedirects`, `InvalidResponse`, and `HTTPError`
   (`ClientError`, `NotFound`, `NotAcceptable`, `TooManyRequests`, and `ServerError`), which has the response's `code`,

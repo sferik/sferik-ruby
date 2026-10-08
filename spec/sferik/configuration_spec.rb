@@ -3,7 +3,8 @@
 RSpec.describe Sferik::Configuration do
   describe "#options" do
     it "has defaults" do
-      expect(Sferik.options).to eq(host: "https://sferik.net", user_agent: Sferik.user_agent, open_timeout: 5, read_timeout: 10, write_timeout: 10, max_redirects: 10)
+      expect(Sferik.options).to eq(host: "https://sferik.net", user_agent: Sferik.user_agent, open_timeout: 5, read_timeout: 10, write_timeout: 10, max_redirects: 10,
+        cache: false)
     end
 
     it "freezes the default user agent, so that changing it in place can't change the default" do
@@ -27,7 +28,7 @@ RSpec.describe Sferik::Configuration do
     end
 
     it "changes the settings in a block" do
-      settings = {host: "http://localhost:3745", user_agent: "test", open_timeout: 1, read_timeout: 2, write_timeout: 4, max_redirects: 3}
+      settings = {host: "http://localhost:3745", user_agent: "test", open_timeout: 1, read_timeout: 2, write_timeout: 4, max_redirects: 3, cache: true}
       Sferik.configure { |config| settings.each { |setting, value| config.public_send(:"#{setting}=", value) } }
 
       expect(Sferik.options).to eq(settings)

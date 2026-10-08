@@ -100,6 +100,61 @@ RSpec.describe Sferik::Client do
     it "takes timeouts with fractions of a second" do
       expect(described_class.new(open_timeout: 0.5, read_timeout: 1.5, write_timeout: 2.5)).to have_attributes(open_timeout: 0.5, read_timeout: 1.5, write_timeout: 2.5)
     end
+
+    context "with cache" do
+      before { stub_request(:get, "https://sferik.net/whoami").to_return(body: "ok", headers: {"Cache-Control" => "public, max-age=60"}) }
+
+      it "builds a client that keeps the responses it gets, which asks once for what it gets twice" do
+        cached = described_class.new(cache: true)
+        made = [cached.cache?, Array.new(2) { cached.get("/whoami") }, WebMock::RequestRegistry.instance.times_executed(a_request(:get, "https://sferik.net/whoami"))]
+
+        expect(made).to eq([true, %w[ok ok], 1])
+      end
+
+      it "builds a client that asks each time, with cache: false" do
+        asking = described_class.new(cache: false)
+        2.times { asking.get("/whoami") }
+
+        expect(a_request(:get, "https://sferik.net/whoami")).to have_been_made.twice
+      end
+
+      it "builds a client that's frozen" do
+        expect(described_class.new(cache: true)).to be_frozen
+      end
+
+      it "defaults to the global configuration" do
+        Sferik.cache = true
+
+        expect(client.cache?).to be(true)
+      end
+
+      it "keeps what it gets over connections with the client's timeouts" do
+        allow(Net::HTTP).to receive(:start).and_call_original
+        described_class.new(open_timeout: 1, read_timeout: 2, write_timeout: 3, cache: true).get("/whoami")
+
+        expect(Net::HTTP).to have_received(:start).with("sferik.net", 443, use_ssl: true, keep_alive_timeout: 30, open_timeout: 1, read_timeout: 2, write_timeout: 3)
+      end
+
+      [nil, 1, "true"].each do |value|
+        it "raises ArgumentError for a cache of #{value.inspect}" do
+          expect { described_class.new(cache: value) }.to raise_error(ArgumentError, "cache must be true or false, not #{value.inspect}")
+        end
+      end
+    end
+  end
+
+  describe "#cache?" do
+    it "is false for a client that asks the server each time" do
+      expect(client.cache?).to be(false)
+    end
+
+    it "is true for a client built to keep the responses it gets" do
+      expect(described_class.new(cache: true).cache?).to be(true)
+    end
+
+    it "is true for the client that cached returns" do
+      expect(client.cached.cache?).to be(true)
+    end
   end
 
   describe "#get" do

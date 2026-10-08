@@ -19,7 +19,8 @@ module Sferik
       open_timeout: 5,
       read_timeout: 10,
       write_timeout: 10,
-      max_redirects: 10
+      max_redirects: 10,
+      cache: false
     }.freeze
     private_constant :DEFAULTS
 
@@ -65,6 +66,17 @@ module Sferik
     #   @return [Integer] the limit, which must not be negative (defaults to 10)
     #   @example
     #     Sferik.max_redirects = 0 # don't follow any
+    # @!attribute cache
+    #   Whether to keep the responses to GET requests
+    #
+    #   With it, {Sferik.client} is a client that keeps what it gets, as {Client#cached} returns: Sferik.who asks the
+    #   server once in five seconds, however often it's called. What's kept is forgotten when a setting changes, since
+    #   the client is built again.
+    #
+    #   @api public
+    #   @return [Boolean] whether to (defaults to false)
+    #   @example
+    #     Sferik.cache = true
     DEFAULTS.each_key { |setting| attr_accessor setting } # one at a time: YARD can't read the names of a splat
 
     # Start what this module extends at the defaults

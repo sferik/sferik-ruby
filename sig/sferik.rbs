@@ -47,6 +47,7 @@ module Sferik
     attr_accessor read_timeout: Numeric
     attr_accessor write_timeout: Numeric
     attr_accessor max_redirects: Integer
+    attr_accessor cache: bool
 
     def configure: () { (self config) -> void } -> self
     def options: () -> Hash[Symbol, untyped]
@@ -272,12 +273,13 @@ module Sferik
     attr_reader write_timeout: Numeric
     attr_reader max_redirects: Integer
 
-    def initialize: (?host: String, ?user_agent: String, ?open_timeout: Numeric, ?read_timeout: Numeric, ?write_timeout: Numeric, ?max_redirects: Integer) -> void
+    def initialize: (?host: String, ?user_agent: String, ?open_timeout: Numeric, ?read_timeout: Numeric, ?write_timeout: Numeric, ?max_redirects: Integer, ?cache: bool) -> void
     def get: (String path, ?accept: String) -> String
     def post: (String path, ?String body, ?accept: String, ?idempotency_key: String?) -> String
     def keep_alive: [T] () { (Client client) -> T } -> T
     def close: () -> nil
     def cached: (?stale_if_error: bool) -> Client
+    def cache?: () -> bool
     def inspect: () -> String
     def json: [T] (String path, ?accept: String) { (Hash[String, untyped] attributes) -> T } -> T
 
@@ -289,6 +291,7 @@ module Sferik
 
     def got: (URI::Generic uri, String accept) -> Net::HTTPResponse
     def success: (Net::HTTPResponse response) -> Net::HTTPResponse
+    def caching: (untyped cache) -> Cache?
     def connections: () -> _Connections
     def uri_for: (String path) -> URI::Generic
     def fetch: (URI::Generic uri, String accept, Integer redirects) -> Net::HTTPResponse
@@ -302,6 +305,7 @@ module Sferik
 
   # What a client makes its requests over: connections, or a cache over them
   interface _Connections
+    def instance_of?: (Class klass) -> bool
     def request: (Net::HTTPRequest request) -> Net::HTTPResponse
     def made: [T] (URI::Generic uri, String accept, Net::HTTPResponse response) { () -> T } -> T
     def keeping: [T] () { (_Connections connections) -> T } -> T

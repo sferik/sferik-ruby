@@ -20,7 +20,8 @@ module Sferik
   #
   # A thread's requests to a host are made over one connection, which is left open between them, and opened again
   # if it has sat unused: {#keep_alive} is for connections that are closed when its block ends. And each GET asks the
-  # server: {#cached} is a client that keeps the responses, and asks again only for what may have changed.
+  # server: {#cached} is a client that keeps the responses, and asks again only for what may have changed, and so is
+  # one built with cache: true.
   #
   # @api public
   class Client
@@ -95,20 +96,24 @@ module Sferik
     # @param read_timeout [Numeric] the seconds to wait for a response
     # @param write_timeout [Numeric] the seconds to wait for a request to be sent
     # @param max_redirects [Integer] the most redirects to follow for one request
+    # @param cache [Boolean] whether to keep the responses to GET requests, as the client {#cached} returns does
     # @return [Client] a new client
     # @raise [ArgumentError] if an option isn't of the type it should be, the host isn't an http or https URL (or has
-    #   credentials, a query, or a fragment), the user agent has a line break, a timeout isn't positive and finite, or
-    #   max_redirects is negative
+    #   credentials, a query, or a fragment), the user agent has a line break, a timeout isn't positive and finite,
+    #   max_redirects is negative, or cache is neither true nor false
     # @example Create a client for a local copy of the site
     #   client = Sferik::Client.new(host: "http://localhost:3745")
+    # @example Create a client that keeps the responses it gets
+    #   client = Sferik::Client.new(cache: true)
     def initialize(host: Sferik.host, user_agent: Sferik.user_agent, open_timeout: Sferik.open_timeout, read_timeout: Sferik.read_timeout,
-      write_timeout: Sferik.write_timeout, max_redirects: Sferik.max_redirects)
+      write_timeout: Sferik.write_timeout, max_redirects: Sferik.max_redirects, cache: Sferik.cache)
       @host = http_url(check(:host, host, String)).delete_suffix("/").freeze
       @user_agent = one_line(:user_agent, check(:user_agent, user_agent, String)).dup.freeze
       @open_timeout = seconds(:open_timeout, open_timeout)
       @read_timeout = seconds(:read_timeout, read_timeout)
       @write_timeout = seconds(:write_timeout, write_timeout)
       @max_redirects = not_negative(:max_redirects, check(:max_redirects, max_redirects, Integer))
+      @connections = caching(cache)
       freeze
     end
 
@@ -242,6 +247,14 @@ module Sferik
     #   client = Sferik.client.cached(stale_if_error: true)
     def cached(stale_if_error: false) = dup.keep(Cache.new(connections, stale: boolean(:stale_if_error, stale_if_error)))
 
+    # Whether the client keeps the responses to its GET requests
+    #
+    # @api public
+    # @return [Boolean] true for a client built with cache: true, or returned by {#cached}
+    # @example
+    #   Sferik.client.cached.cache? # => true
+    def cache? = @connections.instance_of?(Cache)
+
     # A short description of the client, without the user agent
     #
     # @api public
@@ -279,10 +292,7 @@ module Sferik
     # @api private
     # @param connections [Connections, Cache] the connections, or a cache over them
     # @return [Client] the client itself
-    def keep(connections)
-      @connections = connections
-      freeze
-    end
+    def keep(connections) = tap { @connections = connections }.freeze
 
     private
 
@@ -302,6 +312,14 @@ module Sferik
     # @return [Net::HTTPResponse] the response
     # @raise [HTTPError] if the response isn't a success
     def success(response) = response.is_a?(Net::HTTPSuccess) ? response : raise(error_for(response))
+
+    # What keeps the responses of a client that's built to keep them
+    #
+    # @api private
+    # @param cache [Object] whether to keep them
+    # @return [Cache, nil] a cache over the connections a thread keeps open, or nil for a client that asks each time
+    # @raise [ArgumentError] if cache is neither true nor false
+    def caching(cache) = (Cache.new(connections) if boolean(:cache, cache))
 
     # The connections requests are made over
     #
@@ -409,9 +427,7 @@ module Sferik
     # @param response [Net::HTTPResponse] the response
     # @param message [String, nil] a message to use instead of what the response says
     # @return [HTTPError] the error
-    def error_for(response, message = nil)
-      error_class(response).new(message, code: Integer(response.code), reason: response.message, headers: response.each_header.to_h, body: Body.of(response))
-    end
+    def error_for(response, message = nil) = error_class(response).new(message, code: Integer(response.code), reason: response.message, headers: response.each_header.to_h, body: Body.of(response))
 
     # The class of error for a response that isn't a success
     #
