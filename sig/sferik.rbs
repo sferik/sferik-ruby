@@ -308,6 +308,17 @@ module Sferik
     def close: () -> nil
   end
 
+  module Freshness
+    MAX_AGE: Regexp
+    NO_CACHE: Regexp
+    NO_STORE: Regexp
+
+    def self.lifetime: (Net::HTTPResponse answer) -> Integer
+    def self.left: (Net::HTTPResponse answer) -> Integer
+    def self.spent?: (Net::HTTPResponse answer) -> bool
+    def self.keepable?: (Net::HTTPResponse answer) -> bool
+  end
+
   class Cache
     class Entry < Data
       attr_reader response: Net::HTTPResponse
@@ -331,9 +342,6 @@ module Sferik
     type key = [URI::Generic, String]
 
     CLOCK: ^() -> Float
-    MAX_AGE: Regexp
-    NO_CACHE: Regexp
-    NO_STORE: Regexp
     LIMIT: Integer
 
     @connections: _Connections
@@ -359,10 +367,10 @@ module Sferik
     def renewed: (key key, Entry? entry, Net::HTTPResponse response) -> Net::HTTPResponse
     def spared: (Entry entry, Net::HTTPResponse response) -> Net::HTTPResponse
     def remember: [T] (key key, Entry entry, T made) -> T
-    def keep: (key key, Entry entry, String? control) -> void
+    def again: (key key, Net::HTTPRequest request, Net::HTTPResponse answer) -> Net::HTTPResponse
+    def keep: (key key, Entry entry, Net::HTTPResponse answer) -> void
     def hold: (key key, Entry entry) -> void
     def expiry: (Net::HTTPResponse latest) -> Numeric
-    def fresh_for: (String control) -> Integer
   end
 
   class Connections

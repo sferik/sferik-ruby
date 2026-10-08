@@ -31,7 +31,8 @@
   is closed when the block ends, and `Sferik.client.close` closes the ones the thread has open
 - `Sferik.client.cached` is a client that keeps the responses to its GETs for as long as each says it's good for, and
   after that asks with the response's ETag, so the server sends the body only if it has changed. A response that has
-  been kept on its way already (`Age`) is good for that much less. A server error (a 5xx)
+  been kept on its way already (`Age`) is good for that much less, and one that comes older than it's good for is
+  asked for once more, at once. A server error (a 5xx)
   leaves what's kept as it is, to be asked after again. With `cached(stale_if_error: true)`, the client
   answers with what it kept, however old, when the server can't be reached. Threads that ask it for the same thing
   at once make one request between them, and what an endpoint builds of a response is kept with it, so the JSON of

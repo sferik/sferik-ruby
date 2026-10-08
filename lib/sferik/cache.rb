@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "net/http"
+require_relative "freshness"
 
 module Sferik
   # Keeps the responses to a client's GET requests, and asks again only for what may have changed
@@ -14,7 +15,8 @@ module Sferik
   # which says nothing of whether it has changed: the next request asks again.
   #
   # A response that has already been kept somewhere on its way, as one from Cloudflare's cache has, says for how long
-  # (Age), and is good for that much less. And a cache that's told to (stale) answers with a response that's no longer
+  # (Age), and is good for that much less. One that comes older than it's good for is asked for once more, at once:
+  # the cache on its way answers with what it has while it fetches another, which is the one to have. And a cache that's told to (stale) answers with a response that's no longer
   # good, when the server can't be asked whether it has changed, or answers with an error of its own.
   #
   # Threads that ask for the same thing at once, when it isn't kept or is no longer good, make one request between
@@ -88,18 +90,6 @@ module Sferik
     # The time, in seconds, on a clock that only goes forward
     CLOCK = -> { Process.clock_gettime(Process::CLOCK_MONOTONIC) }
     private_constant :CLOCK
-
-    # The seconds a Cache-Control says a response is good for
-    MAX_AGE = /\bmax-age=(\d+)/i
-    private_constant :MAX_AGE
-
-    # A Cache-Control that says to check a response each time it's used
-    NO_CACHE = /\bno-cache\b/i
-    private_constant :NO_CACHE
-
-    # A Cache-Control that says not to keep a response
-    NO_STORE = /\bno-store\b/i
-    private_constant :NO_STORE
 
     # The most responses to keep: far more than the API has, but an end to what a client keeps of URLs that are made
     # up as it goes, each with a query of its own
@@ -267,7 +257,28 @@ module Sferik
       response = @connections.request(request)
       return spared(entry, response) if entry && response.is_a?(Net::HTTPServerError)
 
-      renewed(key, entry, response)
+      answer = renewed(key, entry, response)
+      Freshness.spent?(response) ? again(key, request, answer) : answer
+    end
+
+    # Ask once more for a response that came older than it's good for
+    #
+    # A cache on its way answered with what it had at once, and may have fetched another since, for whoever asks
+    # next: that's this request. What comes back is kept, whatever its age, and isn't asked after a third time. If
+    # nothing does, or an error of the server's own, the first answer stands.
+    #
+    # @api private
+    # @param key [Array] the URL and the media type asked for
+    # @param request [Net::HTTP::Get] the request, to send again
+    # @param answer [Net::HTTPResponse] what the first answer came to
+    # @return [Net::HTTPResponse] the response: the second answer's, or the first's if no second came
+    def again(key, request, answer)
+      entry = @lock.synchronize { @entries[key] }
+      request["if-none-match"] = entry&.etag # no header, when nothing was kept, or it has no ETag
+      response = @connections.request(request)
+      response.is_a?(Net::HTTPServerError) ? answer : renewed(key, entry, response)
+    rescue NetworkError
+      answer
     end
 
     # Keep what the server answers with, or go on keeping what it says hasn't changed
@@ -280,7 +291,7 @@ module Sferik
     def renewed(key, entry, response)
       kept = entry if response.instance_of?(Net::HTTPNotModified)
       latest = kept ? kept.with(expires: expiry(response)) : Entry.new(response, response["etag"], expiry(response), nil)
-      keep(key, latest, response["cache-control"])
+      keep(key, latest, response)
       latest.response
     end
 
@@ -318,11 +329,10 @@ module Sferik
     # @api private
     # @param key [Array] the URL and the media type asked for
     # @param entry [Entry] the response to keep, with when it's good until
-    # @param control [String, nil] the Cache-Control of the latest answer, if it has one: the response's, or a 304's
-    #   that says it hasn't changed
+    # @param answer [Net::HTTPResponse] the latest answer: the response itself, or a 304 that says it hasn't changed
     # @return [void]
-    def keep(key, entry, control)
-      keepable = entry.response.instance_of?(Net::HTTPOK) && !control&.match?(NO_STORE)
+    def keep(key, entry, answer)
+      keepable = entry.response.instance_of?(Net::HTTPOK) && Freshness.keepable?(answer)
       @lock.synchronize do
         @entries.delete(key)
         hold(key, entry) if keepable
@@ -351,16 +361,7 @@ module Sferik
     # @param latest [Net::HTTPResponse] the latest answer: the response itself, or a 304 that says it hasn't changed
     # @return [Numeric] the time on the cache's clock, in seconds
     def expiry(latest)
-      @clock.call + fresh_for(latest["cache-control"].to_s) - latest["age"].to_i
-    end
-
-    # The seconds a Cache-Control says a response is good for
-    #
-    # @api private
-    # @param control [String] the Cache-Control
-    # @return [Integer] the seconds: none if it says to check each time, or doesn't say
-    def fresh_for(control)
-      (control[MAX_AGE, 1] unless NO_CACHE.match?(control)).to_i
+      @clock.call + Freshness.left(latest)
     end
   end
   private_constant :Cache
