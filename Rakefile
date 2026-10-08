@@ -50,7 +50,7 @@ end
 FIXTURES = {
   "home.json" => "/", "whoami.json" => "/whoami", "contributions.json" => "/contributions", "src.json" => "/src",
   "name.json" => "/name", "talks.json" => "/talks", "podcasts.json" => "/podcasts", "finger.json" => "/finger", "resume.json" => "/resume",
-  "dependency.json" => "/dependency", "who.json" => "/who", "openapi.json" => "/openapi.json", "version.json" => "/version",
+  "dependency.json" => "/dependency", "who.json" => "/who", "openapi.json" => "/openapi.json", "version.json" => "/version", "status.json" => "/status",
   "webfinger.json" => "/.well-known/webfinger?resource=acct:sferik@sferik.net"
 }.freeze
 
@@ -91,6 +91,28 @@ task :drift do
   puts "The fixtures are up to date with #{client.host}"
 rescue Sferik::NetworkError, Sferik::ServerError => e
   warn "Couldn't check for drift: #{e.message}" # the site being down isn't the API changing
+end
+
+# How long GitHub may have gone without answering the site with its token: as long as the site's numbers are live for
+# after they were last fetched. It's asked every fifteen minutes, so one answer that didn't come is nothing to say
+TOKEN_SILENCE = 2 * 60 * 60
+
+desc "Check that the live site's numbers are live, and that GitHub answers it with its token (HOST=http://localhost:3745 for a local copy)"
+task :live do
+  require_relative "lib/sferik"
+
+  client = Sferik::Client.new(host: ENV.fetch("HOST", Sferik.host))
+  github = client.status.github
+  answered = github&.answered
+  problems = {contributions: client.contributions, downloads: client.projects}.reject { |_, numbers| numbers.live? }
+    .map { |name, numbers| "the #{name} aren't live: they're as of #{numbers.as_of}" }
+  unless answered && Time.now - answered < TOKEN_SILENCE
+    problems << "GitHub #{answered ? "hasn't answered with the site's token since #{answered}" : "has never answered with the site's token"}: #{github&.error || "it hasn't been asked with one"}"
+  end
+  abort "#{client.host} isn't getting its live numbers as it should:\n#{problems.map { |problem| "  #{problem}" }.join("\n")}" if problems.any?
+  puts "#{client.host} has live numbers, and GitHub answers with its token"
+rescue Sferik::NetworkError, Sferik::ServerError => e
+  warn "Couldn't check the live numbers: #{e.message}" # the site being down isn't its numbers being old
 end
 
 desc "Run mutation tests (skipped on Rubies without Mutant)"

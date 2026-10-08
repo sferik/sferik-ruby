@@ -197,6 +197,13 @@ module Sferik
   #   @example
   #     Sferik.deployment.commit # => "6a34226a3f351a78339b75430055a018ac30c964"
   #   @see API::SiteEndpoints#deployment What it raises, and more about it
+  # @!method self.status
+  #   Returns whether the site's live numbers come as they should
+  #   @api public
+  #   @return [Status]
+  #   @example
+  #     Sferik.status.github.error # => nil
+  #   @see API::SiteEndpoints#status What it raises, and more about it
   def_delegators :client, *API.public_instance_methods
 
   # The methods of SingleForwardable, which the module delegates with rather than offers (one at a time: YARD can't

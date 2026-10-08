@@ -186,6 +186,18 @@ deployment.deployed  # => 2026-10-07 18:04:11 UTC
 deployment.url       # => "https://github.com/sferik/sferik-web/commit/6a34226a3f351a78339b75430055a018ac30c964"
 ```
 
+### Whether the site's live numbers come as they should
+
+The site asks GitHub for its numbers with a token, and another way when that fails, so they come all the same, and
+are live. What became of asking with the token is its status:
+
+```ruby
+github = Sferik.status.github
+github.asked     # => 2026-10-08 21:45:07 UTC, when GitHub was last asked with the token
+github.answered  # => 2026-10-08 21:45:07 UTC, when it last answered
+github.error     # => nil, or what went wrong the last time: "https://api.github.com/graphql: 401"
+```
+
 ### Anything as terminal output
 
 Every resource also comes as text, wrapped to 80 columns, the way `curl sferik.net` shows it:
@@ -292,9 +304,10 @@ The commands that print are `finger`, `whoami`, `talks`, `podcasts`, `resume`, `
 sferik talks --json | jq -r '.talks[].title'
 ```
 
-Five more print what comes in one format alone, and take no format: `signature` (my motto), `webfinger` (where
+Six more print what comes in one format alone, and take no format: `signature` (my motto), `webfinger` (where
 sferik@sferik.net points to, as JSON), `feed` (my talks, as an Atom feed), `deployment` (which commit of the site is
-deployed, and when, as JSON), and `openapi` (the description of the API, as JSON):
+deployed, and when, as JSON), `status` (whether GitHub answers the site with its token, as JSON), and `openapi` (the
+description of the API, as JSON):
 
 ```sh
 sferik deployment | jq -r .commit
@@ -328,7 +341,7 @@ echo "Hello from $tty" | sferik write --tty "$tty"
 
 It exits 0 when it has printed what it was asked for, 1 when a request fails (the site can't be reached, or says
 no), and 2 when the command line is wrong (an unknown command or option, more than one format, a format for
-what prints no resource, or one that comes in one format alone (`write`, `check-in`, `help`, `--version`, `signature`, `webfinger`, `feed`, `deployment`, or `openapi`), `--tty` or `--token` for another command, or a host that isn't an http or https URL, from `--host`
+what prints no resource, or one that comes in one format alone (`write`, `check-in`, `help`, `--version`, `signature`, `webfinger`, `feed`, `deployment`, `status`, or `openapi`), `--tty` or `--token` for another command, or a host that isn't an http or https URL, from `--host`
 or `SFERIK_HOST`), so a script can tell the two apart.
 
 To ask a local copy of the site instead of sferik.net, name it with `--host` or the `SFERIK_HOST` environment
@@ -458,7 +471,8 @@ HOST=http://localhost:3745 bundle exec rake fixtures
 ```
 
 `bundle exec rake drift` checks the saved description against the live one, and fails if the API has changed since.
-It runs daily in `.github/workflows/drift.yml`, which opens an issue when it does.
+It runs daily in `.github/workflows/drift.yml`, which opens an issue when it does. So does `bundle exec rake live`,
+which fails if the live site's numbers aren't live, or GitHub hasn't answered it with its token for two hours.
 
 ## Supported Ruby versions
 

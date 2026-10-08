@@ -46,6 +46,7 @@ module Sferik
         webfinger      where sferik@sferik.net points to, as JSON
         feed           my talks, as an Atom feed
         deployment     which commit of the site is deployed, and when, as JSON
+        status         whether GitHub answers the site with its token, as JSON
         openapi        the description of the site's API, as JSON
         write          send me a message, read from standard input
         check-in       log in a terminal, as a browser tab does, and print its name
@@ -82,7 +83,7 @@ module Sferik
     # What prints no resource of the site, by the command or option that asks for it, and the method that does each.
     # Or what there is of the site in one format alone, which is printed as that: the method, then the path and the format
     ACTIONS = {:usage => [:usage], "help" => [:usage], :version => [:version], "write" => [:write], "check-in" => [:check_in],
-               "feed" => [:only, "/talks.atom", "application/atom+xml"], "deployment" => [:only, "/version", "application/json"], "openapi" => [:only, "/openapi.json", "application/json"], "signature" => [:only, "/.signature", "text/plain"], "webfinger" => [:only, "/.well-known/webfinger?resource=acct%3Asferik%40sferik.net", "application/jrd+json"]}.freeze
+               "feed" => [:only, "/talks.atom", "application/atom+xml"], "deployment" => [:only, "/version", "application/json"], "status" => [:only, "/status", "application/json"], "openapi" => [:only, "/openapi.json", "application/json"], "signature" => [:only, "/.signature", "text/plain"], "webfinger" => [:only, "/.well-known/webfinger?resource=acct%3Asferik%40sferik.net", "application/jrd+json"]}.freeze
     private_constant :FORMATS, :VALUES, :OWNERS, :ACTIONS
 
     # Initialize a new CLI

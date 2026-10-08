@@ -300,6 +300,30 @@ RSpec.describe Sferik::API::SiteEndpoints do
     end
   end
 
+  describe "#status" do
+    it "returns when GitHub was last asked with the site's token, and when it answered" do
+      stub_get("/status", "status.json")
+
+      expect(client.status).to be_a(Sferik::Status).and(have_attributes(github: be_a(Sferik::Status::GitHub)
+        .and(have_attributes(asked: Time.utc(2026, 10, 8, 21, 45, 7), answered: Time.utc(2026, 10, 8, 21, 45, 7), error: nil))))
+    end
+
+    it "returns what went wrong, and when GitHub last answered, from a site whose token has expired" do
+      stub_request(:get, "https://sferik.net/status").with(headers: {"Accept" => "application/json"})
+        .to_return(body: %({"github":{"asked":"2026-10-08T22:00:00Z","answered":"2026-10-08T21:45:07Z","error":"https://api.github.com/graphql: 401"}}\n))
+
+      expect(client.status.github).to have_attributes(asked: Time.utc(2026, 10, 8, 22), answered: Time.utc(2026, 10, 8, 21, 45, 7),
+        error: "https://api.github.com/graphql: 401")
+    end
+
+    it "returns nil for each from a copy of the site that has no token" do
+      stub_request(:get, "https://sferik.net/status").with(headers: {"Accept" => "application/json"})
+        .to_return(body: %({"github":{"asked":null,"answered":null,"error":null}}\n))
+
+      expect(client.status.github).to have_attributes(asked: nil, answered: nil, error: nil)
+    end
+  end
+
   describe "#openapi" do
     it "returns the API's description" do
       stub_get("/openapi.json", "openapi.json")

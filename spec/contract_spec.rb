@@ -14,7 +14,7 @@ module Contract
   FIXTURES = {
     "home.json" => "Home", "whoami.json" => "Whoami", "contributions.json" => "Contributions", "src.json" => "Src",
     "name.json" => "NameChange", "talks.json" => "Talks", "podcasts.json" => "Podcasts", "finger.json" => "Finger", "resume.json" => "Resume",
-    "dependency.json" => "Dependency", "who.json" => "Users", "check_in.json" => "Who", "version.json" => "Version",
+    "dependency.json" => "Dependency", "who.json" => "Users", "check_in.json" => "Who", "version.json" => "Version", "status.json" => "Status",
     "webfinger.json" => "WebFinger"
   }.freeze
 
@@ -34,6 +34,7 @@ module Contract
     Sferik::Resume::Skill => "Resume/properties/skills/items", Sferik::Resume::Speaking => "Resume/properties/speaking",
     Sferik::Resume::Meta => "Resume/properties/meta", Sferik::Dependency => "Dependency", Sferik::Figure => "Figure",
     Sferik::Place => "Place", Sferik::Who => "Who", Sferik::Session => "Session", Sferik::Deployment => "Version",
+    Sferik::Status => "Status", Sferik::Status::GitHub => "Status/properties/github",
     Sferik::WebFinger => "WebFinger", Sferik::WebFinger::Link => "WebFinger/properties/links/items"
   }.freeze
 

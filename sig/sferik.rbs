@@ -35,6 +35,7 @@ module Sferik
   def self.text: (?String path) -> String
   def self.openapi: () -> Hash[String, untyped]
   def self.deployment: () -> Deployment
+  def self.status: () -> Status
 
   module Configuration : Module
     DEFAULTS: Hash[Symbol, untyped]
@@ -182,6 +183,7 @@ module Sferik
       def text: (?String path) -> String
       def openapi: () -> Hash[String, untyped]
       def deployment: () -> Deployment
+      def status: () -> Status
 
       PAUSE: Integer
 
@@ -496,6 +498,16 @@ module Sferik
     def commit: () -> String?
     def deployed: () -> Time?
     def url: () -> String?
+  end
+
+  class Status < Resource
+    def github: () -> GitHub?
+
+    class GitHub < Resource
+      def asked: () -> Time?
+      def answered: () -> Time?
+      def error: () -> String?
+    end
   end
 
   class Dependency < Resource

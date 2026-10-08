@@ -670,7 +670,7 @@ RSpec.describe Sferik::Resource do
       "home.json" => Sferik::Home, "whoami.json" => Sferik::Whoami, "contributions.json" => Sferik::Contributions, "src.json" => Sferik::Projects,
       "name.json" => Sferik::NameChange, "talks.json" => Sferik::Talks, "podcasts.json" => Sferik::Talks, "finger.json" => Sferik::Finger,
       "resume.json" => Sferik::Resume, "dependency.json" => Sferik::Dependency, "who.json" => Sferik::Who, "check_in.json" => Sferik::Who,
-      "version.json" => Sferik::Deployment, "webfinger.json" => Sferik::WebFinger
+      "version.json" => Sferik::Deployment, "status.json" => Sferik::Status, "webfinger.json" => Sferik::WebFinger
     }.each do |file, resource|
       it "can share a #{resource} built of #{file}, and everything in it" do
         expect(Ractor.shareable?(resource.new(JSON.parse(fixture(file))))).to be(true)
@@ -688,7 +688,7 @@ RSpec.describe Sferik::Resource do
       home: ["/", "home.json"], whoami: ["/whoami", "whoami.json"], dependency: ["/dependency", "dependency.json"], finger: ["/finger", "finger.json"],
       name_change: ["/name", "name.json"], contributions: ["/contributions", "contributions.json"], projects: ["/src", "src.json"],
       talks: ["/talks", "talks.json"], podcasts: ["/podcasts", "podcasts.json"], resume: ["/resume", "resume.json"], who: ["/who", "who.json"],
-      deployment: ["/version", "version.json"], openapi: ["/openapi.json", "openapi.json"]
+      deployment: ["/version", "version.json"], status: ["/status", "status.json"], openapi: ["/openapi.json", "openapi.json"]
     }.each do |endpoint, (path, file)|
       it "can share what #{endpoint} returns" do
         stub_get(path, file)

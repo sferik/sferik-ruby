@@ -4,13 +4,15 @@ require "securerandom"
 require "uri"
 require_relative "../deployment"
 require_relative "../json_parsing"
+require_relative "../status"
 require_relative "../validation"
 require_relative "../who"
 
 module Sferik
   module API
     # The endpoints about the site itself: who's reading it, checking in as one of them, sending Erik a message, any
-    # page as terminal output, and the API's description
+    # page as terminal output, the API's description, which commit is deployed, and whether its live numbers come as
+    # they should
     # @api public
     module SiteEndpoints
       include JSONParsing
@@ -126,6 +128,19 @@ module Sferik
       #   Sferik.deployment.commit # => "6a34226a3f351a78339b75430055a018ac30c964"
       def deployment
         json("/version") { |attributes| Deployment.new(attributes) }
+      end
+
+      # Returns whether the site's live numbers come as they should
+      #
+      # The site asks GitHub for its numbers with a token, and another way if that fails, so they come all the same:
+      # this says when GitHub last answered with the token, and what went wrong if it didn't.
+      #
+      # @api public
+      # @return [Status]
+      # @example
+      #   Sferik.status.github.error # => nil
+      def status
+        json("/status") { |attributes| Status.new(attributes) }
       end
 
       private

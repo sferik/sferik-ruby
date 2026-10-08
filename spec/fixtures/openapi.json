@@ -798,6 +798,25 @@
         }
       }
     },
+    "/status": {
+      "get": {
+        "operationId": "getStatus",
+        "summary": "Whether the live numbers come as they should",
+        "description": "The server asks GitHub for the contributions, the stars, and the latest push in one request, with a token. If that fails (a token that has expired, say), it asks for each another way, without the token, and the numbers come all the same: so this says what became of asking with the token. Each is null for a copy of the site that has no token, or hasn't asked yet.",
+        "responses": {
+          "200": {
+            "description": "When GitHub was last asked with the token, when it last answered, and what went wrong if it didn't",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/.signature": {
       "get": {
         "operationId": "getSignature",
@@ -1865,6 +1884,35 @@
           }
         },
         "required": ["commit", "deployed", "url"],
+        "additionalProperties": false
+      },
+      "Status": {
+        "type": "object",
+        "properties": {
+          "github": {
+            "type": "object",
+            "description": "What became of asking GitHub with the server's token",
+            "properties": {
+              "asked": {
+                "type": ["string", "null"],
+                "format": "date-time",
+                "description": "When GitHub was last asked with the token"
+              },
+              "answered": {
+                "type": ["string", "null"],
+                "format": "date-time",
+                "description": "When it last answered: the same time as asked, if the last answer came"
+              },
+              "error": {
+                "type": ["string", "null"],
+                "description": "What went wrong the last time it was asked, or null if it answered"
+              }
+            },
+            "required": ["asked", "answered", "error"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["github"],
         "additionalProperties": false
       },
       "WebFinger": {

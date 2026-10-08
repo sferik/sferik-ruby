@@ -4,7 +4,7 @@
 
 - Initial release: every endpoint of the sferik.net API (`home`, `whoami`, `dependency`, `finger`, `finger_vcard`,
   `name_change`, `signature`, `webfinger`, `contributions`, `projects`, `talks`, `talks_feed`, `podcasts`, `resume`,
-  `resume_latex`, `resume_pdf`, `who`, `deployment`, `text`, `openapi`, and the two that write, `check_in` and
+  `resume_latex`, `resume_pdf`, `who`, `deployment`, `status`, `text`, `openapi`, and the two that write, `check_in` and
   `write`), on `Sferik` itself or on a client of your own (`Sferik.new`)
 - Immutable response objects, typed all the way down (`Sferik::Resume::Work`, `Sferik::Home::Profile`, and so on),
   with every date a `Date` or `Time`, and with equality, pattern matching, `to_h`, `to_json`, and `as_json`. Everything
@@ -21,6 +21,9 @@
   being sent (a 409), `write` asks after it once more, as much later as the server says to
 - `Sferik.contributions` and `Sferik.projects` say when their numbers are from, as `as_of`, and whether that's
   now, as `live?`: it's false for a snapshot, and for numbers the site last fetched more than two hours ago
+- `Sferik.status` says whether the site gets its numbers from GitHub as it should, with its token: when GitHub was
+  last asked with it, when it last answered, and what went wrong if it didn't. The numbers are live either way, since
+  the site asks another way when the token fails
 - `Sferik.client.get` and `Sferik.client.post` send raw requests. A GET's redirects are followed, up to
   `max_redirects` (10), but never from https to http. A POST is sent only once, and its redirects aren't followed. Its
   body is sent as UTF-8, converted from the charset of the String it's given (a binary or US-ASCII one is taken for
@@ -52,8 +55,8 @@
 - A `sferik` command, which prints what the shell on sferik.net prints: `sferik finger`, `sferik resume`, and so on.
   With `--json` it prints JSON instead, `sferik resume --pdf` and `sferik resume --latex` print the resume as a PDF and
   as LaTeX, `sferik finger --vcard` prints a contact card, and `--host` or the `SFERIK_HOST` environment variable names a copy of the site to ask instead of
-  sferik.net. `sferik feed`, `sferik deployment`, and `sferik openapi` print the talks as an Atom feed, the deployed
-  commit, and the API's description, and `sferik signature` and `sferik webfinger` the motto, and where
+  sferik.net. `sferik feed`, `sferik deployment`, `sferik status`, and `sferik openapi` print the talks as an Atom feed, the deployed
+  commit, whether GitHub answers the site with its token, and the API's description, and `sferik signature` and `sferik webfinger` the motto, and where
   sferik@sferik.net points to. `sferik write` sends Erik the message it reads from standard input, and
   `sferik check-in` logs in a terminal and prints its name, which `sferik write --tty` takes. It exits 1 when a request fails, and 2
   when the command line is wrong, as one that names two formats is, or a format for what prints no resource
