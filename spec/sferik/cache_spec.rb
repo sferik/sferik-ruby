@@ -155,6 +155,14 @@ RSpec.describe "Sferik::Cache" do
       expect([get(url).body, made(request)]).to eq(["two", 2])
     end
 
+    it "says not to be answered from a cache when it asks once more, and not when it first asks" do
+      stub_spent.then.to_return(body: "two")
+      get(url)
+
+      expect([a_request(:get, url).with(headers: {"Cache-Control" => "no-cache"}), a_request(:get, url).with { |request| !request.headers.key?("Cache-Control") }])
+        .to all(have_been_made.once)
+    end
+
     it "asks once more with the ETag of the response that came old" do
       stub_spent("ETag" => '"v1"').then.to_return(status: 304, headers: {"Cache-Control" => "public, max-age=60"})
       get(url)

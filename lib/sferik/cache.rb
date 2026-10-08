@@ -15,8 +15,9 @@ module Sferik
   # which says nothing of whether it has changed: the next request asks again.
   #
   # A response that has already been kept somewhere on its way, as one from Cloudflare's cache has, says for how long
-  # (Age), and is good for that much less. One that comes older than it's good for is asked for once more, at once:
-  # the cache on its way answers with what it has while it fetches another, which is the one to have. And a cache that's told to (stale) answers with a response that's no longer
+  # (Age), and is good for that much less. One that comes older than it's good for is asked for once more, at once,
+  # with a request that says not to answer from a cache: the cache on its way answers with what it has while it
+  # fetches another, which is the one to have, and the site makes that request wait for it. And a cache that's told to (stale) answers with a response that's no longer
   # good, when the server can't be asked whether it has changed, or answers with an error of its own.
   #
   # Threads that ask for the same thing at once, when it isn't kept or is no longer good, make one request between
@@ -263,9 +264,11 @@ module Sferik
 
     # Ask once more for a response that came older than it's good for
     #
-    # A cache on its way answered with what it had at once, and may have fetched another since, for whoever asks
-    # next: that's this request. What comes back is kept, whatever its age, and isn't asked after a third time. If
-    # nothing does, or an error of the server's own, the first answer stands.
+    # A cache on its way answered with what it had at once, and fetches another for whoever asks next. But asked
+    # again at once, it hasn't got that one yet, as often as not: so this request says not to be answered from a
+    # cache (Cache-Control: no-cache), which the site takes to mean that it should wait for the new one. What comes
+    # back is kept, whatever its age, and isn't asked after a third time. If nothing does, or an error of the
+    # server's own, the first answer stands.
     #
     # @api private
     # @param key [Array] the URL and the media type asked for
@@ -275,6 +278,7 @@ module Sferik
     def again(key, request, answer)
       entry = @lock.synchronize { @entries[key] }
       request["if-none-match"] = entry&.etag # no header, when nothing was kept, or it has no ETag
+      request["cache-control"] = "no-cache"
       response = @connections.request(request)
       response.is_a?(Net::HTTPServerError) ? answer : renewed(key, entry, response)
     rescue NetworkError

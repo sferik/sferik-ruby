@@ -227,7 +227,8 @@ module Sferik
     #
     # A response that Cloudflare's cache answered with has been kept there for a while already, which it says (Age),
     # and is good for that much less here. One that comes older than it's good for is asked for once more, at once:
-    # that cache answers with what it has while it builds another, and the second request gets that one.
+    # that cache answers with what it has while it builds another, and the second request says not to be answered
+    # from a cache (Cache-Control: no-cache), so the site has it wait for that one.
     #
     # When the server can't be reached, or doesn't answer, to say whether a response that's no longer good has
     # changed, the request fails with a {NetworkError}, as any other would, and when it answers with an error of its
