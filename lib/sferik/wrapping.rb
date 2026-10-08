@@ -11,6 +11,19 @@ module Sferik
 
     private
 
+    # A value of the response, or something else when the response has nothing there
+    #
+    # Nothing is null, which is what a key that's missing reads as too. False isn't nothing: it's a value, and where
+    # a list or an object belongs, the wrong one.
+    #
+    # @api private
+    # @param value [Object] the value
+    # @param otherwise [Object] what to return when the response has nothing there
+    # @return [Object] the value, or what was given in its place
+    def given(value, otherwise)
+      value.nil? ? otherwise : value
+    end
+
     # Wrap a value in a resource class
     #
     # @api private
@@ -19,7 +32,7 @@ module Sferik
     # @return [Object] the value, wrapped
     # @raise [InvalidResponse] if the value isn't a JSON object
     def wrap(value, type)
-      (type && value) ? build(type, value) : value
+      (type.nil? || value.nil?) ? value : build(type, value)
     end
 
     # Wrap each value of a list in a resource class
@@ -59,7 +72,7 @@ module Sferik
     # @return [Time, Date, nil] the date or time, frozen, or nil if the response has none
     # @raise [InvalidResponse] if the value isn't an ISO 8601 date or time
     def wrap_timestamp(name, value, parser)
-      parser.iso8601(value).freeze if value
+      parser.iso8601(value).freeze unless value.nil?
     rescue ArgumentError, TypeError
       raise InvalidResponse, "#{self.class}##{name}: #{value.inspect} isn't an ISO 8601 #{parser.equal?(Time) ? "time" : "date"}"
     end

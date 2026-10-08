@@ -382,6 +382,7 @@ module Sferik
 
     private
 
+    def given: (untyped value, untyped otherwise) -> untyped
     def wrap: (untyped value, singleton(Resource)? type) -> untyped
     def wrap_list: (Symbol name, untyped list, singleton(Resource)? type) -> Array[untyped]
     def wrap_dictionary: (Symbol name, untyped dictionary, singleton(Resource) type) -> Hash[String, Resource]

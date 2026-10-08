@@ -56,4 +56,8 @@ RSpec.describe Sferik::Projects do
       expect(described_class.new({}).to_a).to eq([])
     end
   end
+
+  it "raises InvalidResponse for totals of false, which is no JSON object" do
+    expect { described_class.new("total" => false) }.to raise_error(Sferik::InvalidResponse, "Sferik::Projects#total: expected a JSON object, got FalseClass")
+  end
 end

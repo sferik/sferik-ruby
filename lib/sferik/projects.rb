@@ -115,7 +115,7 @@ module Sferik
 
     # The totals, which are empty when the response has none, and are checked when the projects are built
     prepare(:total) do
-      value = attributes["total"] || NONE
+      value = given(attributes["total"], NONE)
       raise InvalidResponse, "#{self.class}#total: expected a JSON object, got #{value.class}" unless value.instance_of?(Hash)
 
       value

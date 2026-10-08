@@ -156,7 +156,7 @@ module Sferik
       # @param type [Class, nil] a resource class to wrap each value of the list in
       # @return [Symbol] the name of the reader
       def list(name, key = camelize(name), type: nil)
-        reader(name, key) { wrap_list(name, attributes[key] || EMPTY, type) }
+        reader(name, key) { wrap_list(name, given(attributes[key], EMPTY), type) }
       end
 
       # Define a predicate for a boolean attribute
@@ -184,7 +184,7 @@ module Sferik
       # @param type [Class] a resource class to wrap each value of the dictionary in
       # @return [Symbol] the name of the reader
       def dictionary(name, key = camelize(name), type:)
-        reader(name, key) { wrap_dictionary(name, attributes[key] || NONE, type) }
+        reader(name, key) { wrap_dictionary(name, given(attributes[key], NONE), type) }
       end
 
       # Define a reader that parses an ISO 8601 date or time

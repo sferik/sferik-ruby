@@ -118,6 +118,42 @@ RSpec.describe Sferik::Resource do
       expect { Sferik::Home.new("pages" => [{}]) }.to raise_error(Sferik::InvalidResponse, "Expected a JSON object for a Sferik::Home::Pages, got Array")
     end
 
+    # False is a value, not nothing: where something else belongs, it's the wrong one, as a number or a string is
+    it "raises InvalidResponse for false where a resource belongs" do
+      expect { Sferik::Home.new("pages" => false) }.to raise_error(Sferik::InvalidResponse, "Expected a JSON object for a Sferik::Home::Pages, got FalseClass")
+    end
+
+    it "raises InvalidResponse for false where a list of resources belongs" do
+      expect { Sferik::Talks.new("talks" => false) }.to raise_error(Sferik::InvalidResponse, "Sferik::Talks#talks: expected a JSON array, got FalseClass")
+    end
+
+    it "raises InvalidResponse for false where a list of anything belongs" do
+      expect { Sferik::NameChange.new("notes" => false) }.to raise_error(Sferik::InvalidResponse, "Sferik::NameChange#notes: expected a JSON array, got FalseClass")
+    end
+
+    it "raises InvalidResponse for false where a dictionary belongs" do
+      expect { Sferik::Talks.new("places" => false) }.to raise_error(Sferik::InvalidResponse, "Sferik::Talks#places: expected a JSON object, got FalseClass")
+    end
+
+    it "raises InvalidResponse for false where a date belongs" do
+      expect { Sferik::Talk.new("date" => false) }.to raise_error(Sferik::InvalidResponse, "Sferik::Talk#date: false isn't an ISO 8601 date")
+    end
+
+    it "raises InvalidResponse for false where a time belongs" do
+      expect { Sferik::Push.new("at" => false) }.to raise_error(Sferik::InvalidResponse, "Sferik::Push#at: false isn't an ISO 8601 time")
+    end
+
+    it "takes null for nothing, wherever a resource, a list, a dictionary, a date, or a time belongs" do
+      nothing = [Sferik::Home.new("pages" => nil).pages, Sferik::Talks.new("talks" => nil, "places" => nil).then { |talks| [talks.talks, talks.places] },
+        Sferik::NameChange.new("notes" => nil).notes, Sferik::Talk.new("date" => nil).date, Sferik::Push.new("at" => nil).at]
+
+      expect(nothing).to eq([nil, [[], {}], [], nil, nil])
+    end
+
+    it "leaves false as it is where anything may be" do
+      expect(Sferik::Talk.new("title" => false).title).to be(false)
+    end
+
     it "return the same resources each time" do
       expect([home.pages, home.modules, home.modules.first]).to eq([home.pages, home.modules, home.modules.first]).and(all(be_frozen))
         .and(satisfy { |values| values.zip([home.pages, home.modules, home.modules.first]).all? { |value, again| value.equal?(again) } })
