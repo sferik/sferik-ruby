@@ -7,7 +7,7 @@ way to receive a fix.
 
 | Version | Supported |
 | ------- | --------- |
-| 0.1.x   | Yes       |
+| 0.0.x   | Yes       |
 
 ## Reporting a vulnerability
 
