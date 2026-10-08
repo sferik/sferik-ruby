@@ -78,6 +78,21 @@ module Sferik
   #   @example
   #     Sferik.name_change.year # => 2017
   #   @see API::ProfileEndpoints#name_change What it raises, and more about it
+  # @!method self.signature
+  #   Returns the motto: ~/.signature, which the home page shows as cat .signature
+  #   @api public
+  #   @return [String] the motto, without the newline the site ends it with
+  #   @example
+  #     Sferik.signature # => "I build libraries and tools software engineers depend on."
+  #   @see API::ProfileEndpoints#signature What it raises, and more about it
+  # @!method self.webfinger(resource = "acct:sferik@sferik.net")
+  #   Returns where an account at sferik.net points to, as WebFinger answers
+  #   @api public
+  #   @param resource [String] the account, as an acct: URI
+  #   @return [WebFinger]
+  #   @example
+  #     Sferik.webfinger.subject # => "acct:sferik@mastodon.social"
+  #   @see API::ProfileEndpoints#webfinger What it raises, and more about it
   # @!method self.contributions
   #   Returns a year of GitHub contributions, the longest streak, and the latest push
   #   @api public

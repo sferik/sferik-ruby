@@ -50,12 +50,14 @@ end
 FIXTURES = {
   "home.json" => "/", "whoami.json" => "/whoami", "contributions.json" => "/contributions", "src.json" => "/src",
   "name.json" => "/name", "talks.json" => "/talks", "podcasts.json" => "/podcasts", "finger.json" => "/finger", "resume.json" => "/resume",
-  "dependency.json" => "/dependency", "who.json" => "/who", "openapi.json" => "/openapi.json", "version.json" => "/version"
+  "dependency.json" => "/dependency", "who.json" => "/who", "openapi.json" => "/openapi.json", "version.json" => "/version",
+  "webfinger.json" => "/.well-known/webfinger?resource=acct:sferik@sferik.net"
 }.freeze
 
 # The fixtures that aren't JSON, and what each is asked for as
 OTHER_FIXTURES = {
-  "whoami.txt" => ["/whoami", "text/plain"], "finger.vcf" => ["/finger", "text/vcard"], "talks.atom" => ["/talks.atom", "application/atom+xml"]
+  "whoami.txt" => ["/whoami", "text/plain"], "finger.vcf" => ["/finger", "text/vcard"], "talks.atom" => ["/talks.atom", "application/atom+xml"],
+  "signature.txt" => ["/.signature", "text/plain"]
 }.freeze
 
 desc "Save the API's responses as the specs' fixtures (HOST=http://localhost:3745 for a local copy of the site)"

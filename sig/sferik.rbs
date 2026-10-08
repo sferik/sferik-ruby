@@ -19,6 +19,8 @@ module Sferik
   def self.finger: () -> Finger
   def self.finger_vcard: () -> String
   def self.name_change: () -> NameChange
+  def self.signature: () -> String
+  def self.webfinger: (?String resource) -> WebFinger
   def self.contributions: () -> Contributions
   def self.projects: () -> Projects
   def self.talks: () -> Talks
@@ -139,6 +141,7 @@ module Sferik
 
     module ProfileEndpoints : Object, _Requests
       include JSONParsing
+      include Validation
 
       def home: () -> Home
       def whoami: () -> Whoami
@@ -146,6 +149,8 @@ module Sferik
       def finger: () -> Finger
       def finger_vcard: () -> String
       def name_change: () -> NameChange
+      def signature: () -> String
+      def webfinger: (?String resource) -> WebFinger
     end
 
     module CodeEndpoints : Object, _Requests
@@ -507,6 +512,19 @@ module Sferik
     class Section < Resource
       def id: () -> String
       def url: () -> String
+    end
+  end
+
+  class WebFinger < Resource
+    def subject: () -> String
+    def aliases: () -> Array[String]
+    def links: () -> Array[Link]
+
+    class Link < Resource
+      def rel: () -> String
+      def type: () -> String?
+      def href: () -> String?
+      def template: () -> String?
     end
   end
 

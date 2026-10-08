@@ -67,7 +67,7 @@ RSpec.describe Sferik::CLI do
   end
 
   it "lists every command in the usage" do
-    expect(usage.scan(/^  (\S+)  /).flatten).to contain_exactly(*described_class.const_get(:COMMANDS).keys, "feed", "deployment", "openapi", "write", "check-in", "help")
+    expect(usage.scan(/^  (\S+)  /).flatten).to contain_exactly(*described_class.const_get(:COMMANDS).keys, "signature", "webfinger", "feed", "deployment", "openapi", "write", "check-in", "help")
   end
 
   %w[-v --version].each do |flag|
@@ -137,7 +137,8 @@ RSpec.describe Sferik::CLI do
   end
 
   {"feed" => "/talks.atom as application/atom+xml", "deployment" => "/version as application/json",
-   "openapi" => "/openapi.json as application/json"}.each do |command, asked|
+   "openapi" => "/openapi.json as application/json", "signature" => "/.signature as text/plain",
+   "webfinger" => "/.well-known/webfinger?resource=acct%3Asferik%40sferik.net as application/jrd+json"}.each do |command, asked|
     it "#{command} prints what comes in one format alone, as that" do
       expect(run_cli(command)).to eq([0, "#{asked}\n", ""])
     end
@@ -151,7 +152,7 @@ RSpec.describe Sferik::CLI do
     end
   end
 
-  [%w[--help], %w[-h], %w[help], %w[--version], %w[-v], %w[finger --help], %w[finger --version], %w[feed], %w[deployment], %w[openapi]].each do |argv|
+  [%w[--help], %w[-h], %w[help], %w[--version], %w[-v], %w[finger --help], %w[finger --version], %w[feed], %w[deployment], %w[openapi], %w[signature], %w[webfinger]].each do |argv|
     %w[--json --pdf --latex --vcard].each do |format|
       it "takes no #{format} for #{argv.join(" ")}, which prints no resource: it says so, then the usage" do
         expect(run_cli(*argv, format)).to eq([2, "", "sferik: --json, --pdf, --latex, and --vcard are for the commands that print a resource\n\n#{usage}"])

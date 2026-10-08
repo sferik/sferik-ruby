@@ -80,4 +80,58 @@ RSpec.describe Sferik::API::ProfileEndpoints do
       expect(client.name_change).to have_attributes(year: 2017, commit: "8c0d698", subject: /Berlin/, notes: all(be_a(String)), command: /git log/)
     end
   end
+
+  describe "#signature" do
+    it "returns the motto, asked for as text, without the newline the site ends it with" do
+      stub_get("/.signature", "signature.txt", accept: "text/plain")
+
+      expect(client.signature).to eq("I build libraries and tools software engineers depend on.")
+    end
+  end
+
+  describe "#webfinger" do
+    # Stub WebFinger for an account, asked for as a JSON Resource Descriptor
+    def stub_webfinger(resource)
+      stub_get("/.well-known/webfinger?resource=#{resource}", "webfinger.json", accept: "application/jrd+json")
+    end
+
+    it "returns where sferik@sferik.net points to" do
+      stub_webfinger("acct%3Asferik%40sferik.net")
+
+      expect(client.webfinger).to have_attributes(subject: "acct:sferik@mastodon.social", aliases: include("https://mastodon.social/@sferik"))
+    end
+
+    it "returns what the account links to, by URL or by a template for one" do
+      stub_webfinger("acct%3Asferik%40sferik.net")
+
+      expect(client.webfinger.links.values_at(0, -1)).to match([
+        have_attributes(rel: "http://webfinger.net/rel/profile-page", type: "text/html", href: "https://mastodon.social/@sferik", template: nil),
+        have_attributes(rel: "http://ostatus.org/schema/1.0/subscribe", type: nil, href: nil, template: /\{uri\}\z/)
+      ])
+    end
+
+    it "asks after the account it's given, with whatever can't be in a query as it is escaped" do
+      request = stub_webfinger("acct%3Asferik%2Bx%40sferik.org")
+      client.webfinger("acct:sferik+x@sferik.org")
+
+      expect(request).to have_been_made
+    end
+
+    it "raises NotFound for an account there isn't" do
+      stub_request(:get, "https://sferik.net/.well-known/webfinger?resource=acct%3Anobody%40example.com")
+        .to_return(status: 404, body: "No such account: acct:nobody@example.com\n", headers: {"Content-Type" => "text/plain; charset=utf-8"})
+
+      expect { client.webfinger("acct:nobody@example.com") }.to raise_error(Sferik::NotFound, /No such account/)
+    end
+
+    it "raises ArgumentError for an account that isn't a String, before asking" do
+      expect { client.webfinger(:sferik) }.to raise_error(ArgumentError, "resource must be String, not :sferik")
+    end
+
+    it "shows the account it points to when it's inspected" do
+      stub_webfinger("acct%3Asferik%40sferik.net")
+
+      expect(client.webfinger.inspect).to include('subject="acct:sferik@mastodon.social"')
+    end
+  end
 end

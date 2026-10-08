@@ -18,6 +18,7 @@ module Sferik
   #   Sferik::CLI.new.run(["finger"])          # prints how to reach me, and returns 0
   #   Sferik::CLI.new.run(["talks", "--json"]) # prints my talks as JSON
   #   Sferik::CLI.new.run(["resume", "--pdf"]) # prints my resume as a PDF
+  #   Sferik::CLI.new.run(["signature"])       # prints my motto
   #   Sferik::CLI.new.run(["write"])           # sends me a message, read from standard input
   #   Sferik::CLI.new.run(["check-in"])        # logs in a terminal, and prints its name
   class CLI
@@ -42,6 +43,8 @@ module Sferik
         name           my name change, as a git commit
         dependency     the xkcd comic, in words
         who            who's reading sferik.net
+        signature      my motto
+        webfinger      where sferik@sferik.net points to, as JSON
         feed           my talks, as an Atom feed
         deployment     which commit of the site is deployed, and when, as JSON
         openapi        the description of the site's API, as JSON
@@ -80,7 +83,7 @@ module Sferik
     # What prints no resource of the site, by the command or option that asks for it, and the method that does each.
     # Or what there is of the site in one format alone, which is printed as that: the method, then the path and the format
     ACTIONS = {:usage => [:usage], "help" => [:usage], :version => [:version], "write" => [:write], "check-in" => [:check_in],
-               "feed" => [:only, "/talks.atom", "application/atom+xml"], "deployment" => [:only, "/version", "application/json"], "openapi" => [:only, "/openapi.json", "application/json"]}.freeze
+               "feed" => [:only, "/talks.atom", "application/atom+xml"], "deployment" => [:only, "/version", "application/json"], "openapi" => [:only, "/openapi.json", "application/json"], "signature" => [:only, "/.signature", "text/plain"], "webfinger" => [:only, "/.well-known/webfinger?resource=acct%3Asferik%40sferik.net", "application/jrd+json"]}.freeze
     private_constant :FORMATS, :VALUES, :OWNERS, :ACTIONS
 
     # Initialize a new CLI
@@ -248,7 +251,7 @@ module Sferik
 
     # Print what there is of the site in one format alone
     #
-    # That's the feed of talks, the deployed version, and the API's description.
+    # That's the feed of talks, the deployed version, the API's description, the motto, and where the account points to.
     #
     # @api private
     # @param path [String] the path

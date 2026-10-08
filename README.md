@@ -54,6 +54,23 @@ finger.profiles.map(&:url)    # => ["https://github.com/sferik", "https://gitlab
 File.write("erik-berlin.vcf", Sferik.finger_vcard)  # the same, as a contact card for an address book
 ```
 
+### The motto, and the account
+
+```ruby
+Sferik.signature  # => "I build libraries and tools software engineers depend on."
+```
+
+sferik@sferik.net is a fediverse handle: the site answers WebFinger for it, and points to the account on Mastodon.
+
+```ruby
+webfinger = Sferik.webfinger
+webfinger.subject            # => "acct:sferik@mastodon.social"
+webfinger.aliases            # => ["https://mastodon.social/@sferik", "https://mastodon.social/users/sferik"]
+webfinger.links.map(&:rel)   # => ["http://webfinger.net/rel/profile-page", "self", "http://ostatus.org/schema/1.0/subscribe"]
+
+Sferik.webfinger("acct:sferik@sferik.org")  # the same account, at sferik.com, sferik.org, and sferik.me too
+```
+
 ### GitHub contributions
 
 ```ruby
@@ -265,9 +282,9 @@ The commands that print are `finger`, `whoami`, `talks`, `podcasts`, `resume`, `
 sferik talks --json | jq -r '.talks[].title'
 ```
 
-Three more print what comes in one format alone, and take no format: `feed` (my talks, as an Atom feed),
-`deployment` (which commit of the site is deployed, and when, as JSON), and `openapi` (the description of the API,
-as JSON):
+Five more print what comes in one format alone, and take no format: `signature` (my motto), `webfinger` (where
+sferik@sferik.net points to, as JSON), `feed` (my talks, as an Atom feed), `deployment` (which commit of the site is
+deployed, and when, as JSON), and `openapi` (the description of the API, as JSON):
 
 ```sh
 sferik deployment | jq -r .commit
@@ -301,7 +318,7 @@ echo "Hello from $tty" | sferik write --tty "$tty"
 
 It exits 0 when it has printed what it was asked for, 1 when a request fails (the site can't be reached, or says
 no), and 2 when the command line is wrong (an unknown command or option, more than one format, a format for
-what prints no resource, or one that comes in one format alone (`write`, `check-in`, `help`, `--version`, `feed`, `deployment`, or `openapi`), `--tty` or `--token` for another command, or a host that isn't an http or https URL, from `--host`
+what prints no resource, or one that comes in one format alone (`write`, `check-in`, `help`, `--version`, `signature`, `webfinger`, `feed`, `deployment`, or `openapi`), `--tty` or `--token` for another command, or a host that isn't an http or https URL, from `--host`
 or `SFERIK_HOST`), so a script can tell the two apart.
 
 To ask a local copy of the site instead of sferik.net, name it with `--host` or the `SFERIK_HOST` environment

@@ -14,7 +14,8 @@ module Contract
   FIXTURES = {
     "home.json" => "Home", "whoami.json" => "Whoami", "contributions.json" => "Contributions", "src.json" => "Src",
     "name.json" => "NameChange", "talks.json" => "Talks", "podcasts.json" => "Podcasts", "finger.json" => "Finger", "resume.json" => "Resume",
-    "dependency.json" => "Dependency", "who.json" => "Users", "check_in.json" => "Who", "version.json" => "Version"
+    "dependency.json" => "Dependency", "who.json" => "Users", "check_in.json" => "Who", "version.json" => "Version",
+    "webfinger.json" => "WebFinger"
   }.freeze
 
   # Each resource class, and where its schema is in the document
@@ -32,7 +33,8 @@ module Contract
     Sferik::Resume::Patent => "Resume/properties/patents/items", Sferik::Resume::Project => "Resume/properties/projects/items",
     Sferik::Resume::Skill => "Resume/properties/skills/items", Sferik::Resume::Speaking => "Resume/properties/speaking",
     Sferik::Resume::Meta => "Resume/properties/meta", Sferik::Dependency => "Dependency", Sferik::Figure => "Figure",
-    Sferik::Place => "Place", Sferik::Who => "Who", Sferik::Session => "Session", Sferik::Deployment => "Version"
+    Sferik::Place => "Place", Sferik::Who => "Who", Sferik::Session => "Session", Sferik::Deployment => "Version",
+    Sferik::WebFinger => "WebFinger", Sferik::WebFinger::Link => "WebFinger/properties/links/items"
   }.freeze
 
   module_function
