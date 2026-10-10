@@ -3,7 +3,7 @@ software: HTTP clients, JSON and XML parsers, OAuth, code coverage, package
 registries, and command-line tools. If you've shipped a Ruby app, some of my
 code is probably in your Gemfile.lock.
 
-I'm the author of MultiJSON and MultiXML, which have 1,781,214,448 combined
+I'm the author of MultiJSON and MultiXML, which have 1,783,559,744 combined
 downloads, and the top contributor to SimpleCov, OmniAuth, and RubyGems.org. All
 of it is core infrastructure for the Ruby community. In 2014, I was given the
 Ruby Hero Award for my open-source contributions.

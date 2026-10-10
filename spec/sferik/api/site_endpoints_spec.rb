@@ -415,7 +415,7 @@ RSpec.describe Sferik::API::SiteEndpoints do
       stub_get("/status", "status.json")
 
       expect(client.status).to be_a(Sferik::Status).and(have_attributes(github: be_a(Sferik::Status::GitHub)
-        .and(have_attributes(asked: Time.utc(2026, 10, 8, 21, 45, 7), answered: Time.utc(2026, 10, 8, 21, 45, 7), error: nil))))
+        .and(have_attributes(asked: Time.utc(2026, 10, 10, 13, 0, 59), answered: Time.utc(2026, 10, 10, 13, 0, 59), error: nil))))
     end
 
     it "returns what went wrong, and when GitHub last answered, from a site whose token has expired" do
@@ -429,8 +429,8 @@ RSpec.describe Sferik::API::SiteEndpoints do
     it "returns when the site last loaded each live value" do
       stub_get("/status", "status.json")
 
-      expect(client.status.loaded).to be_a(Sferik::Status::Loaded).and(have_attributes(gems: Time.utc(2026, 10, 8, 21, 45, 7),
-        stars: Time.utc(2026, 10, 8, 21, 45, 7), contributions: Time.utc(2026, 10, 8, 21, 45, 7), push: Time.utc(2026, 10, 8, 21, 45, 8)))
+      expect(client.status.loaded).to be_a(Sferik::Status::Loaded).and(have_attributes(gems: Time.utc(2026, 10, 10, 13, 1),
+        stars: Time.utc(2026, 10, 10, 13, 1, 2), contributions: Time.utc(2026, 10, 10, 13, 1, 2), push: Time.utc(2026, 10, 10, 13, 1, 2)))
     end
 
     it "returns nil for a value the site has never loaded" do
