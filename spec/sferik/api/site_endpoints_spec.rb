@@ -61,6 +61,9 @@ RSpec.describe Sferik::API::SiteEndpoints do
       let!(:request) { stub_check_in("token" => token, "page" => "/") }
 
       before do
+        # Read here, by the example's thread: one killed while it waits to read what let keeps raises ThreadError
+        slept = self.slept
+        minutes = self.minutes
         allow(Kernel).to receive(:sleep) do |seconds|
           slept << seconds
           minutes.pop
