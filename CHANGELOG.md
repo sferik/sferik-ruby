@@ -1,6 +1,15 @@
 # Changelog
 
-## 0.0.1 (2026-10-08)
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.0.1] - 2026-10-08
+
+### Added
 
 - Initial release: every endpoint of the sferik.net API (`home`, `whoami`, `dependency`, `finger`, `finger_vcard`,
   `name_change`, `signature`, `webfinger`, `contributions`, `projects`, `talks`, `talks_feed`, `podcasts`, `resume`,
@@ -70,3 +79,6 @@
 - The command loads the client only when it asks the site for something: `sferik --version` and `sferik --help`
   don't wait for it
 - RBS signatures, checked by Steep
+
+[Unreleased]: https://github.com/sferik/sferik-ruby/compare/v0.0.1...HEAD
+[0.0.1]: https://github.com/sferik/sferik-ruby/releases/tag/v0.0.1
