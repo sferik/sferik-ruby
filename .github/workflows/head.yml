@@ -1,7 +1,9 @@
 # The next releases of Ruby and JRuby, built from their main branches. This workflow is separate from the others so
 # that it never blocks a merge or a release: don't make it a required check. It runs on every push, and daily so that
-# a change in Ruby itself is caught even when this repository is quiet. A failed scheduled run opens an issue (or
-# comments on the open one), on top of GitHub's usual email about a failed workflow.
+# a change in Ruby itself is caught even when this repository is quiet. A failure on a push or a pull request leaves
+# the build green, since a broken head is usually Ruby's bug and not this library's. A failed scheduled run (or one
+# started by hand) still fails, and a scheduled one opens an issue (or comments on the open one), on top of GitHub's
+# usual email about a failed workflow.
 name: ruby-head
 on:
   push:
@@ -25,11 +27,18 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
-    - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+    - id: ruby
+      uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
       with:
         ruby-version: ${{ matrix.ruby }}
         bundler-cache: true
-    - run: bundle exec rake spec
+      continue-on-error: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+    - id: spec
+      run: bundle exec rake spec
+      continue-on-error: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+    - name: Note an advisory failure
+      if: steps.ruby.outcome == 'failure' || steps.spec.outcome == 'failure'
+      run: echo "::warning title=Advisory failure::A step failed, but this job is allowed to fail, so the build still passes"
 
   alert:
     needs: build
